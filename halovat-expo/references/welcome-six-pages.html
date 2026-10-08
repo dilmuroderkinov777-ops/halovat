@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Halovat — tanishtiruv</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#dddbd6;--paper:#faf9f5;--g:#064e3b;--gd:#064e3b;--g2:#6ed3ac;--g3:#c7efdf;--g4:#ecf8f2;--tx:#3e4540;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0a120e}}
+:root[data-theme="dark"]{--page:#0a120e}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--page);display:grid;place-items:center;font-family:Plus Jakarta Sans,system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--gd)}
+.screen{width:min(390px,100%);height:min(844px,calc(100% - 32px));min-height:640px;background:var(--paper);border-radius:38px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.top{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:22px 28px 0}
+.logo{font:800 22px Plus Jakarta Sans,system-ui,sans-serif;color:var(--g)}
+.view{flex:1 1 auto;min-height:0;overflow:hidden;touch-action:pan-y}
+.track{display:flex;height:100%;transition:transform .45s cubic-bezier(.3,.7,.2,1)}
+.page{flex:0 0 100%;display:flex;flex-direction:column;padding:0 28px}
+.art{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:flex-start;position:relative}
+.art svg{width:100%;max-height:100%}
+h1{font:700 30px/1.15 Plus Jakarta Sans,system-ui,sans-serif;letter-spacing:-.03em;margin:0 0 12px;color:var(--gd)}
+p.d{margin:0 0 22px;font-size:15px;line-height:1.55;color:var(--tx);max-width:322px}
+.bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 28px calc(26px + env(safe-area-inset-bottom,0px))}
+.beads{display:flex;align-items:center;gap:7px;position:relative}
+.beads:before{content:"";position:absolute;left:4px;right:4px;top:50%;height:1px;background:var(--g3)}
+.b{position:relative;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--g2);background:var(--paper);padding:0;cursor:pointer;transition:all .3s}
+.b.done{background:var(--g2)}
+.b.on{width:22px;height:22px;background:var(--g);border-color:var(--g)}
+.go{height:56px;min-width:56px;padding:0 24px;border:0;border-radius:28px;background:var(--g);color:#fff;font:600 16px Plus Jakarta Sans,sans-serif;cursor:pointer;transition:transform .15s,background .2s}
+.go:hover{background:#0b6650}.go:active{transform:scale(.97)}
+.go:focus-visible,.b:focus-visible{outline:3px solid var(--g2);outline-offset:3px}
+.sm{fill:#faf9f5;stroke:#6ed3ac;stroke-width:1.5;transition:.3s}.sm.lit{fill:#10b981;stroke:#10b981}.sl{font:500 11px Plus Jakarta Sans,sans-serif;fill:#3e4540;text-anchor:middle;transition:.3s}.sl.lit{fill:#064e3b;font-weight:700}#rip{transform-box:fill-box;transform-origin:center}.pills{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;opacity:0;transform:translateY(8px);transition:all .5s}.pills.show{opacity:1;transform:none}.dv .mu{opacity:0;transform:scale(.3);transform-box:fill-box;transform-origin:center;transition:all .3s}.dv .dot{transition:opacity .2s}.dv.in .mu{opacity:1;transform:scale(1)}.dv.in .dot{opacity:0}.pulse{transform-box:fill-box;transform-origin:center;animation:pl 2.2s ease-out infinite}@keyframes pl{0%{transform:scale(.5);opacity:.5}100%{transform:scale(2.6);opacity:0}}
+.pill{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 13px;white-space:nowrap;flex:none;border-radius:19px;font:600 13.5px Plus Jakarta Sans,sans-serif}
+.pill svg{flex:none;width:16px;height:16px;max-height:none}.pill.s{background:var(--g);color:#fff}.pill.o{border:1.5px solid var(--g);color:var(--g)}
+.wk{display:grid;grid-template-columns:54px repeat(7,1fr);gap:11px 8px;align-items:center;width:100%}
+.wk span{font-size:12px;color:var(--tx)}
+.wk i{aspect-ratio:1;border-radius:50%;background:#006c49 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2012.5l4.5%204.5L19%207.5%22/%3E%3C/svg%3E") center/54% no-repeat;display:block}
+.wk i.m,.wk i.n{background:#efeeea url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b706b%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6%2012h12%22/%3E%3C/svg%3E") center/44% no-repeat}
+.wk.play i{animation:pop .4s ease-out backwards}@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}#tbtn{transform-box:fill-box;transform-origin:center}.wk i.q{background:#ba1a1a url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6.5%206.5l11%2011M17.5%206.5l-11%2011%22/%3E%3C/svg%3E") center/48% no-repeat;box-shadow:0 0 0 4px #ffdad6}.lg{grid-column:1/-1;display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}.lg b{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.wk .h{font-size:12px;font-weight:500;text-align:center;color:var(--tx)}.wk .h.a{color:#006c49;font-weight:700}.wk .h.t{color:#064e3b;font-weight:700}
+@media (max-width:430px){.screen{width:100%;height:100%;border-radius:0}}
+@media (max-height:760px){h1{font-size:27px}}
+@media (prefers-reduced-motion:reduce){.track,.b,.pills{transition:none}.pulse{animation:none}.wk.play i{animation:none}}
+</style>
+</head>
+<body>
+<main class="screen">
+  <header class="top"><span class="logo">Halovat</span></header>
+  <section class="view" id="view"><div class="track" id="track">
+
+    <article class="page"><div class="art"><div style="width:100%"><svg viewBox="0 0 334 230" id="sunsvg" role="img" aria-label="Quyosh ko‘tarilib, Peshin vaqti kiradi">
+      <line x1="0" y1="200" x2="334" y2="200" stroke="#c7efdf" stroke-width="2"/>
+      <path d="M27 200A140 140 0 0 1 307 200" fill="none" stroke="#c7efdf" stroke-width="2" stroke-dasharray="2 7" stroke-linecap="round"/>
+      <path id="prog" d="M27 200A140 140 0 0 1 307 200" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+      <g id="mk1"></g>
+      <text id="clk" x="167" y="158" text-anchor="middle" font-family="Plus Jakarta Sans,system-ui,sans-serif" font-weight="800" font-size="40" fill="#064e3b" letter-spacing="-1">05:12</text>
+      <text id="nm" x="167" y="182" text-anchor="middle" font-family="Plus Jakarta Sans,system-ui,sans-serif" font-weight="500" font-size="14" fill="#3e4540">Tong</text>
+      <g id="sun"><circle r="26" fill="#fdebc8"/><circle id="rip" r="20" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0"/><circle r="19" fill="#f59e0b"/></g>
+    </svg>
+    <div class="pills" id="pills"><span class="pill s">Peshin vaqti kirdi</span><span class="pill o"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z"/><path d="M10.5 6l3.5 4M14 6l-3.5 4"/></svg>Ovozsiz rejim</span></div></div></div>
+    <h1>Namoz vaqti kirganda Halovat eslatadi</h1>
+    <p class="d">Telefoningiz avtomatik ovozsiz rejimga o‘tadi. Siz esa chalg‘imasdan, halovat bilan ibodat qilasiz.</p></article>
+
+    <article class="page"><div class="art"><div class="wk" id="wk"></div></div>
+    <h1>Namozlaringizni kuzating</h1>
+    <p class="d">O‘qilgan namozlarni belgilang, qazo namozlarini qayd eting. Haftalik, oylik va yillik natijalarni ko‘ring.</p></article>
+
+    <article class="page"><div class="art"><svg viewBox="0 0 334 290" id="tasbeh" role="img" aria-label="Tasbeh: 26 / 33"></svg></div>
+    <h1>Tasbeh va duolar — bir joyda</h1>
+    <p class="d">Istagan zikringizni tanlang, qulay sanang va duolaringizni tez toping.</p></article>
+
+    <article class="page"><div class="art"><svg viewBox="0 -12 334 372" id="qibla" role="img" aria-label="Qibla kompasi"></svg></div>
+    <h1>Qibla yo‘nalishini aniq toping</h1>
+    <p class="d">Halovat kompasi bilan namoz uchun Qibla tomonini bilib oling — qayerda bo‘lsangiz ham.</p></article>
+
+    <article class="page"><div class="art"><svg viewBox="0 0 334 290" id="near" role="img" aria-label="Eng yaqin masjid xaritada"></svg></div>
+    <h1>Eng yaqin masjidni toping</h1>
+    <p class="d">Atrofingizdagi masjidlarni xaritadan toping va eng yaqinigacha masofani bilib oling.</p></article>
+
+    <article class="page"><div class="art"><svg viewBox="0 0 334 290" id="masjid" role="img" aria-label="Masjid hududi va ovozsiz rejim"></svg></div>
+    <h1>Masjidda barchaga halovat</h1>
+    <p class="d">Masjid hududiga kirganingizda telefoningiz avtomatik ovozsiz rejimga o‘tadi. Shunda siz ham, atrofdagilar ham ibodatdan chalg‘imaysiz.</p></article>
+
+  </div></section>
+  <footer class="bar"><div class="beads" id="beads"></div><button class="go" id="go" type="button">Keyingisi</button></footer>
+</main>
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg",rad=Math.PI/180,$=function(i){return document.getElementById(i)};
+  /* page 2: week grid */
+  var names=["Bomdod","Peshin","Asr","Shom","Xufton"],days=["Du","Se","Cho","Pay","Ju","Sha","Ya"],
+  st=["1111110","111q111","11q1011","1111q11","111qnnn"],wk=$("wk"),h="<span></span>";
+  days.forEach(function(d){h+='<span class="h'+(d=="Ju"?" a":d=="Ya"?" t":"")+'">'+d+'</span>'});
+  st.forEach(function(r,i){h+="<span>"+names[i]+"</span>";r.split("").forEach(function(c,j){h+='<i style="animation-delay:'+((i*7+j)*30)+'ms" class="'+(c=="1"?"":c=="0"?"m":c=="q"?"q":"n")+'"></i>'})});
+  h+='<div class="lg"><span><b style="background:#006c49"></b>O‘qildi</span><span><b style="background:#ba1a1a"></b>Qazo</span><span><b style="background:#efeeea"></b>Kutilmoqda</span></div>';wk.innerHTML=h;function playTr(){wk.classList.remove("play");void wk.offsetWidth;wk.classList.add("play")}
+  /* page 3: tasbeh ring */
+  var t="",cx=167,cy=140,i,a;
+  for(i=0;i<33;i++){a=(i/33*360-90)*rad;t+='<circle cx="'+(cx+118*Math.cos(a)).toFixed(1)+'" cy="'+(cy+118*Math.sin(a)).toFixed(1)+'" r="6" fill="#fff" stroke="#6ed3ac" stroke-width="1.5" class="tb"/>'}
+  t+='<text x="167" y="158" text-anchor="middle" font-family="Plus Jakarta Sans,system-ui,sans-serif" font-weight="700" font-size="92" fill="#064e3b" letter-spacing="-3" id="tn">26</text>';
+  t+='<text x="167" y="190" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="14" fill="#3e4540">33 tadan</text>';
+  t+='<g id="tbtn"><rect x="127" y="238" width="80" height="38" rx="19" fill="#064e3b"/><text x="167" y="263" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="600" font-size="16" fill="#fff">+1</text></g>';
+  $("tasbeh").innerHTML=t;
+  var tbs=document.querySelectorAll("#tasbeh .tb"),tn=$("tn"),tbtn=$("tbtn"),raf3,raf4;
+  function setTb(n){tbs.forEach(function(c,k){var on=k<n;c.setAttribute("r",on?8:6);c.setAttribute("fill",on?"#10b981":"#faf9f5");c.setAttribute("stroke",on?"#10b981":"#6ed3ac")});tn.textContent=n}
+  function playTb(){cancelAnimationFrame(raf3);if(red){setTb(27);return}var s1=null,pr=false;setTb(0);
+    (function f(ts){if(s1===null)s1=ts;var t=(ts-s1)/1000,n=Math.round(26*(1-Math.pow(1-Math.min(t/2.4,1),2)));
+      if(t>=3&&!pr){pr=true;tbtn.animate([{transform:"scale(1)"},{transform:"scale(.86)"},{transform:"scale(1)"}],{duration:280})}
+      setTb(t>=3?27:n);if(t<3.4)raf3=requestAnimationFrame(f)})(performance.now())}
+  /* page 4: compass (Kaaba + needle fixed, dial rotates) */
+  var q="",CY=162,R=130,dl="",lbl=[["Sh",0],["Shq",90],["J",180],["G‘",270]],lbs=[];
+  for(i=0;i<72;i++){a=i*5*rad;var L=i%18==0?16:i%2==0?9:5,cd=i%18==0;
+    dl+='<line x1="'+(167+R*Math.sin(a)).toFixed(1)+'" y1="'+(CY-R*Math.cos(a)).toFixed(1)+'" x2="'+(167+(R-L)*Math.sin(a)).toFixed(1)+'" y2="'+(CY-(R-L)*Math.cos(a)).toFixed(1)+'" stroke="'+(cd?"#064e3b":"#6ed3ac")+'" stroke-width="'+(cd?2:1.3)+'"/>'}
+  lbl.forEach(function(l,k){var bb=l[1]*rad;dl+='<text id="cl'+k+'" x="'+(167+(R-34)*Math.sin(bb)).toFixed(1)+'" y="'+(CY-(R-34)*Math.cos(bb)).toFixed(1)+'" text-anchor="middle" dominant-baseline="central" font-family="Plus Jakarta Sans,system-ui,sans-serif" font-weight="700" font-size="13" fill="'+(k==0?"#064e3b":"#3e4540")+'">'+l[0]+'</text>'});
+  q+='<g id="dial">'+dl+'</g>';
+  q+='<path d="M167 64 176 162 167 154 158 162Z" fill="#064e3b"/><circle cx="167" cy="162" r="6" fill="#faf9f5" stroke="#064e3b" stroke-width="2"/>';
+  q+='<rect x="151" y="-10" width="32" height="32" rx="4" fill="#1b1c1a"/><path d="M151 2h32" stroke="#f59e0b" stroke-width="2.5"/>';
+  q+='<text x="167" y="348" text-anchor="middle" font-family="Plus Jakarta Sans,system-ui,sans-serif" font-weight="700" font-size="30" fill="#064e3b" id="qd">247°</text>';
+  $("qibla").innerHTML=q;
+  var dial=$("dial"),qd=$("qd");
+  lbs=lbl.map(function(l,k){return $("cl"+k)});
+  function setQ(r){dial.setAttribute("transform","rotate("+r.toFixed(1)+" 167 "+CY+")");
+    lbl.forEach(function(l,k){var bb=l[1]*rad,x=167+(R-34)*Math.sin(bb),y=CY-(R-34)*Math.cos(bb);lbs[k].setAttribute("transform","rotate("+(-r).toFixed(1)+" "+x.toFixed(1)+" "+y.toFixed(1)+")")});
+    qd.textContent=Math.round(((-r)%360+360)%360)+"°"}
+  function playQ(){cancelAnimationFrame(raf4);if(red){setQ(113);return}var s2=null;
+    (function f(ts){if(s2===null)s2=ts;var t=(ts-s2)/1000;if(t>=3){setQ(113);return}setQ(113+130*Math.exp(-2.4*t)*Math.cos(7*t));raf4=requestAnimationFrame(f)})(performance.now())}
+  setQ(113);
+  /* page 5: nearest mosque */
+  function pin(x,y,k,c){return '<g transform="translate('+x+' '+y+') scale('+k+')"><path d="M0 0C-16-18-16-42 0-42S16-18 0 0Z" fill="'+c+'"/><path d="M-7-24a7 7 0 0 1 14 0ZM-7-24h14v3h-14Z" fill="#fff"/></g>'}
+  var n='<clipPath id="nc"><rect y="10" width="334" height="250" rx="30"/></clipPath><g clip-path="url(#nc)"><rect y="10" width="334" height="250" fill="#ecf8f2"/>';
+  n+='<path d="M0 92C80 82 110 132 190 122S300 92 334 112V138C300 120 220 152 190 144S70 108 0 120Z" fill="#c7efdf"/>';
+  n+='<g fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"><path d="M10 232 120 178 215 218 330 162"/><path d="M60 30 100 165 140 270"/><path d="M232 20 215 218"/><path d="M0 64 334 72"/></g></g>';
+  n+='<path d="M100 165C130 150 160 122 230 112" fill="none" stroke="#064e3b" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>';
+  n+=pin(62,86,.8,"#6ed3ac")+pin(292,205,.8,"#6ed3ac")+pin(285,58,.8,"#6ed3ac")+pin(230,112,1.3,"#064e3b");
+  n+='<circle class="pulse" cx="100" cy="165" r="16" fill="#064e3b"/><circle cx="100" cy="165" r="8" fill="#064e3b" stroke="#fff" stroke-width="3"/>';
+  n+='<rect x="22" y="210" width="172" height="46" rx="23" fill="#064e3b"/><text x="44" y="228" font-family="Plus Jakarta Sans,sans-serif" font-size="11" fill="#c7efdf">Eng yaqin masjid</text><text x="44" y="246" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" font-size="15" fill="#fff">350 m · 4 daqiqa</text>';
+  $("near").innerHTML=n;
+  /* page 6: mosque zone */
+  var m='<circle cx="167" cy="140" r="130" fill="#ecf8f2"/><circle cx="167" cy="140" r="92" fill="#c7efdf"/><circle cx="167" cy="140" r="54" fill="#6ed3ac"/>';
+  m+='<path d="M20 200C70 170 90 215 140 190S230 120 320 160M30 90C90 110 120 70 180 60S280 60 320 40" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>';
+  m+='<circle cx="167" cy="140" r="54" fill="none" stroke="#064e3b" stroke-width="2" stroke-dasharray="3 6"/><circle cx="167" cy="140" r="92" fill="none" stroke="#064e3b" stroke-width="1.5" stroke-dasharray="3 6" opacity=".6"/>';
+  m+='<g fill="#064e3b"><path d="M147 154v-14a20 20 0 0 1 40 0v14Z"/><rect x="141" y="124" width="5" height="30"/><rect x="188" y="124" width="5" height="30"/><path d="M167 111v-9" stroke="#064e3b" stroke-width="2"/></g>';
+  var dv=[[64,70,70],[276,222,74],[270,76,68],[60,215,108]],dvs=[],raf2;
+  dv.forEach(function(d,i){var dx=d[0]-167,dy=d[1]-140,L=Math.sqrt(dx*dx+dy*dy);d[3]=167+dx/L*d[2];d[4]=140+dy/L*d[2];
+    m+='<g class="dv" id="dv'+i+'" transform="translate('+d[0]+' '+d[1]+')"><circle class="dot" r="6" fill="#064e3b"/><g class="mu"><circle r="12" fill="#064e3b"/><path d="M-7-2.5h3L0-6v12l-4-3.5h-3ZM3-3l5 6M8-3l-5 6" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></g></g>'});
+  m+='<rect x="57" y="236" width="220" height="38" rx="19" fill="#064e3b"/><g transform="translate(77 247)" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h2.5L8 3v10L4.5 10H2z"/><path d="M10.5 6l3.5 4M14 6l-3.5 4"/></g><text x="101" y="260" font-family="Plus Jakarta Sans,sans-serif" font-weight="600" font-size="13.5" fill="#fff">Ovozsiz rejim yoqildi</text>';
+  $("masjid").innerHTML=m;dvs=dv.map(function(d,i){return $("dv"+i)});
+  function zoneFrame(t){dvs.forEach(function(el,i){var d=dv[i],p=Math.max(0,Math.min(1,(t-.4-i*.55)/2.4)),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2,x=d[0]+(d[3]-d[0])*e,y=d[1]+(d[4]-d[1])*e;
+    el.setAttribute("transform","translate("+x.toFixed(1)+" "+y.toFixed(1)+")");el.classList.toggle("in",Math.hypot(x-167,y-140)<92);
+    el.style.opacity=t<.3?t/.3:t>6?Math.max(0,(6.5-t)/.5):1})}
+  function playZone(){cancelAnimationFrame(raf2);if(matchMedia("(prefers-reduced-motion: reduce)").matches){zoneFrame(5);return}
+    var s0=null;(function f(ts){if(s0===null)s0=ts;zoneFrame(((ts-s0)/1000)%6.6);raf2=requestAnimationFrame(f)})(performance.now())}
+  /* page 1: sunrise to prayer time */
+  var sang=[170,100,60,28,6],mk1=$("mk1"),sunEl=$("sun"),prog=$("prog"),clk=$("clk"),nm=$("nm"),pills=$("pills"),rip=$("rip"),raf1,red=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  sang.forEach(function(a,i){var r=a*rad,x=167+140*Math.cos(r),y=200-140*Math.sin(r),lx=167+104*Math.cos(r),ly=200-104*Math.sin(r)+4;
+    mk1.insertAdjacentHTML("beforeend",'<circle class="sm" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5"/><text class="sl" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'">'+names[i]+'</text>')});
+  var sm=mk1.querySelectorAll(".sm"),sl=mk1.querySelectorAll(".sl");
+  function pad(v){return v<10?"0"+v:""+v}
+  function setSun(e){var a=178-78*e,r=a*rad,last=-1,mins=Math.round(312+431*e);
+    sunEl.setAttribute("transform","translate("+(167+140*Math.cos(r)).toFixed(1)+" "+(200-140*Math.sin(r)).toFixed(1)+")");
+    prog.setAttribute("stroke-dasharray",((180-a)/180*100).toFixed(2)+" 100");
+    clk.textContent=pad(mins/60|0)+":"+pad(mins%60);
+    sang.forEach(function(m,i){var on=a<=m+1;sm[i].classList.toggle("lit",on);sl[i].classList.toggle("lit",on);if(on)last=i});
+    nm.textContent=last<0?"Tong":names[last]}
+  function playSun(){cancelAnimationFrame(raf1);pills.classList.remove("show");
+    if(red){setSun(1);pills.classList.add("show");return}
+    setSun(0);var s=null;
+    (function f(ts){if(s===null)s=ts;var t=Math.min((ts-s)/3800,1),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;setSun(e);
+      if(t<1)raf1=requestAnimationFrame(f);else{rip.animate([{opacity:.8,transform:"scale(1)"},{opacity:0,transform:"scale(3.2)"}],{duration:1200,easing:"ease-out"});pills.classList.add("show")}})(performance.now())}
+  /* navigation */
+  var N=6,cur=0,track=$("track"),beads=$("beads"),go=$("go"),bs=[];
+  for(i=0;i<N;i++){var b=document.createElement("button");b.className="b";b.type="button";b.setAttribute("aria-label",(i+1)+"-sahifa");(function(k){b.onclick=function(){show(k)}})(i);beads.appendChild(b);bs.push(b)}
+  function show(k){cur=Math.max(0,Math.min(N-1,k));track.style.transform="translateX(-"+cur*100+"%)";
+    bs.forEach(function(b,j){b.className="b"+(j==cur?" on":j<cur?" done":"")});
+    if(cur==0)playSun();if(cur==1)playTr();if(cur==2)playTb();if(cur==3)playQ();if(cur==5)playZone();else cancelAnimationFrame(raf2);go.textContent=cur==N-1?"Boshlash":"Keyingisi"}
+  go.onclick=function(){cur<N-1?show(cur+1):0};
+  var x0=null,v=$("view");
+  v.addEventListener("pointerdown",function(e){x0=e.clientX});
+  v.addEventListener("pointerup",function(e){if(x0===null)return;var d=e.clientX-x0;x0=null;if(Math.abs(d)>50)show(cur+(d<0?1:-1))});
+  show(0);
+})();
+</script>
+</body>
+</html>

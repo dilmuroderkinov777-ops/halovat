@@ -1,0 +1,28 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+dependencies {
+  implementation 'com.google.android.gms:play-services-location:21.0.1'
+  if (findProject(':expo-notifications') != null) {
+    implementation project(':expo-notifications')
+  } else {
+    // SDK 57 normally links Expo modules as prebuilt local Maven artifacts.
+    def publication = new groovy.json.JsonSlurper().parse(file('../../../node_modules/expo-notifications/expo-module.config.json')).android.publication
+    implementation "${publication.groupId}:${publication.artifactId}:${publication.version}"
+  }
+  implementation 'androidx.core:core:1.17.0'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+}
+
+group = 'uz.halovat.focus'
+version = '1.0.0'
+
+android {
+  namespace "uz.halovat.focus"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}

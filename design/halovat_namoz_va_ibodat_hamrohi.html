@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="uz" class="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Halovat — Namoz va Ibodat Hamrohi</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "inverse-on-surface": "#f2f1ed",
+            "secondary": "#006c49",
+            "tertiary-fixed-dim": "#ffb95f",
+            "background": "#faf9f5",
+            "tertiary": "#442800",
+            "outline": "#707974",
+            "tertiary-fixed": "#ffddb8",
+            "primary-fixed": "#b0f0d6",
+            "tertiary-container": "#623c00",
+            "surface-tint": "#2b6954",
+            "surface-container-highest": "#e3e2df",
+            "surface-dim": "#dbdad6",
+            "outline-variant": "#bfc9c3",
+            "secondary-fixed-dim": "#4edea3",
+            "primary": "#003527",
+            "on-secondary": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "secondary-container": "#6cf8bb",
+            "surface-container": "#efeeea",
+            "on-secondary-container": "#00714d",
+            "error": "#ba1a1a",
+            "secondary-fixed": "#6ffbbe",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#005236",
+            "surface-container-high": "#e9e8e4",
+            "inverse-surface": "#2f312e",
+            "on-tertiary-fixed": "#2a1700",
+            "surface": "#faf9f5",
+            "on-secondary-fixed": "#002113",
+            "primary-container": "#064e3b",
+            "on-primary-container": "#80bea6",
+            "on-primary-fixed-variant": "#0b513d",
+            "on-error-container": "#93000a",
+            "inverse-primary": "#95d3ba",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1b1c1a",
+            "on-primary-fixed": "#002117",
+            "surface-variant": "#e3e2df",
+            "on-background": "#1b1c1a",
+            "on-primary": "#ffffff",
+            "on-tertiary-container": "#f69f0d",
+            "surface-bright": "#faf9f5",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#95d3ba",
+            "surface-container-low": "#f4f4f0",
+            "on-surface-variant": "#404944",
+            "on-tertiary-fixed-variant": "#653e00"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1.5rem",
+            "margin": "1rem",
+            "gutter": "1rem",
+            "space-md": "1rem"
+          },
+          fontFamily: {
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "counter-xl": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"]
+          },
+          fontSize: {
+            "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "display-lg-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-lg": ["28px", { lineHeight: "34px", letterSpacing: "-0.015em", fontWeight: "700" }],
+            "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }],
+            "counter-xl": ["56px", { lineHeight: "60px", letterSpacing: "-0.03em", fontWeight: "700" }],
+            "label-sm": ["10px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "600" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "title-md": ["16px", { lineHeight: "22px", fontWeight: "600" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }],
+            "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700" }]
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        background-color: #faf9f5;
+      }
+      body {
+        overscroll-behavior: none;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    }
+    ::-webkit-scrollbar { display: none; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+
+  <!-- External React & Router Libraries -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+  <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+  <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { createRoot } = ReactDOM;
+    const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+    // --- Sound Helper ---
+    function playBeep(freq = 440, dur = 0.04) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+      } catch (e) {}
+    }
+
+    // --- Common Header ---
+    function AppHeader({ title = "Bosh Sahifa" }) {
+      return (
+        <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+          <div class="h-16 px-margin flex items-center justify-between">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm">
+                <span class="material-symbols-outlined text-[20px]">mosque</span>
+              </div>
+              <div class="flex flex-col text-left">
+                <div class="flex items-center gap-1 cursor-pointer active:opacity-75 transition-opacity">
+                  <span class="material-symbols-outlined text-secondary text-[16px]">location_on</span>
+                  <span class="font-title-md text-title-md text-on-surface">Toshkent</span>
+                  <span class="material-symbols-outlined text-on-surface-variant text-[16px]">keyboard_arrow_down</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">{title}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-space-xs">
+              <button aria-label="Bildirishnomalar" class="relative w-11 h-11 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors">
+                <span class="material-symbols-outlined text-[22px]">notifications</span>
+                <span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface"></span>
+              </button>
+              <Link to="/profil" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1 text-on-primary">
+                <span class="material-symbols-outlined text-[18px]">person</span>
+              </Link>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // --- Common Bottom Navigation ---
+    function AppBottomNav() {
+      const location = useLocation();
+      const currentPath = location.pathname;
+
+      const navItems = [
+        { path: "/", label: "Bosh sahifa", icon: "home" },
+        { path: "/namozlar", label: "Namozlar", icon: "event_available" },
+        { path: "/tasbeh", label: "Tasbeh", icon: "counter_3" },
+        { path: "/qibla", label: "Qibla", icon: "explore" },
+        { path: "/profil", label: "Profil", icon: "person" }
+      ];
+
+      return (
+        <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(6,78,59,0.06)]">
+          <div class="h-16 px-space-xs max-w-[440px] mx-auto flex items-center justify-around">
+            {navItems.map((item) => {
+              const isActive = (item.path === "/" && currentPath === "/") || (item.path !== "/" && currentPath.startsWith(item.path));
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  class={`flex flex-col items-center justify-center gap-1 min-w-[58px] min-h-[48px] py-1 transition-colors ${
+                    isActive ? "text-secondary font-semibold" : "text-on-surface-variant hover:text-on-surface"
+                  }`}
+                >
+                  <span class={`material-symbols-outlined text-[24px] ${isActive ? 'fill' : ''}`}>{item.icon}</span>
+                  <span class="font-label-sm text-[11px] leading-tight">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      );
+    }
+
+    // ==========================================
+    // SCREEN 1: BOSH SAHIFA (HOME DASHBOARD)
+    // ==========================================
+    function HomeScreen() {
+      const navigate = useNavigate();
+      const [secondsLeft, setSecondsLeft] = useState(30 * 60 + 33);
+      const [prayerMode, setPrayerMode] = useState(false);
+      const [isPlayingAyah, setIsPlayingAyah] = useState(false);
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setSecondsLeft(prev => (prev > 0 ? prev - 1 : 0));
+        }, 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const formatCountdown = (totalSec) => {
+        const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+        const m = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+        const s = (totalSec % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${s}`;
+      };
+
+      return (
+        <div class="flex flex-col min-h-screen">
+          <AppHeader title="Bosh Sahifa" />
+          <main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-28">
+            <div class="flex flex-col w-full max-w-[440px] mx-auto px-margin space-y-space-lg pb-6">
+              
+              {/* Top Greeting & Hijri */}
+              <section class="flex flex-col gap-1.5 pt-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5 bg-surface-container-high px-3 py-1 rounded-full shadow-sm">
+                    <span class="material-symbols-outlined text-[16px] text-secondary">calendar_today</span>
+                    <span class="font-label-md text-label-md text-on-surface-variant font-medium">14 Safar, 1446-yil</span>
+                  </div>
+                  <div class="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-full text-secondary">
+                    <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">Hozir: <strong class="text-on-surface">Shom</strong></span>
+                  </div>
+                </div>
+                <div class="flex flex-col mt-0.5">
+                  <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Assalomu alaykum</h1>
+                  <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+                    <span>Halovat bilan har kun ibodatda</span>
+                    <span class="material-symbols-outlined text-tertiary-container text-[16px] fill">auto_awesome</span>
+                  </p>
+                </div>
+              </section>
+
+              {/* Atmospheric Hero Prayer Card */}
+              <section class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-primary via-primary-container to-[#022c22] text-on-primary p-6 shadow-xl shadow-primary/10">
+                <div class="absolute -top-16 -right-16 w-52 h-52 rounded-full bg-secondary-container/10 blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-primary-fixed-dim/10 blur-2xl pointer-events-none"></div>
+                <div class="relative z-10 flex flex-col space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full">
+                      <span class="material-symbols-outlined text-[16px] text-primary-fixed-dim">schedule</span>
+                      <span class="font-label-md text-label-md tracking-wide text-primary-fixed">Keyingi namoz: <strong>Xufton</strong></span>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-primary-fixed-dim shadow-inner">
+                      <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col py-1">
+                    <div class="flex items-baseline gap-2 text-on-primary tracking-tight">
+                      <span class="font-counter-xl text-counter-xl font-bold font-mono">{formatCountdown(secondsLeft)}</span>
+                    </div>
+                    <div class="flex items-center gap-6 mt-1 font-label-md text-label-md text-on-primary-container tracking-wider">
+                      <span class="w-16">SOAT</span>
+                      <span class="w-16">DAQIQA</span>
+                      <span class="w-16">SONIYA</span>
+                    </div>
+                  </div>
+
+                  <div class="space-y-2 pt-1">
+                    <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+                      <div class="bg-gradient-to-r from-secondary-fixed-dim to-secondary-container h-full rounded-full w-[78%] transition-all duration-500"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-on-primary-container font-label-sm text-label-sm">
+                      <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">timelapse</span>
+                        Shom vaqti tugashiga oz qoldi
+                      </span>
+                      <span class="text-on-primary font-medium">19:15 gacha</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Today's Prayers Row */}
+              <section class="flex flex-col space-y-2.5">
+                <div class="flex items-center justify-between px-0.5">
+                  <h2 class="font-headline-sm text-headline-sm text-on-surface">Bugungi namoz vaqtlari</h2>
+                  <Link to="/namozlar" class="font-label-md text-label-md text-secondary font-medium flex items-center gap-0.5">
+                    To'liq taqvim
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </Link>
+                </div>
+                <div class="grid grid-cols-5 gap-2">
+                  <div class="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-surface-container-low transition-all">
+                    <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Bomdod</span>
+                    <span class="font-title-md text-title-md text-on-surface font-semibold my-1">05:05</span>
+                    <div class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-secondary">
+                      <span class="material-symbols-outlined text-[15px] fill">check</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-surface-container-low transition-all">
+                    <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Peshin</span>
+                    <span class="font-title-md text-title-md text-on-surface font-semibold my-1">12:17</span>
+                    <div class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-secondary">
+                      <span class="material-symbols-outlined text-[15px] fill">check</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-surface-container-low transition-all">
+                    <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Asr</span>
+                    <span class="font-title-md text-title-md text-on-surface font-semibold my-1">16:15</span>
+                    <div class="w-6 h-6 rounded-full bg-surface-container flex items-center justify-center text-secondary">
+                      <span class="material-symbols-outlined text-[15px] fill">check</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-secondary-container/25 shadow-md shadow-secondary/10 transition-all scale-[1.03]">
+                    <div class="flex items-center gap-0.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      <span class="font-label-sm text-label-sm text-secondary font-bold">Shom</span>
+                    </div>
+                    <span class="font-title-md text-title-md text-on-surface font-bold my-1">18:02</span>
+                    <div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm">
+                      <span class="material-symbols-outlined text-[15px]">wb_twilight</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-center justify-between p-2.5 rounded-2xl bg-surface-container-lowest shadow-sm transition-all">
+                    <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Xufton</span>
+                    <span class="font-title-md text-title-md text-on-surface font-semibold my-1">19:15</span>
+                    <div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+                      <span class="material-symbols-outlined text-[15px]">nightlight</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Devotional Action: Namoz Rejimi Toggle */}
+              <section>
+                <button
+                  onClick={() => {
+                    setPrayerMode(!prayerMode);
+                    playBeep(prayerMode ? 350 : 550, 0.05);
+                  }}
+                  class="w-full h-[54px] rounded-full bg-primary-container text-on-primary flex items-center justify-between px-5 shadow-lg shadow-primary-container/20 active:scale-[0.98] transition-transform"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-secondary-container">
+                      <span class="material-symbols-outlined text-[18px]">volume_off</span>
+                    </div>
+                    <div class="flex flex-col text-left">
+                      <span class="font-title-md text-title-md font-semibold leading-tight">Namoz rejimini yoqish</span>
+                      <span class="font-label-sm text-label-sm text-on-primary-container font-normal">
+                        {prayerMode ? "Ovozsiz holat faol" : "Ovozsiz holat & Azon bildirishnomasi"}
+                      </span>
+                    </div>
+                  </div>
+                  <div class={`w-11 h-6 rounded-full p-0.5 transition-colors flex items-center ${prayerMode ? 'bg-secondary-fixed' : 'bg-surface-container-highest'}`}>
+                    <div class={`w-5 h-5 rounded-full bg-surface shadow-md transition-transform ${prayerMode ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                  </div>
+                </button>
+              </section>
+
+              {/* Spiritual Bento Grid */}
+              <section class="space-y-3">
+                <div class="flex items-center justify-between px-0.5">
+                  <h2 class="font-headline-sm text-headline-sm text-on-surface">Ibodat yo'ldoshi</h2>
+                  <span class="font-label-md text-label-md text-on-surface-variant">Tezkor xizmatlar</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div onClick={() => navigate('/tasbeh')} class="p-4 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 cursor-pointer active:scale-[0.98]">
+                    <div class="flex items-start justify-between">
+                      <div class="w-10 h-10 rounded-xl bg-secondary-container/40 text-on-secondary-container flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[22px]">counter_3</span>
+                      </div>
+                      <span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-semibold">33/99</span>
+                    </div>
+                    <div>
+                      <h3 class="font-title-md text-title-md text-on-surface font-semibold">Tasbeh</h3>
+                      <p class="font-label-md text-label-md text-on-surface-variant mt-0.5">Subhanalloh zikri</p>
+                    </div>
+                  </div>
+
+                  <div onClick={() => navigate('/tasbeh?tab=duolar')} class="p-4 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 cursor-pointer active:scale-[0.98]">
+                    <div class="flex items-start justify-between">
+                      <div class="w-10 h-10 rounded-xl bg-tertiary-fixed/60 text-tertiary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[22px]">menu_book</span>
+                      </div>
+                      <span class="material-symbols-outlined text-outline-variant text-[18px]">chevron_right</span>
+                    </div>
+                    <div>
+                      <h3 class="font-title-md text-title-md text-on-surface font-semibold">Duolar</h3>
+                      <p class="font-label-md text-label-md text-on-surface-variant mt-0.5">Tonggi va kechki zikrlar</p>
+                    </div>
+                  </div>
+
+                  <div onClick={() => navigate('/masjidlar')} class="p-4 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 cursor-pointer active:scale-[0.98]">
+                    <div class="flex items-start justify-between">
+                      <div class="w-10 h-10 rounded-xl bg-primary-fixed/40 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[22px]">near_me</span>
+                      </div>
+                      <span class="px-2 py-0.5 rounded-full bg-secondary-container/30 text-secondary font-label-sm text-label-sm font-semibold">350 m</span>
+                    </div>
+                    <div>
+                      <h3 class="font-title-md text-title-md text-on-surface font-semibold">Masjidlar</h3>
+                      <p class="font-label-md text-label-md text-on-surface-variant mt-0.5">Minor masjidi yaqin</p>
+                    </div>
+                  </div>
+
+                  <div onClick={() => navigate('/qibla')} class="p-4 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 cursor-pointer active:scale-[0.98]">
+                    <div class="flex items-start justify-between">
+                      <div class="w-10 h-10 rounded-xl bg-surface-container-highest text-secondary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[22px]">explore</span>
+                      </div>
+                      <span class="font-label-md text-label-md text-on-surface font-semibold">240°</span>
+                    </div>
+                    <div>
+                      <h3 class="font-title-md text-title-md text-on-surface font-semibold">Qibla</h3>
+                      <p class="font-label-md text-label-md text-on-surface-variant mt-0.5">Janubi-g'arb tomon</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Kun Oyati Card */}
+              <section class="rounded-3xl bg-surface-container-lowest p-5 shadow-sm space-y-3 relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-tertiary-fixed/40 flex items-center justify-center text-tertiary">
+                      <span class="material-symbols-outlined text-[18px]">format_quote</span>
+                    </div>
+                    <span class="font-label-md text-label-md font-semibold text-on-surface uppercase tracking-wider">Kun hikmati</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-on-surface-variant">
+                    <button
+                      onClick={() => {
+                        setIsPlayingAyah(!isPlayingAyah);
+                        playBeep(520, 0.15);
+                      }}
+                      class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container transition-colors"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">{isPlayingAyah ? 'pause' : 'volume_up'}</span>
+                    </button>
+                    <button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container transition-colors">
+                      <span class="material-symbols-outlined text-[18px]">share</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="py-2 text-right">
+                  <p class="text-[20px] leading-[36px] font-serif text-on-surface font-medium tracking-wide">
+                    أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ
+                  </p>
+                </div>
+                <div class="space-y-1 bg-surface-container-low p-3.5 rounded-2xl">
+                  <p class="font-body-md text-body-md text-on-surface italic leading-relaxed">
+                    “Ogoh bo'lingizkim, Allohning zikri ila qalblar orom olur.”
+                  </p>
+                  <div class="flex items-center justify-between pt-1 text-on-surface-variant font-label-sm text-label-sm">
+                    <span>Ra'd surasi, 28-oyat</span>
+                    <span class="text-secondary font-medium">Tafsiri bilan o'qish</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Quick Qazo settlement link */}
+              <div onClick={() => navigate('/namozlar')} class="flex items-center justify-between p-4 rounded-2xl bg-secondary-container/20 text-on-surface cursor-pointer active:opacity-90">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[20px]">spa</span>
+                  </div>
+                  <div>
+                    <p class="font-title-md text-title-md font-semibold">Qazo namozlari hisobi</p>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">Sizda bugun barcha 5 vaqt to'liq ado etildi</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-secondary text-[20px]">chevron_right</span>
+              </div>
+
+            </div>
+          </main>
+          <AppBottomNav />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // SCREEN 2: NAMOZLAR DAFTARI (PRAYER TRACKER)
+    // ==========================================
+    function PrayersTrackerScreen() {
+      const navigate = useNavigate();
+      const [period, setPeriod] = useState("hafta");
+      const [qazoPaid, setQazoPaid] = useState(false);
+
+      // Matrix statuses: 0: prayed, 1: qazo, 2: neutral
+      const prayers = [
+        { name: "Bomdod", color: "bg-tertiary-fixed-dim" },
+        { name: "Peshin", color: "bg-on-tertiary-container" },
+        { name: "Asr", color: "bg-tertiary-fixed-dim" },
+        { name: "Shom", color: "bg-error" },
+        { name: "Xufton", color: "bg-primary-container" }
+      ];
+
+      const initialMatrix = [
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1], // Shom missed on Sunday
+        [0, 0, 0, 0, 0, 0, 2]  // Xufton pending
+      ];
+
+      const [matrix, setMatrix] = useState(initialMatrix);
+
+      const toggleCell = (rIdx, cIdx) => {
+        setMatrix(prev => {
+          const next = prev.map(row => [...row]);
+          const current = next[rIdx][cIdx];
+          // cycle: 0 (check) -> 1 (qazo) -> 2 (neutral) -> 0
+          next[rIdx][cIdx] = (current + 1) % 3;
+          return next;
+        });
+        playBeep(480, 0.03);
+      };
+
+      const renderBubble = (val, rIdx, cIdx) => {
+        if (val === 0) {
+          return (
+            <button
+              onClick={() => toggleCell(rIdx, cIdx)}
+              class="w-7 h-7 mx-auto rounded-full bg-secondary flex items-center justify-center text-on-secondary shadow-sm active:scale-90 transition-transform"
+            >
+              <span class="material-symbols-outlined text-[16px]">check</span>
+            </button>
+          );
+        } else if (val === 1) {
+          return (
+            <button
+              onClick={() => toggleCell(rIdx, cIdx)}
+              class="w-7 h-7 mx-auto rounded-full bg-error flex items-center justify-center text-on-error shadow-sm active:scale-90 transition-transform ring-4 ring-error-container"
+            >
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          );
+        } else {
+          return (
+            <button
+              onClick={() => toggleCell(rIdx, cIdx)}
+              class="w-7 h-7 mx-auto rounded-full bg-surface-container flex items-center justify-center text-outline active:scale-90 transition-transform"
+            >
+              <span class="material-symbols-outlined text-[14px]">remove</span>
+            </button>
+          );
+        }
+      };
+
+      return (
+        <div class="flex flex-col min-h-screen">
+          <AppHeader title="Namozlar" />
+          <main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-28">
+            <div class="flex flex-col w-full max-w-[440px] mx-auto px-margin pb-6 gap-space-lg">
+              
+              {/* Sub-Header & Period Selector */}
+              <section class="flex flex-col gap-space-md pt-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex flex-col">
+                    <span class="font-label-md text-label-md text-secondary uppercase tracking-wider font-semibold">Ibodat hisobi</span>
+                    <h2 class="font-headline-md text-headline-md text-on-surface">Namozlar daftari</h2>
+                  </div>
+                  <button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 shadow-sm">
+                    <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+                  </button>
+                </div>
+
+                <div class="relative bg-surface-container-high p-1 rounded-full flex items-center justify-between shadow-inner">
+                  {["hafta", "oy", "yil"].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPeriod(p)}
+                      class={`relative z-10 flex-1 py-2 text-center rounded-full font-label-md text-label-md transition-all duration-300 capitalize ${
+                        period === p
+                          ? "font-semibold text-on-primary bg-primary shadow-sm"
+                          : "font-medium text-on-surface-variant hover:text-on-surface"
+                      }`}
+                    >
+                      {p === 'hafta' ? 'Hafta' : p === 'oy' ? 'Oy' : 'Yil'}
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Weekday Date Strip */}
+              <section class="flex flex-col gap-space-xs">
+                <div class="flex items-center justify-between text-on-surface-variant px-1 mb-1">
+                  <span class="font-label-md text-label-md font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-secondary text-[16px]">event_repeat</span>
+                    28 Sentabr – 4 Oktyabr
+                  </span>
+                  <div class="flex items-center gap-1">
+                    <button class="w-7 h-7 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface active:scale-95">
+                      <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                    </button>
+                    <button class="w-7 h-7 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface active:scale-95">
+                      <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-1.5 bg-surface-container-lowest p-2 rounded-2xl shadow-sm">
+                  {[
+                    { day: "Du", date: "28" },
+                    { day: "Se", date: "29" },
+                    { day: "Cho", date: "30" },
+                    { day: "Pay", date: "1" },
+                    { day: "Ju", date: "2", special: true },
+                    { day: "Sha", date: "3" },
+                    { day: "Bugun", date: "4", today: true }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      class={`flex flex-col items-center py-2 px-1 rounded-xl transition-all ${
+                        item.today
+                          ? "bg-primary text-on-primary shadow-sm scale-105"
+                          : item.special
+                          ? "bg-primary-fixed/30 hover:bg-primary-fixed/50"
+                          : "hover:bg-surface-container"
+                      }`}
+                    >
+                      <span class={`font-label-sm text-label-sm ${item.today ? 'text-on-primary/80 font-bold' : item.special ? 'text-secondary font-semibold' : 'text-on-surface-variant'}`}>{item.day}</span>
+                      <span class={`font-title-md text-title-md mt-0.5 ${item.today ? 'text-on-primary font-bold' : item.special ? 'text-secondary font-bold' : 'text-on-surface'}`}>{item.date}</span>
+                      <span class={`w-1.5 h-1.5 rounded-full mt-1 ${item.today ? 'bg-secondary-container' : 'bg-secondary'}`}></span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Weekly Prayer Matrix */}
+              <section class="bg-surface-container-lowest rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-secondary-fixed/50 flex items-center justify-center text-secondary">
+                      <span class="material-symbols-outlined text-[18px]">verified</span>
+                    </div>
+                    <span class="font-title-md text-title-md text-on-surface">Haftalik belgilash</span>
+                  </div>
+                  <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded-full">Har bir katakka bosing</span>
+                </div>
+
+                <div class="grid grid-cols-[80px_repeat(7,1fr)] items-center text-center pt-2">
+                  <div class="text-left pl-1 font-label-sm text-label-sm text-on-surface-variant">Namoz</div>
+                  <div class="font-label-sm text-label-sm text-on-surface-variant">Du</div>
+                  <div class="font-label-sm text-label-sm text-on-surface-variant">Se</div>
+                  <div class="font-label-sm text-label-sm text-on-surface-variant">Cho</div>
+                  <div class="font-label-sm text-label-sm text-on-surface-variant">Pay</div>
+                  <div class="font-label-sm text-label-sm text-secondary font-bold">Ju</div>
+                  <div class="font-label-sm text-label-sm text-on-surface-variant">Sha</div>
+                  <div class="font-label-sm text-label-sm text-primary font-bold">Ya</div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  {prayers.map((prayer, rIdx) => (
+                    <div key={prayer.name} class="grid grid-cols-[80px_repeat(7,1fr)] items-center py-1 rounded-xl hover:bg-surface-container-low transition-colors">
+                      <div class="flex items-center gap-1.5 pl-1">
+                        <span class={`w-2 h-2 rounded-full ${prayer.color}`}></span>
+                        <span class="font-body-md text-body-md text-on-surface font-medium truncate">{prayer.name}</span>
+                      </div>
+                      {matrix[rIdx].map((val, cIdx) => (
+                        <div key={cIdx}>{renderBubble(val, rIdx, cIdx)}</div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Quick Legend */}
+                <div class="flex items-center justify-center gap-4 pt-3 border-t border-surface-container mt-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-secondary"></span>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">O'qildi</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-error"></span>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">Qazo</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-surface-container-highest"></span>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">Kutilmoqda</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Progress and Chart Bento */}
+              <section class="flex flex-col gap-space-sm">
+                <div class="flex items-center justify-between px-1">
+                  <h3 class="font-headline-sm text-headline-sm text-on-surface">Haftalik natija</h3>
+                  <span class="font-label-md text-label-md text-secondary font-semibold">94% yakunlandi</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div class="sm:col-span-5 bg-surface-container-lowest rounded-3xl p-4 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
+                    <div class="relative w-28 h-28 flex items-center justify-center">
+                      <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle class="text-surface-container" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" stroke-width="9"></circle>
+                        <circle class="text-secondary" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" strokeDasharray="251.2" strokeDashoffset="15" strokeLinecap="round" strokeWidth="9"></circle>
+                      </svg>
+                      <div class="absolute flex flex-col items-center justify-center">
+                        <span class="font-headline-lg text-headline-lg font-bold text-on-surface leading-none">33</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">/ 35 namoz</span>
+                      </div>
+                    </div>
+                    <span class="font-label-md text-label-md text-on-surface font-medium mt-2">Bajarilish darajasi</span>
+                  </div>
+
+                  <div class="sm:col-span-7 bg-surface-container-lowest rounded-3xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between">
+                      <span class="font-label-md text-label-md text-on-surface-variant font-medium">Kunlik taqsimot</span>
+                      <span class="font-label-sm text-label-sm bg-secondary-fixed/50 text-secondary px-2 py-0.5 rounded-full font-semibold">5 / 5 to'liq kunlar</span>
+                    </div>
+                    <div class="flex items-end justify-between gap-1.5 h-16 pt-3 px-1">
+                      {["Du", "Se", "Cho", "Pay", "Ju", "Sha", "Ya"].map((d, i) => (
+                        <div key={d} class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                          <div class={`w-full rounded-t-md transition-all ${i === 6 ? 'bg-secondary-fixed h-[65%]' : 'bg-secondary h-full'}`}></div>
+                          <span class={`font-label-sm text-[10px] ${i === 4 ? 'text-secondary font-bold' : i === 6 ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>{d}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 bg-surface-container-low p-2 rounded-2xl">
+                      <div class="w-6 h-6 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container text-xs">🔥</div>
+                      <p class="font-label-sm text-label-sm text-on-surface font-medium truncate">
+                        Ajoyib! 6 kunlik uzluksiz jamoat va namoz silsilasi.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Qazo Settlement Card */}
+              <section class="bg-surface-container-lowest rounded-3xl p-5 shadow-sm flex flex-col gap-4 relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-error-container flex items-center justify-center text-error">
+                      <span class="material-symbols-outlined text-[20px]">history_edu</span>
+                    </div>
+                    <div>
+                      <h4 class="font-title-md text-title-md text-on-surface">Qazo namozlar</h4>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant">Qarzlarni o'z vaqtida ado eting</span>
+                    </div>
+                  </div>
+                  <span class="bg-error text-on-error font-label-md text-label-md font-bold px-2.5 py-1 rounded-full shadow-sm">
+                    {qazoPaid ? "0 ta" : "1 ta"}
+                  </span>
+                </div>
+
+                {!qazoPaid ? (
+                  <div class="bg-surface-container-low rounded-2xl p-3.5 flex items-center justify-between transition-all duration-300">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center text-error">
+                        <span class="material-symbols-outlined text-[22px]">timer_off</span>
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="font-title-md text-title-md text-on-surface">Shom namozi</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">Bugun · 4-oktyabr 2026</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setQazoPaid(true);
+                        playBeep(600, 0.08);
+                      }}
+                      class="flex items-center gap-1.5 bg-secondary hover:bg-primary text-on-secondary px-3.5 py-2 rounded-full font-label-md text-label-md font-semibold transition-all active:scale-95 shadow-sm"
+                    >
+                      <span class="material-symbols-outlined text-[16px]">done_all</span>
+                      <span>O'qidim</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div class="bg-primary-fixed/40 rounded-2xl p-3.5 flex items-center justify-center gap-2 text-secondary transition-all">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    <span class="font-title-md text-title-md font-semibold">Shom qazosi o'qildi! Barakallohu fik.</span>
+                  </div>
+                )}
+
+                <div class="flex items-center justify-between pt-1">
+                  <span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                    <span class="material-symbols-outlined text-secondary text-[16px]">info</span>
+                    Qazo namozlar daftarchasi
+                  </span>
+                  <button class="font-label-md text-label-md text-secondary font-bold hover:underline flex items-center gap-0.5">
+                    Batafsil hisob
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </section>
+
+              {/* Daily Quran Quote */}
+              <section class="bg-gradient-to-r from-primary-container to-primary text-on-primary rounded-3xl p-5 flex flex-col gap-2 relative shadow-md">
+                <div class="flex items-center justify-between text-on-primary/80">
+                  <span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Kunning oyati karimasi</span>
+                  <span class="material-symbols-outlined text-[20px] opacity-75">auto_stories</span>
+                </div>
+                <p class="font-body-md text-body-md text-on-primary italic font-serif leading-relaxed">
+                  «Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir».
+                </p>
+                <div class="flex items-center justify-between mt-1 text-on-primary-container">
+                  <span class="font-label-sm text-label-sm">«Ankavut» surasi, 45-oyat</span>
+                  <button class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-on-primary hover:bg-white/20 active:scale-90 transition-all">
+                    <span class="material-symbols-outlined text-[16px]">share</span>
+                  </button>
+                </div>
+              </section>
+
+            </div>
+          </main>
+          <AppBottomNav />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // SCREEN 3: QIBLA COMPASS & VIEW SWITCH
+    // ==========================================
+    function QiblaScreen() {
+      const navigate = useNavigate();
+      const [view, setView] = useState("compass");
+      const [rotation, setRotation] = useState(0);
+      const [isCalibrating, setIsCalibrating] = useState(false);
+
+      const calibrateCompass = () => {
+        setIsCalibrating(true);
+        setRotation(prev => prev + 360);
+        playBeep(500, 0.05);
+        setTimeout(() => {
+          setIsCalibrating(false);
+          setRotation(0);
+        }, 700);
+      };
+
+      return (
+        <div class="flex flex-col min-h-screen">
+          <AppHeader title="Qibla" />
+          <main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-28">
+            <div class="flex flex-col w-full max-w-[440px] mx-auto px-margin space-y-space-lg select-none pb-4">
+              
+              {/* Segmented Top Switcher */}
+              <div class="w-full flex items-center justify-between p-1 bg-surface-container rounded-full shadow-sm mt-2">
+                <button
+                  onClick={() => setView('compass')}
+                  class={`flex-1 py-2 rounded-full text-center transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                    view === 'compass'
+                      ? 'bg-surface-container-lowest text-primary shadow-sm font-semibold'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <span class="material-symbols-outlined text-[18px]">explore</span>
+                  <span class="font-title-md text-title-md">Qibla kompas</span>
+                </button>
+                <button
+                  onClick={() => setView('masjids')}
+                  class={`flex-1 py-2 rounded-full text-center transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                    view === 'masjids'
+                      ? 'bg-surface-container-lowest text-primary shadow-sm font-semibold'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <span class="material-symbols-outlined text-[18px]">mosque</span>
+                  <span class="font-title-md text-title-md">Yaqin masjidlar</span>
+                  <span class="w-2 h-2 rounded-full bg-secondary animate-pulse ml-0.5"></span>
+                </button>
+              </div>
+
+              {/* Location Badge */}
+              <div class="flex items-center justify-between px-space-md py-2.5 bg-surface-container-low rounded-xl">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-secondary-container/50 flex items-center justify-center text-secondary">
+                    <span class="material-symbols-outlined text-[16px]">my_location</span>
+                  </div>
+                  <div class="flex flex-col text-left">
+                    <span class="font-title-md text-title-md text-on-surface leading-tight">Toshkent, O‘zbekiston</span>
+                    <span class="font-label-sm text-label-sm text-secondary flex items-center gap-1">
+                      <span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                      Joylashuv aniqlandi (±2m)
+                    </span>
+                  </div>
+                </div>
+                <button class="px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-md text-label-md flex items-center gap-0.5 active:opacity-70 transition-opacity">
+                  <span>O‘zgartirish</span>
+                  <span class="material-symbols-outlined text-[14px]">unfold_more</span>
+                </button>
+              </div>
+
+              {/* VIEW 1: COMPASS */}
+              {view === 'compass' ? (
+                <div class="flex flex-col items-center w-full space-y-space-lg">
+                  {/* Compass Dial */}
+                  <div class="relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center my-1">
+                    <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-secondary-container/20 via-transparent to-primary-fixed/25 blur-xl"></div>
+                    
+                    <div class="absolute inset-0 rounded-full bg-surface-container-lowest shadow-[0_8px_32px_rgba(0,53,39,0.08)] flex items-center justify-center">
+                      <svg class="w-full h-full p-2" viewBox="0 0 300 300">
+                        <circle cx="150" cy="150" fill="none" r="140" stroke="#E3E2DF" strokeDasharray="1 8" strokeWidth="1.5"></circle>
+                        <circle cx="150" cy="150" fill="none" r="126" stroke="#E3E2DF" strokeWidth="0.5"></circle>
+                        <circle class="opacity-80" cx="150" cy="150" fill="none" r="132" stroke="#006C49" strokeDasharray="28 200" strokeDashoffset="-120" strokeLinecap="round" strokeWidth="2.5"></circle>
+                      </svg>
+                      <span class="absolute top-4 text-center font-title-md text-title-md text-primary font-bold">N</span>
+                      <span class="absolute right-5 text-center font-label-md text-label-md text-on-surface-variant font-semibold">E</span>
+                      <span class="absolute bottom-4 text-center font-label-md text-label-md text-on-surface-variant font-semibold">S</span>
+                      <span class="absolute left-5 text-center font-label-md text-label-md text-on-surface-variant font-semibold">W</span>
+                    </div>
+
+                    {/* Rotating Disc */}
+                    <div
+                      style={{ transform: `rotate(${rotation}deg)` }}
+                      class="relative w-56 h-56 rounded-full flex items-center justify-center transition-transform duration-700 ease-out"
+                    >
+                      <div class="w-48 h-48 rounded-full bg-surface-container-low shadow-inner flex items-center justify-center relative">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 200 200">
+                          <line stroke="#BFC9C3" strokeDasharray="3 3" strokeWidth="0.75" x1="100" x2="100" y1="20" y2="180"></line>
+                          <line stroke="#BFC9C3" strokeDasharray="3 3" strokeWidth="0.75" x1="20" x2="180" y1="100" y2="100"></line>
+                        </svg>
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-fixed shadow-md">
+                            <span class="material-symbols-outlined text-[16px]">mosque</span>
+                          </div>
+                          <span class="font-label-sm text-[9px] text-primary font-bold mt-0.5">KA'BA</span>
+                        </div>
+                        <div class="relative w-full h-full flex items-center justify-center pointer-events-none">
+                          <div class="absolute top-4 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[68px] border-b-primary drop-shadow-[0_2px_6px_rgba(0,53,39,0.3)]"></div>
+                          <div class="absolute bottom-4 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[68px] border-t-outline-variant opacity-75"></div>
+                          <div class="w-8 h-8 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center z-10">
+                            <div class="w-3.5 h-3.5 rounded-full bg-secondary ring-2 ring-primary-fixed"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-secondary text-on-secondary rounded-full shadow-md flex items-center gap-1.5 whitespace-nowrap">
+                      <span class="w-2 h-2 rounded-full bg-secondary-fixed animate-ping"></span>
+                      <span class="font-label-md text-label-md font-semibold">Qibla tomoni to‘g‘rilandi</span>
+                    </div>
+                  </div>
+
+                  {/* Degree & Distance */}
+                  <div class="flex flex-col items-center text-center space-y-1 pt-1">
+                    <div class="flex items-baseline justify-center gap-0.5 text-primary">
+                      <span class="font-display-lg-mobile text-display-lg-mobile font-bold tracking-tight">240°</span>
+                      <span class="font-headline-sm text-headline-sm text-secondary font-medium">SW</span>
+                    </div>
+                    <div class="font-title-md text-title-md text-on-surface">Makkai Mukarrama yo‘nalishi</div>
+                    <p class="font-body-md text-body-md text-on-surface-variant max-w-[280px]">
+                      Toshkent shahridan Ka’bagacha masofa: <strong class="text-on-surface">3,342 km</strong>
+                    </p>
+                  </div>
+
+                  {/* Calibrate button */}
+                  <div class="w-full flex flex-col items-center space-y-2 pt-2">
+                    <button
+                      onClick={calibrateCompass}
+                      class="w-full h-13 py-3 px-space-lg rounded-full bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                    >
+                      <span class={`material-symbols-outlined text-[20px] text-secondary ${isCalibrating ? 'animate-spin' : ''}`}>explore</span>
+                      <span class="font-title-md text-title-md">Kompasni qayta sozlash</span>
+                    </button>
+                    <span class="font-label-sm text-label-sm text-outline">Telefoningizni sakkiz (8) shaklida ohista aylantiring</span>
+                  </div>
+
+                  {/* Quick Nearby Mosques Bottom Drawer Peek */}
+                  <div class="w-full bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-space-sm mt-2">
+                    <div class="flex items-center justify-between pb-1">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary text-[20px]">near_me</span>
+                        <span class="font-title-md text-title-md text-on-surface">Yaqin atrofdagi masjidlar</span>
+                      </div>
+                      <button onClick={() => setView('masjids')} class="font-label-md text-label-md text-secondary font-semibold">Barchasi</button>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-xl">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center">
+                          <span class="material-symbols-outlined text-[20px]">mosque</span>
+                        </div>
+                        <div class="flex flex-col text-left">
+                          <span class="font-title-md text-title-md text-on-surface">Minor masjidi</span>
+                          <span class="font-label-sm text-label-sm text-on-surface-variant">650 m • 8 daqiqa piyoda</span>
+                        </div>
+                      </div>
+                      <button onClick={() => navigate('/masjidlar')} class="w-9 h-9 rounded-full bg-secondary-container/60 text-on-secondary-container flex items-center justify-center active:scale-95 transition-transform">
+                        <span class="material-symbols-outlined text-[18px]">directions</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* VIEW 2: COMPACT MOSQUES (Alternative Tab View) */
+                <div class="flex flex-col w-full space-y-space-md">
+                  <div class="w-full flex items-center px-space-md py-2.5 bg-surface-container-lowest rounded-full shadow-sm">
+                    <span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-2">search</span>
+                    <input class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="Masjid nomi bo‘yicha qidirish..." type="text" />
+                    <span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-pointer">tune</span>
+                  </div>
+
+                  <div onClick={() => navigate('/masjidlar')} class="relative w-full h-44 rounded-2xl overflow-hidden shadow-sm cursor-pointer">
+                    <div class="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAhSiT7N-2xyiN7EF2RvCRp0A9jVzOixSTU4L0_3xJhsIJBijZYGNxz6dQFthIK_TkEkuC1jwoeN7-6yoZsFESa0ILxfsmLcdcqZm78kkyP4fZ8yzO7QlKG45ZrH2ykLPf2PL954unHlFeWWR5GzLo-g8HTyPe3rQE8Pya1ltZeZ98loK_G-eSJp874QDQP5ZDTmLl_bgBNKGb8yKPL0HUHwfEuCPWo0u2-ecRcIeyCwFI7RKI_OqqdWg')" }}></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/70 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-primary">
+                      <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px] text-secondary-fixed">place</span>
+                        <span class="font-title-md text-title-md">Atrofingizda 14 ta masjid</span>
+                      </div>
+                      <span class="px-3 py-1 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md font-semibold shadow-sm">
+                        Kattalashtirish
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Mosque 1 */}
+                  <div class="w-full p-space-md bg-surface-container-lowest rounded-2xl shadow-sm space-y-space-sm">
+                    <div class="flex items-start justify-between">
+                      <div class="flex items-start gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0">
+                          <span class="material-symbols-outlined text-[24px]">mosque</span>
+                        </div>
+                        <div class="flex flex-col text-left">
+                          <span class="font-title-md text-title-md text-on-surface">Minor masjidi</span>
+                          <span class="font-body-md text-body-md text-on-surface-variant">Kichik halqa yo‘li, Toshkent</span>
+                          <div class="flex items-center gap-2 mt-1">
+                            <span class="font-label-sm text-label-sm text-secondary bg-primary-fixed/30 px-2 py-0.5 rounded-full font-semibold">650 metr</span>
+                            <span class="font-label-sm text-label-sm text-on-surface-variant">Piyoda 8 daq.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-xl">
+                      <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-secondary text-[16px]">schedule</span>
+                        <span class="font-body-md text-body-md text-on-surface">Xufton jamoati:</span>
+                        <strong class="font-title-md text-title-md text-primary">19:30</strong>
+                      </div>
+                      <span class="font-label-sm text-label-sm text-secondary font-semibold">Tahoratxona mavjud</span>
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                      <button onClick={() => navigate('/masjidlar')} class="flex-1 py-2.5 rounded-full bg-primary text-on-primary font-title-md text-title-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform">
+                        <span class="material-symbols-outlined text-[18px]">navigation</span>
+                        <span>Marshrut</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="pt-2">
+                    <button onClick={() => navigate('/masjidlar')} class="w-full py-3 rounded-2xl bg-surface-container-high text-primary font-title-md text-title-md flex items-center justify-center gap-2">
+                      <span>Barcha 14 ta masjidni xaritada ko'rish</span>
+                      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </main>
+          <AppBottomNav />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // SCREEN 4: DIGITAL TASBEH & KUNDALIK DUOLAR
+    // ==========================================
+    function TasbehScreen() {
+      const location = useLocation();
+      const [activeTab, setActiveTab] = useState(
+        location.search.includes('tab=duolar') ? 'duolar' : 'tasbeh'
+      );
+
+      const [count, setCount] = useState(17);
+      const [target, setTarget] = useState(33);
+      const [cycle, setCycle] = useState(1);
+      const [totalToday, setTotalToday] = useState(142);
+      const [vibrate, setVibrate] = useState(true);
+      const [sound, setSound] = useState(true);
+      const [showModal, setShowModal] = useState(false);
+      const [currentZikr, setCurrentZikr] = useState({
+        title: "Subhanalloh",
+        arabic: "سُبْحَانَ اللَّهِ",
+        meaning: "Alloh barcha ayb-nuqsonlardan pokdir"
+      });
+
+      const zikrPresets = [
+        { title: "Subhanalloh", arabic: "سُبْحَانَ اللَّهِ", meaning: "Alloh barcha ayb-nuqsonlardan pokdir", target: 33 },
+        { title: "Alhamdulillah", arabic: "الْحَمْدُ لِلَّهِ", meaning: "Barcha maqtovlar Allohgadir", target: 33 },
+        { title: "Allohu Akbar", arabic: "اللَّهُ أَكْبَرُ", meaning: "Alloh eng buyukdir", target: 33 },
+        { title: "Astag'firulloh", arabic: "أَسْتَغْفِرُ اللَّهَ", meaning: "Allohdan mag'firat so'rayman", target: 100 },
+        { title: "La ilaha illalloh", arabic: "لَا إِلَهَ إِلَّا اللَّهُ", meaning: "Allohdan o'zga iloh yo'q", target: 100 }
+      ];
+
+      const circumference = 2 * Math.PI * 102;
+      const progressOffset = circumference - (Math.min(count / target, 1) * circumference);
+
+      const handleIncrement = () => {
+        const next = count + 1;
+        setTotalToday(prev => prev + 1);
+        if (sound) playBeep(520, 0.03);
+
+        if (next >= target) {
+          playBeep(650, 0.08);
+          setCount(0);
+          setCycle(prev => prev + 1);
+        } else {
+          setCount(next);
+        }
+      };
+
+      const handleDecrement = () => {
+        if (count > 0) {
+          setCount(count - 1);
+          setTotalToday(prev => Math.max(0, prev - 1));
+          if (sound) playBeep(380, 0.02);
+        }
+      };
+
+      const handleReset = () => {
+        if (window.confirm("Sanagichni nolga qaytarishni xohlaysizmi?")) {
+          setCount(0);
+        }
+      };
+
+      const selectZikr = (preset) => {
+        setCurrentZikr(preset);
+        setTarget(preset.target);
+        setCount(0);
+      };
+
+      return (
+        <div class="flex flex-col min-h-screen">
+          <AppHeader title="Zikr Va Tasbeh" />
+          <main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-28">
+            <div class="flex flex-col w-full max-w-[440px] mx-auto px-margin space-y-space-md pt-2">
+              
+              {/* Segmented Mode Switcher */}
+              <div class="w-full p-1 bg-surface-container rounded-full flex items-center shadow-sm">
+                <button
+                  onClick={() => setActiveTab('tasbeh')}
+                  class={`flex-1 py-2 rounded-full text-center font-title-md text-title-md transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    activeTab === 'tasbeh'
+                      ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <span class="material-symbols-outlined text-[18px]">counter_3</span>
+                  <span>Raqamli Tasbeh</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('duolar')}
+                  class={`flex-1 py-2 rounded-full text-center font-title-md text-title-md transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    activeTab === 'duolar'
+                      ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <span class="material-symbols-outlined text-[18px]">menu_book</span>
+                  <span>Kundalik Duolar</span>
+                </button>
+              </div>
+
+              {/* SECTION 1: DIGITAL TASBEH */}
+              {activeTab === 'tasbeh' && (
+                <div class="flex flex-col w-full space-y-space-md">
+                  <div class="w-full bg-primary-container text-on-primary rounded-[28px] p-space-md shadow-lg relative overflow-hidden flex flex-col items-center">
+                    <div class="absolute -top-16 -right-16 w-52 h-52 bg-secondary-container/15 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-16 -left-16 w-52 h-52 bg-secondary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                    {/* Zikr Header & Controls */}
+                    <div class="w-full flex items-center justify-between mb-space-sm z-10">
+                      <button
+                        onClick={() => setShowModal(true)}
+                        class="flex items-center gap-2 bg-primary/60 hover:bg-primary/90 text-on-primary px-3.5 py-1.5 rounded-full transition-all active:scale-95 shadow-sm"
+                      >
+                        <span class="material-symbols-outlined text-secondary-fixed text-[18px]">auto_awesome</span>
+                        <span class="font-title-md text-title-md">{currentZikr.title}</span>
+                        <span class="material-symbols-outlined text-[18px] text-on-primary-container">expand_more</span>
+                      </button>
+                      <div class="flex items-center gap-1">
+                        <button
+                          onClick={() => setVibrate(!vibrate)}
+                          class={`w-9 h-9 rounded-full bg-primary/60 hover:bg-primary/90 flex items-center justify-center transition-colors ${vibrate ? 'text-secondary-fixed' : 'text-outline'}`}
+                          title="Tebranish"
+                        >
+                          <span class="material-symbols-outlined text-[18px]">vibration</span>
+                        </button>
+                        <button
+                          onClick={() => setSound(!sound)}
+                          class={`w-9 h-9 rounded-full bg-primary/60 hover:bg-primary/90 flex items-center justify-center transition-colors ${sound ? 'text-secondary-fixed' : 'text-outline'}`}
+                          title="Ovoz effekti"
+                        >
+                          <span class="material-symbols-outlined text-[18px]">volume_up</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Arabic Text */}
+                    <div class="text-center z-10 mb-2">
+                      <div class="text-[26px] leading-8 font-semibold tracking-wide text-secondary-fixed mb-0.5" dir="rtl">
+                        {currentZikr.arabic}
+                      </div>
+                      <p class="font-label-md text-label-md text-on-primary-container max-w-[260px] mx-auto line-clamp-1">
+                        {currentZikr.meaning}
+                      </p>
+                    </div>
+
+                    {/* Preset Chips */}
+                    <div class="w-full overflow-x-auto py-1 flex items-center gap-1.5 z-10 no-scrollbar mb-2">
+                      {zikrPresets.map((preset) => {
+                        const isSelected = preset.title === currentZikr.title;
+                        return (
+                          <button
+                            key={preset.title}
+                            onClick={() => selectZikr(preset)}
+                            class={`px-3 py-1 rounded-full text-label-md font-label-md whitespace-nowrap active:scale-95 transition-all ${
+                              isSelected
+                                ? 'bg-secondary text-on-secondary shadow-sm'
+                                : 'bg-primary/70 text-on-primary hover:bg-primary'
+                            }`}
+                          >
+                            {preset.title}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Big Circular Counter Dial */}
+                    <div
+                      onClick={handleIncrement}
+                      class="relative w-64 h-64 my-2 flex items-center justify-center select-none cursor-pointer group active:scale-[0.98] transition-transform duration-100"
+                    >
+                      <svg class="w-full h-full transform -rotate-90" viewBox="0 0 240 240">
+                        <circle cx="120" cy="120" fill="none" opacity="0.6" r="102" stroke="#003527" strokeWidth="10"></circle>
+                        <circle
+                          cx="120"
+                          cy="120"
+                          fill="none"
+                          r="102"
+                          stroke="#4edea3"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={progressOffset}
+                          strokeLinecap="round"
+                          strokeWidth="10"
+                          class="transition-all duration-150"
+                        ></circle>
+                      </svg>
+                      <div class="absolute inset-5 rounded-full bg-gradient-to-b from-primary/95 to-primary-container flex flex-col items-center justify-center text-center shadow-inner overflow-hidden">
+                        <span class="font-counter-xl text-counter-xl text-secondary-fixed leading-none tracking-tight">{count}</span>
+                        <span class="font-title-md text-title-md text-on-primary-container mt-1">/ {target}</span>
+                        <div class="mt-2 flex items-center gap-1.5 text-on-primary-container">
+                          <span class="material-symbols-outlined text-[18px]">touch_app</span>
+                          <span class="font-label-sm text-label-sm uppercase tracking-wider">Sanash uchun teging</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Controls */}
+                    <div class="w-full mt-2 pt-2 bg-primary/40 rounded-2xl p-space-sm flex items-center justify-between z-10">
+                      <button
+                        onClick={handleDecrement}
+                        class="flex flex-col items-center justify-center w-16 py-1 rounded-xl text-on-primary-container hover:text-on-primary active:bg-primary/50 transition-colors"
+                        title="Bitta orqaga"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">undo</span>
+                        <span class="font-label-sm text-label-sm mt-0.5">Orqaga</span>
+                      </button>
+                      <div class="flex flex-col items-center text-center">
+                        <div class="flex items-center gap-1.5 text-on-primary">
+                          <span class="font-headline-sm text-headline-sm text-secondary-fixed">
+                            {target - count === 0 ? "Davra yakunlandi!" : `${target - count} ta qoldi`}
+                          </span>
+                        </div>
+                        <span class="font-label-sm text-label-sm text-on-primary-container">
+                          {cycle}-davra • {target} talik marra
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleReset}
+                        class="flex flex-col items-center justify-center w-16 py-1 rounded-xl text-on-primary-container hover:text-on-primary active:bg-primary/50 transition-colors"
+                        title="Nolga tushirish"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">refresh</span>
+                        <span class="font-label-sm text-label-sm mt-0.5">Qaytarish</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats Bento */}
+                  <div class="grid grid-cols-3 gap-space-sm w-full">
+                    <div class="bg-surface-container-lowest p-3 rounded-2xl flex flex-col items-center text-center shadow-sm">
+                      <span class="material-symbols-outlined text-secondary text-[20px] mb-1">checklist</span>
+                      <span class="font-title-md text-title-md text-on-surface">{totalToday}</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant">Jami zikr</span>
+                    </div>
+                    <div class="bg-surface-container-lowest p-3 rounded-2xl flex flex-col items-center text-center shadow-sm">
+                      <span class="material-symbols-outlined text-secondary text-[20px] mb-1">replay</span>
+                      <span class="font-title-md text-title-md text-on-surface">{cycle - 1}</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant">To'liq davra</span>
+                    </div>
+                    <div class="bg-surface-container-lowest p-3 rounded-2xl flex flex-col items-center text-center shadow-sm">
+                      <span class="material-symbols-outlined text-secondary text-[20px] mb-1">local_fire_department</span>
+                      <span class="font-title-md text-title-md text-on-surface">7 kun</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant">Davomiylik</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SECTION 2: KUNDALIK DUOLAR */}
+              {activeTab === 'duolar' && (
+                <div class="flex flex-col w-full space-y-space-md">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h2 class="font-headline-sm text-headline-sm text-on-surface">Tavsiya etilgan duolar</h2>
+                      <p class="font-label-md text-label-md text-on-surface-variant">Qur'on va sunnatdagi muhim zikrlar</p>
+                    </div>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <span class="px-3.5 py-1.5 rounded-full bg-secondary text-on-secondary font-label-md text-label-md whitespace-nowrap shadow-sm">Barchasi</span>
+                    <span class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md whitespace-nowrap cursor-pointer">Tonggi & Tungi</span>
+                    <span class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md whitespace-nowrap cursor-pointer">Namozdan so'ng</span>
+                    <span class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md whitespace-nowrap cursor-pointer">Qiyinchilikda</span>
+                  </div>
+
+                  {/* Dua 1 */}
+                  <div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-3 relative overflow-hidden group">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+                          <span class="material-symbols-outlined text-[18px]">wb_twilight</span>
+                        </div>
+                        <div>
+                          <h3 class="font-title-md text-title-md text-on-surface">Ertalabki duo</h3>
+                          <span class="font-label-sm text-label-sm text-on-surface-variant">Tonggi zikr • Termiziy rivoyati</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <button onClick={() => playBeep(500, 0.15)} class="w-9 h-9 rounded-full bg-surface-container hover:bg-secondary hover:text-on-secondary flex items-center justify-center text-on-surface transition-colors">
+                          <span class="material-symbols-outlined text-[20px]">volume_up</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="text-right py-1">
+                      <p class="text-[22px] leading-9 font-medium text-on-surface tracking-wide" dir="rtl">
+                        اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ
+                      </p>
+                    </div>
+                    <div class="bg-surface-container-low p-2.5 rounded-xl">
+                      <p class="font-title-md text-title-md text-secondary leading-snug">
+                        Allohumma bika asbahna va bika amsayna va bika nahya va bika namutu va ilaykan-nushur.
+                      </p>
+                    </div>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                      «Allohim, Sening yordaming bilan tong ottirdik va Sening yordaming bilan kech kiritdik. Sening noming bilan tirilamiz va Sening xohishing bilan vafot etamiz. Qayta tirilish ham Faqat Sengadir.»
+                    </p>
+                    <div class="pt-1 flex items-center justify-between">
+                      <span class="font-label-sm text-label-sm text-outline">1 marta o'qiladi</span>
+                      <button
+                        onClick={() => {
+                          selectZikr({
+                            title: "Allohumma bika asbahna",
+                            arabic: "اللَّهُمَّ بِكَ أَصْبَحْنَا",
+                            meaning: "Tonggi baraka va omonlik duosi",
+                            target: 1
+                          });
+                          setActiveTab('tasbeh');
+                        }}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-fixed/50 hover:bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                        <span>Tasbehda sanash</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dua 2 */}
+                  <div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-3 relative overflow-hidden group">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+                          <span class="material-symbols-outlined text-[18px]">bedtime</span>
+                        </div>
+                        <div>
+                          <h3 class="font-title-md text-title-md text-on-surface">Uyqudan oldin</h3>
+                          <span class="font-label-sm text-label-sm text-on-surface-variant">Tungi zikr • Buxoriy rivoyati</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <button onClick={() => playBeep(450, 0.15)} class="w-9 h-9 rounded-full bg-surface-container hover:bg-secondary hover:text-on-secondary flex items-center justify-center text-on-surface transition-colors">
+                          <span class="material-symbols-outlined text-[20px]">volume_up</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="text-right py-1">
+                      <p class="text-[22px] leading-9 font-medium text-on-surface tracking-wide" dir="rtl">
+                        بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا
+                      </p>
+                    </div>
+                    <div class="bg-surface-container-low p-2.5 rounded-xl">
+                      <p class="font-title-md text-title-md text-secondary leading-snug">
+                        Bismika Allohumma amutu va ahya.
+                      </p>
+                    </div>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                      «Yo Alloh, Sening isming bilan vafot etaman (uxlayman) va Sening isming ila qayta tirilaman.»
+                    </p>
+                    <div class="pt-1 flex items-center justify-between">
+                      <span class="font-label-sm text-label-sm text-outline">Har kecha o'qiladi</span>
+                      <button
+                        onClick={() => {
+                          selectZikr({
+                            title: "Bismika Allohumma",
+                            arabic: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
+                            meaning: "Uyqudan oldingi duo",
+                            target: 1
+                          });
+                          setActiveTab('tasbeh');
+                        }}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-fixed/50 hover:bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                        <span>Tasbehda sanash</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dua 3 */}
+                  <div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-3 relative overflow-hidden group">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+                          <span class="material-symbols-outlined text-[18px]">school</span>
+                        </div>
+                        <div>
+                          <h3 class="font-title-md text-title-md text-on-surface">Ilm so'rash duosi</h3>
+                          <span class="font-label-sm text-label-sm text-on-surface-variant">Toha surasi, 114-oyat</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <button onClick={() => playBeep(550, 0.15)} class="w-9 h-9 rounded-full bg-surface-container hover:bg-secondary hover:text-on-secondary flex items-center justify-center text-on-surface transition-colors">
+                          <span class="material-symbols-outlined text-[20px]">volume_up</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="text-right py-1">
+                      <p class="text-[22px] leading-9 font-medium text-on-surface tracking-wide" dir="rtl">
+                        رَبِّ زِدْنِي عِلْمًا
+                      </p>
+                    </div>
+                    <div class="bg-surface-container-low p-2.5 rounded-xl">
+                      <p class="font-title-md text-title-md text-secondary leading-snug">
+                        Robbi zidni ilma.
+                      </p>
+                    </div>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                      «Robbim, mening ilmimni yanada ziyoda qilgin!»
+                    </p>
+                    <div class="pt-1 flex items-center justify-between">
+                      <span class="font-label-sm text-label-sm text-outline">Dars va mutolaa oldidan</span>
+                      <button
+                        onClick={() => {
+                          selectZikr({
+                            title: "Robbi zidni ilma",
+                            arabic: "رَبِّ زِدْنِي عِلْمًا",
+                            meaning: "Ilmni ziyoda qilish zikri",
+                            target: 33
+                          });
+                          setActiveTab('tasbeh');
+                        }}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-fixed/50 hover:bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                        <span>Tasbehda sanash</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Zikr Picker Modal Sheet */}
+              {showModal && (
+                <div
+                  onClick={() => setShowModal(false)}
+                  class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex items-end justify-center transition-opacity"
+                >
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    class="w-full max-w-[440px] bg-surface rounded-t-[28px] p-space-lg shadow-2xl flex flex-col space-y-space-md"
+                  >
+                    <div class="w-12 h-1.5 rounded-full bg-outline-variant mx-auto mb-1"></div>
+                    <div class="flex items-center justify-between">
+                      <h3 class="font-headline-sm text-headline-sm text-on-surface">Zikr turini tanlang</h3>
+                      <button onClick={() => setShowModal(false)} class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+                    <div class="space-y-2 max-h-[530px] overflow-y-auto no-scrollbar">
+                      {zikrPresets.map((p) => (
+                        <div
+                          key={p.title}
+                          onClick={() => {
+                            selectZikr(p);
+                            setShowModal(false);
+                          }}
+                          class="p-3 rounded-2xl bg-surface-container hover:bg-secondary-container/40 flex items-center justify-between cursor-pointer"
+                        >
+                          <div>
+                            <h4 class="font-title-md text-title-md text-on-surface">{p.title}</h4>
+                            <p class="font-label-sm text-label-sm text-on-surface-variant">{p.target} marotaba • {p.meaning}</p>
+                          </div>
+                          <span class="text-secondary font-title-md text-title-md" dir="rtl">{p.arabic}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </main>
+          <AppBottomNav />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // SCREEN 5: YAQIN MASJIDLAR (MOSQUES & LIVE MAP)
+    // ==========================================
+    function NearbyMosquesScreen() {
+      const [filterOpen, setFilterOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [geofenceActive, setGeofenceActive] = useState(true);
+      const [bookmarks, setBookmarks] = useState({ 1: true, 2: false, 3: false });
+
+      const toggleBookmark = (id) => {
+        setBookmarks(prev => ({ ...prev, [id]: !prev[id] }));
+        playBeep(520, 0.04);
+      };
+
+      const mosques = [
+        {
+          id: 1,
+          name: "Minor masjidi",
+          address: "Labzak ko‘chasi, Yunusobod tumani",
+          dist: "650 m • 8 daq",
+          jam: "Peshin jamoati: 12:45",
+          open: "Ochiq • 24/7",
+          img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBSPjYWlyex8BEjRl1B-qQJmtcjz6IOjPDqfEKisBJAwwKJvJ_6dWnselLJOmvUGeQ6Gv_4BkrV7H1nb8CRc8rVKwt4duZJ5fw8C8HcWua1P1b6USroVIT8a9VoxH84ASA1AgeC45C67PZygdXpGU25XmdlHT_Z2Rz_QDZ4FmjNr8Tl5mffeKlY2haXyBhih_MGpYE_6O9kkswCJUc8IrV144lBkBXi0btqjS2blLwDATWNWt4V6ZthmA",
+          tags: ["Tahoratxona", "Katta jamoat zali (5 000+)", "Avtoturargoh"]
+        },
+        {
+          id: 2,
+          name: "Hazrati Imom (Hastimom) masjidi",
+          address: "Qorasaroy ko‘chasi, Olmazor tumani",
+          dist: "1.8 km • 5 daq",
+          jam: "Peshin jamoati: 12:45",
+          badge: "Tarixiy obida",
+          img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCwqDUrgSEgbRDfGP-pPR5G1NzZtWBY4KScP3fpZjDqlK3bFt9efYz3hhTI-MQDh_-azNbfWArTBE2hm8_lGPlru-zaApTHrt84YFvAyJip-DWCUc9nOe2RzIXplomUYh56akzUn2mGJOkei2s6OJHwbAZiWWr2D6p4rzXf7AuMG6f7NtqYWXuZDtAYrJ66O2iVJIccTs0JxcsEJv3d2n-KW_ocq0TklXVpjB-egXfymaRrq6XHxhEsxQ",
+          tags: ["Ayollar namozxonasi", "Tahoratxona"]
+        },
+        {
+          id: 3,
+          name: "Ko‘kcha (Shayx Zayniddin) masjidi",
+          address: "Uyg‘ur ko‘chasi, Shayxontohur tumani",
+          dist: "2.4 km • 7 daq",
+          jam: "Peshin jamoati: 12:50",
+          img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBWT5uvtEz1hilqufbno-lOc25UpbNMlzYz4ihaPkc84m5s68dfmADvZxwWEs3Vh0d5dd1ShtUcicWg9Tfe3qRllctoOGn-8V-A6U_G5hbyvpaFnSuRJahOzMc3jQZjx019OU0opaZjGaNdIoPsru9pkSasDtMvTwK53oi29BtevIXKN-uGluTeXlh3aV_EiS7qfTHq8VtYUj9ouhJAhKvcP1Qt2wG0tkQryqutJkRcxT2PDovUSmtZFw",
+          tags: ["Katta tahoratxona", "Avtoturargoh"]
+        }
+      ];
+
+      const filteredMosques = mosques.filter(m =>
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.address.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return (
+        <div class="flex flex-col min-h-screen">
+          <AppHeader title="Masjidlar" />
+          <main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-28">
+            <div class="flex flex-col w-full max-w-[440px] mx-auto px-margin pb-6 gap-space-lg">
+              
+              {/* Search & Filter Top Bar */}
+              <section class="flex flex-col gap-space-sm pt-2">
+                <div class="relative flex items-center w-full">
+                  <span class="material-symbols-outlined absolute left-3.5 text-secondary text-[20px] pointer-events-none">search</span>
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    class="w-full h-12 pl-11 pr-11 rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline text-body-md font-body-md shadow-sm focus:outline-none focus:bg-surface-container-low transition-all"
+                    placeholder="Masjid nomi yoki manzil bo‘yicha..."
+                    type="search"
+                  />
+                  <button
+                    onClick={() => setFilterOpen(true)}
+                    aria-label="Filtr sozlamalari"
+                    class="absolute right-2 w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-secondary hover:bg-secondary-fixed transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">tune</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-margin px-margin scrollbar-none">
+                  <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md whitespace-nowrap shadow-sm shrink-0">
+                    <span class="material-symbols-outlined text-[15px]">near_me</span>
+                    <span>Yaqin atrofda (&lt;5 km)</span>
+                  </button>
+                  <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md whitespace-nowrap shadow-sm shrink-0">
+                    <span class="material-symbols-outlined text-[15px] text-secondary">water_drop</span>
+                    <span>Tahoratxona</span>
+                  </button>
+                  <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md whitespace-nowrap shadow-sm shrink-0">
+                    <span class="material-symbols-outlined text-[15px] text-secondary">woman</span>
+                    <span>Ayollar xonasi</span>
+                  </button>
+                </div>
+              </section>
+
+              {/* Stylized Emerald Map Section */}
+              <section class="relative w-full rounded-2xl overflow-hidden shadow-sm bg-surface-container-high h-[250px] flex flex-col justify-between p-3 select-none">
+                <svg class="absolute inset-0 w-full h-full object-cover" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 250">
+                  <defs>
+                    <radialGradient cx="38%" cy="56%" id="mapGlow" r="65%">
+                      <stop offset="0%" stopColor="#ECFDF5" stopOpacity="0.9"></stop>
+                      <stop offset="60%" stopColor="#E2ECE9" stopOpacity="0.8"></stop>
+                      <stop offset="100%" stopColor="#D5E8DF" stopOpacity="0.95"></stop>
+                    </radialGradient>
+                  </defs>
+                  <rect fill="url(#mapGlow)" height="100%" width="100%"></rect>
+                  <path d="M-20,180 C80,160 140,210 260,140 C340,90 380,110 430,70" fill="none" opacity="0.6" stroke="#b0f0d6" strokeLinecap="round" strokeWidth="12"></path>
+                  <path d="M-10,40 L410,190" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="7"></path>
+                  <path d="M70,-20 L210,270" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="8"></path>
+                  <path d="M290,-10 L150,260" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="6"></path>
+                  <path d="M-20,120 Q180,80 420,160" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="5"></path>
+                  <path d="M30,55 C60,40 110,65 95,105 C80,125 40,115 30,55 Z" fill="#95d3ba" opacity="0.35"></path>
+                  <path d="M260,30 C310,25 340,60 320,95 C290,110 250,70 260,30 Z" fill="#95d3ba" opacity="0.3"></path>
+                  <path d="M190,150 C240,140 280,185 245,225 C215,235 180,195 190,150 Z" fill="#95d3ba" opacity="0.4"></path>
+                </svg>
+
+                {/* Map Pins */}
+                <div class="relative w-full h-full pointer-events-none">
+                  <div class="absolute left-[36%] top-[58%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-auto">
+                    <span class="absolute w-8 h-8 rounded-full bg-secondary opacity-25 animate-ping"></span>
+                    <span class="absolute w-5 h-5 rounded-full bg-secondary-fixed opacity-70"></span>
+                    <span class="relative w-3.5 h-3.5 rounded-full bg-primary shadow-md ring-2 ring-surface-container-lowest"></span>
+                  </div>
+
+                  <div class="absolute left-[54%] top-[34%] -translate-x-1/2 -translate-y-full flex flex-col items-center pointer-events-auto cursor-pointer group">
+                    <div class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm shadow-md mb-1 flex items-center gap-1 group-hover:scale-105 transition-transform">
+                      <span class="material-symbols-outlined text-[12px]">mosque</span>
+                      <span>Minor • 650 m</span>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg ring-2 ring-primary-fixed">
+                      <span class="material-symbols-outlined text-[18px]">mosque</span>
+                    </div>
+                    <div class="w-1.5 h-1.5 bg-primary rotate-45 -mt-1"></div>
+                  </div>
+
+                  <div class="absolute left-[18%] top-[24%] -translate-x-1/2 -translate-y-full flex flex-col items-center pointer-events-auto cursor-pointer opacity-90">
+                    <div class="w-7 h-7 rounded-full bg-surface-container-lowest text-secondary flex items-center justify-center shadow-md">
+                      <span class="material-symbols-outlined text-[15px]">mosque</span>
+                    </div>
+                  </div>
+
+                  <div class="absolute left-[80%] top-[42%] -translate-x-1/2 -translate-y-full flex flex-col items-center pointer-events-auto cursor-pointer opacity-90">
+                    <div class="w-7 h-7 rounded-full bg-surface-container-lowest text-secondary flex items-center justify-center shadow-md">
+                      <span class="material-symbols-outlined text-[15px]">mosque</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="relative z-10 flex items-center justify-between w-full">
+                  <div class="px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-on-surface font-label-md text-label-md shadow-sm flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                    <span>Jonli xarita rejimi</span>
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <Link to="/qibla" class="w-9 h-9 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md shadow-sm flex items-center justify-center text-on-surface hover:text-secondary active:scale-95 transition-all">
+                      <span class="material-symbols-outlined text-[18px]">explore</span>
+                    </Link>
+                    <button onClick={() => playBeep(520, 0.05)} class="w-9 h-9 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md shadow-sm flex items-center justify-center text-secondary active:scale-95 transition-all">
+                      <span class="material-symbols-outlined text-[18px]">my_location</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="relative z-10 w-full p-2.5 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md shadow-sm flex items-center justify-between">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed shrink-0">
+                      <span class="material-symbols-outlined text-[18px]">near_me</span>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <div class="font-title-md text-title-md text-on-surface truncate">Minor masjidi</div>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant">650 m • 8 daqiqa piyoda</span>
+                    </div>
+                  </div>
+                  <button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md flex items-center gap-1 shrink-0 active:scale-95 transition-transform">
+                    <span>Yo‘l</span>
+                    <span class="material-symbols-outlined text-[14px]">turn_right</span>
+                  </button>
+                </div>
+              </section>
+
+              {/* Geofence Auto-Silent Alert Banner */}
+              <section class="flex items-center justify-between p-3.5 rounded-2xl bg-primary-container text-on-primary shadow-sm">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-full bg-surface-container-lowest/15 flex items-center justify-center text-primary-fixed shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">notifications_off</span>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <div class="font-title-md text-title-md text-on-primary truncate">Avtomatik ovozsiz rejim</div>
+                    <p class="font-label-sm text-label-sm text-on-primary-container truncate">Masjid hududiga kirganda telefon ovozi o‘chiriladi</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setGeofenceActive(!geofenceActive)}
+                  class={`relative w-11 h-6 rounded-full transition-colors ${geofenceActive ? 'bg-secondary-container' : 'bg-surface-container-lowest/30'}`}
+                >
+                  <div class={`absolute left-1 top-1 w-4 h-4 rounded-full bg-on-primary transition-transform ${geofenceActive ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                </button>
+              </section>
+
+              {/* Mosque List Cards */}
+              <section class="flex flex-col gap-space-md">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-baseline gap-2">
+                    <h2 class="font-headline-sm text-headline-sm text-on-surface">Yaqin atrofdagi masjidlar</h2>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">{filteredMosques.length} ta topildi</span>
+                  </div>
+                  <button class="flex items-center gap-1 font-label-md text-label-md text-secondary hover:underline">
+                    <span>Saralash</span>
+                    <span class="material-symbols-outlined text-[14px]">swap_vert</span>
+                  </button>
+                </div>
+
+                {filteredMosques.map((item) => (
+                  <article key={item.id} class="flex flex-col p-4 rounded-2xl bg-surface-container-lowest shadow-sm gap-3">
+                    <div class="relative w-full h-36 rounded-xl overflow-hidden">
+                      <img src={item.img} alt={item.name} class="w-full h-full object-cover" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent"></div>
+                      <div class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-on-surface font-label-sm text-label-sm flex items-center gap-1">
+                        <span class="material-symbols-outlined text-secondary text-[14px]">directions_walk</span>
+                        <span>{item.dist}</span>
+                      </div>
+                      <button
+                        onClick={() => toggleBookmark(item.id)}
+                        class={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-surface-container-lowest/90 backdrop-blur-md flex items-center justify-center transition-colors ${bookmarks[item.id] ? 'text-secondary' : 'text-on-surface'}`}
+                      >
+                        <span class={`material-symbols-outlined text-[18px] ${bookmarks[item.id] ? 'fill' : ''}`}>
+                          {bookmarks[item.id] ? 'bookmark' : 'bookmark_border'}
+                        </span>
+                      </button>
+                      <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-on-primary">
+                        <span class="font-label-sm text-label-sm bg-primary-container/85 px-2 py-0.5 rounded backdrop-blur-sm">
+                          {item.open || "Tarixiy obida"}
+                        </span>
+                        <div class="flex items-center gap-1 text-label-sm font-label-sm bg-tertiary-container/90 text-on-tertiary-container px-2 py-0.5 rounded backdrop-blur-sm font-semibold">
+                          <span class="material-symbols-outlined text-[13px]">schedule</span>
+                          <span>{item.jam}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <h3 class="font-title-md text-title-md text-on-surface font-semibold">{item.name}</h3>
+                      <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 truncate">
+                        <span class="material-symbols-outlined text-[16px] text-outline shrink-0">location_on</span>
+                        <span>{item.address}</span>
+                      </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1.5">
+                      {item.tags.map(t => (
+                        <span key={t} class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+                          <span class="material-symbols-outlined text-[13px] text-secondary">check</span>
+                          <span>{t}</span>
+                        </span>
+                      ))}
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => alert(`${item.name} bo‘yicha marshrut boshlandi.`)}
+                        class="flex-1 h-11 rounded-xl bg-primary text-on-primary font-title-md text-title-md flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-all"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">directions</span>
+                        <span>Yo‘nalish (Navigatsiya)</span>
+                      </button>
+                      <button class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-on-surface hover:text-secondary active:scale-95 transition-all">
+                        <span class="material-symbols-outlined text-[20px]">share</span>
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </section>
+
+              {/* Filter Bottom Drawer Sheet */}
+              {filterOpen && (
+                <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end justify-center" onClick={() => setFilterOpen(false)}>
+                  <div onClick={e => e.stopPropagation()} class="w-full max-w-[440px] bg-surface-container-lowest rounded-t-3xl p-margin shadow-2xl flex flex-col gap-space-md">
+                    <div class="w-12 h-1 bg-surface-container-highest rounded-full mx-auto -mt-1"></div>
+                    <div class="flex items-center justify-between">
+                      <h3 class="font-headline-sm text-headline-sm text-on-surface">Masjidlarni filtrlash</h3>
+                      <button onClick={() => setFilterOpen(false)} class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+
+                    <div class="flex flex-col gap-space-sm">
+                      <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Qulayliklar</span>
+                      <div class="grid grid-cols-2 gap-2">
+                        {["Tahoratxona bor", "Ayollar xonasi", "Avtoturargoh", "Juma namozi", "Konditsioner", "Nogironlar uchun"].map((label, i) => (
+                          <label key={label} class="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container cursor-pointer select-none">
+                            <input defaultChecked={i % 2 === 0} class="w-4 h-4 accent-secondary rounded" type="checkbox" />
+                            <span class="font-body-md text-body-md text-on-surface text-sm">{label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-2">
+                      <button onClick={() => setFilterOpen(false)} class="flex-1 h-11 rounded-xl bg-surface-container text-on-surface font-title-md text-title-md active:scale-95 transition-all">
+                        Tozalash
+                      </button>
+                      <button onClick={() => setFilterOpen(false)} class="flex-1 h-11 rounded-xl bg-primary text-on-primary font-title-md text-title-md active:scale-95 transition-all shadow-sm">
+                        Qo‘llash
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </main>
+          <AppBottomNav />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // SCREEN 6: PROFIL & SOZLAMALAR (PROFILE & SETTINGS)
+    // ==========================================
+    function ProfileScreen() {
+      const [userName, setUserName] = useState("Abdulloh Mahmudov");
+      const [copied, setCopied] = useState(false);
+      const [darkMode, setDarkMode] = useState(false);
+      const [toggles, setToggles] = useState({
+        remindAzon: true,
+        afterPrayerAsk: true,
+        dailyZikrAlert: true
+      });
+
+      const handleToggle = (key) => {
+        setToggles(prev => ({ ...prev, [key]: !prev[key] }));
+        playBeep(480, 0.03);
+      };
+
+      const handleThemeToggle = () => {
+        const next = !darkMode;
+        setDarkMode(next);
+        const root = document.documentElement;
+        if (next) {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
+      };
+
+      const copyCard = () => {
+        setCopied(true);
+        playBeep(620, 0.05);
+        setTimeout(() => setCopied(false), 2200);
+      };
+
+      const editName = () => {
+        const entered = prompt("Ismingizni kiriting:", userName);
+        if (entered && entered.trim()) {
+          setUserName(entered.trim());
+        }
+      };
+
+      return (
+        <div class="flex flex-col min-h-screen">
+          <AppHeader title="Profil" />
+          <main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-28">
+            <div class="flex flex-col w-full max-w-[440px] mx-auto px-margin space-y-space-lg pb-10 pt-2">
+              
+              {/* User Identity Card */}
+              <div class="relative overflow-hidden rounded-[28px] bg-surface-container-lowest p-space-lg shadow-[0_4px_24px_-4px_rgba(6,78,59,0.06)]">
+                <div class="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none"></div>
+                <div class="relative flex items-start justify-between">
+                  <div class="flex items-center gap-space-md">
+                    <div class="relative flex-shrink-0">
+                      <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-primary-container to-secondary flex items-center justify-center text-on-primary font-headline-md text-headline-md shadow-[0_8px_20px_rgba(6,78,59,0.25)] ring-4 ring-primary-fixed/30">
+                        AM
+                      </div>
+                      <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+                        <span class="material-symbols-outlined text-secondary text-[16px] fill">verified</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <h2 class="font-headline-sm text-headline-sm text-on-surface truncate">{userName}</h2>
+                      <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-0.5">
+                        <span class="material-symbols-outlined text-[15px] text-secondary">calendar_today</span>
+                        <span>Halovat bilan 42 kundan beri birga</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={editName} aria-label="Profilni tahrirlash" class="h-8 px-3 rounded-full bg-surface-container-low hover:bg-surface-container active:scale-95 text-secondary font-label-md text-label-md transition-all flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[15px]">edit</span>
+                    <span>Tahrirlash</span>
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-space-sm mt-5 pt-4">
+                  <div class="rounded-2xl bg-surface-container-low/70 p-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-secondary-container/40 flex items-center justify-center text-secondary flex-shrink-0">
+                      <span class="material-symbols-outlined text-[20px] fill">task_alt</span>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-headline-sm text-headline-sm text-primary-container leading-none">312</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Ado etilgan namoz</span>
+                    </div>
+                  </div>
+                  <div class="rounded-2xl bg-surface-container-low/70 p-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-error-container/60 flex items-center justify-center text-error flex-shrink-0">
+                      <span class="material-symbols-outlined text-[20px]">history_toggle_off</span>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-headline-sm text-headline-sm text-error leading-none">4</span>
+                      <span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Qazo namozlari</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location & Calculation Method */}
+              <div class="flex flex-col space-y-2.5">
+                <div class="px-1 flex items-baseline justify-between">
+                  <h3 class="font-headline-sm text-headline-sm text-on-surface">Joylashuv va hisob-kitob</h3>
+                  <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Hanafiy</span>
+                </div>
+                <div class="rounded-[24px] bg-surface-container-lowest p-space-md shadow-[0_4px_20px_-2px_rgba(6,78,59,0.04)] space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-2xl bg-secondary-container/30 flex items-center justify-center text-secondary">
+                        <span class="material-symbols-outlined text-[22px]">location_on</span>
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="font-title-md text-title-md text-on-surface">Toshkent, O‘zbekiston</span>
+                        <span class="font-body-md text-body-md text-on-surface-variant">Toshkent shahri (GMT+5)</span>
+                      </div>
+                    </div>
+                    <button class="h-9 px-3.5 rounded-full bg-surface-container text-primary font-label-md text-label-md hover:bg-surface-container-high active:scale-95 transition-all">
+                      O‘zgartirish
+                    </button>
+                  </div>
+                  <button class="w-full h-11 rounded-xl bg-surface-container-low hover:bg-surface-container active:scale-[0.99] flex items-center justify-center gap-2 text-secondary font-label-md text-label-md transition-all">
+                    <span class="material-symbols-outlined text-[18px]">near_me</span>
+                    <span>GPS orqali avtomatik aniqlash</span>
+                  </button>
+                  <div class="p-3 rounded-2xl bg-surface-container-low/60 flex items-start gap-2.5">
+                    <span class="material-symbols-outlined text-secondary text-[18px] mt-0.5">verified_user</span>
+                    <div class="flex flex-col">
+                      <span class="font-label-md text-label-md text-on-surface font-semibold">Namoz vaqtlari manbasi</span>
+                      <span class="font-body-md text-body-md text-on-surface-variant">O‘zbekiston Musulmonlari Idorasi rasmiy taqvimi bo‘yicha</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notifications & Toggles */}
+              <div class="flex flex-col space-y-2.5">
+                <div class="px-1">
+                  <h3 class="font-headline-sm text-headline-sm text-on-surface">Eslatmalar va Bildirishnomalar</h3>
+                </div>
+                <div class="rounded-[24px] bg-surface-container-lowest p-space-md shadow-[0_4px_20px_-2px_rgba(6,78,59,0.04)] space-y-4">
+                  
+                  {/* Toggle 1 */}
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-2xl bg-secondary-container/30 flex items-center justify-center text-secondary flex-shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">notifications_active</span>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-title-md text-title-md text-on-surface truncate">Namoz vaqti azon eslatmasi</span>
+                        <span class="font-body-md text-body-md text-on-surface-variant truncate">5 vaqt azon ovozi va bildirishnoma</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('remindAzon')}
+                      class={`relative w-12 h-7 rounded-full transition-colors duration-200 flex-shrink-0 ${toggles.remindAzon ? 'bg-secondary' : 'bg-surface-container-highest'}`}
+                    >
+                      <span class={`absolute top-1 w-5 h-5 rounded-full bg-on-secondary shadow-md transition-all duration-200 ${toggles.remindAzon ? 'left-6' : 'left-1'}`}></span>
+                    </button>
+                  </div>
+
+                  {/* Toggle 2 */}
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-2xl bg-secondary-container/30 flex items-center justify-center text-secondary flex-shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">checklist_rtl</span>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-title-md text-title-md text-on-surface truncate">Namozdan keyin so‘rash</span>
+                        <span class="font-body-md text-body-md text-on-surface-variant truncate">O‘qidim yoki qazo deb hisobga olish</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('afterPrayerAsk')}
+                      class={`relative w-12 h-7 rounded-full transition-colors duration-200 flex-shrink-0 ${toggles.afterPrayerAsk ? 'bg-secondary' : 'bg-surface-container-highest'}`}
+                    >
+                      <span class={`absolute top-1 w-5 h-5 rounded-full bg-on-secondary shadow-md transition-all duration-200 ${toggles.afterPrayerAsk ? 'left-6' : 'left-1'}`}></span>
+                    </button>
+                  </div>
+
+                  {/* Toggle 3 */}
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-2xl bg-secondary-container/30 flex items-center justify-center text-secondary flex-shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">wb_twilight</span>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-title-md text-title-md text-on-surface truncate">Tonggi va kechki zikrlar</span>
+                        <span class="font-body-md text-body-md text-on-surface-variant truncate">07:00 va 19:30 da sokin eslatma</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('dailyZikrAlert')}
+                      class={`relative w-12 h-7 rounded-full transition-colors duration-200 flex-shrink-0 ${toggles.dailyZikrAlert ? 'bg-secondary' : 'bg-surface-container-highest'}`}
+                    >
+                      <span class={`absolute top-1 w-5 h-5 rounded-full bg-on-secondary shadow-md transition-all duration-200 ${toggles.dailyZikrAlert ? 'left-6' : 'left-1'}`}></span>
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* App Appearance & Personalization */}
+              <div class="flex flex-col space-y-2.5">
+                <div class="px-1">
+                  <h3 class="font-headline-sm text-headline-sm text-on-surface">Ilova ko‘rinishi va qulayliklar</h3>
+                </div>
+                <div class="rounded-[24px] bg-surface-container-lowest p-space-md shadow-[0_4px_20px_-2px_rgba(6,78,59,0.04)] space-y-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant flex-shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-title-md text-title-md text-on-surface truncate">Tungi rejim (Dark mode)</span>
+                        <span class="font-body-md text-body-md text-on-surface-variant truncate">Ko‘zni asrash uchun qorong‘u fon</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleThemeToggle}
+                      class={`relative w-12 h-7 rounded-full transition-colors duration-200 flex-shrink-0 ${darkMode ? 'bg-secondary' : 'bg-surface-container-highest'}`}
+                    >
+                      <span class={`absolute top-1 w-5 h-5 rounded-full bg-on-secondary shadow-md transition-all duration-200 ${darkMode ? 'left-6' : 'left-1'}`}></span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center justify-between pt-1">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[20px]">language</span>
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="font-title-md text-title-md text-on-surface">Ilova tili</span>
+                        <span class="font-body-md text-body-md text-on-surface-variant">Lotin yozuvida o‘zbekcha</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1 text-secondary font-label-md text-label-md">
+                      <span>O‘zbekcha</span>
+                      <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Donation / Support */}
+              <div class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-primary-container via-primary to-primary text-on-primary p-space-lg shadow-[0_12px_32px_rgba(6,78,59,0.22)]">
+                <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-secondary-fixed/20 blur-3xl pointer-events-none"></div>
+                <div class="relative flex flex-col space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-9 h-9 rounded-full bg-secondary-fixed-dim/20 flex items-center justify-center text-secondary-fixed">
+                        <span class="material-symbols-outlined text-[20px] fill">volunteer_activism</span>
+                      </div>
+                      <span class="font-headline-sm text-headline-sm text-on-primary">Xayriya va Ehson</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full bg-surface-container-lowest/15 backdrop-blur-md text-secondary-fixed font-label-sm text-label-sm uppercase tracking-wide">
+                      Xolisona
+                    </span>
+                  </div>
+                  <p class="font-body-md text-body-md text-on-primary-container leading-relaxed">
+                    «Halovat» ilovamiz rivojlanishi va ko‘proq insonlarga manfaatli bo‘lishi uchun, bizning kichik jamoamizni qo‘llab-quvvatlashingiz mumkin.
+                  </p>
+
+                  <div class="rounded-2xl bg-surface-container-lowest/10 backdrop-blur-md p-4 space-y-3 shadow-inner">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-surface-container-lowest/20 font-label-sm text-label-sm font-bold text-on-primary tracking-wider">UZCARD</span>
+                        <span class="px-2 py-0.5 rounded bg-surface-container-lowest/20 font-label-sm text-label-sm font-bold text-on-primary tracking-wider">HUMO</span>
+                      </div>
+                      <span class="font-label-sm text-label-sm text-on-primary-container">Halovat jamoasi (X.A.)</span>
+                    </div>
+                    <div class="flex items-center justify-between pt-1">
+                      <div class="flex flex-col">
+                        <span class="font-label-sm text-label-sm text-on-primary-container">Karta raqami</span>
+                        <span class="font-title-md text-title-md tracking-wider text-on-primary font-mono mt-0.5">8600 4912 3456 7890</span>
+                      </div>
+                      <button
+                        onClick={copyCard}
+                        class={`h-9 px-3.5 rounded-xl font-label-md text-label-md flex items-center gap-1.5 active:scale-95 transition-all shadow-sm ${
+                          copied ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-lowest text-primary hover:bg-surface-container'
+                        }`}
+                      >
+                        <span class="material-symbols-outlined text-[16px]">{copied ? 'done' : 'content_copy'}</span>
+                        <span>{copied ? 'Nusxa olindi!' : 'Nusxa olish'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="pt-2 text-center">
+                    <p class="font-label-md text-label-md italic text-primary-fixed-dim/90">
+                      «Ehsonning mukofoti faqat ehsondir»
+                    </p>
+                    <span class="font-label-sm text-label-sm text-on-primary-container/80 mt-0.5 block">
+                      (Rahmon surasi, 60-oyat)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Version Footnote */}
+              <div class="py-4 flex flex-col items-center justify-center text-center space-y-1">
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+                    <span class="material-symbols-outlined text-[11px] fill">spa</span>
+                  </div>
+                  <span class="font-label-md text-label-md text-on-surface-variant font-semibold">Halovat — Sokin va xolis hamroh</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-outline">Versiya: v2.4.1 (Yengil va reklamasiz)</span>
+              </div>
+
+            </div>
+          </main>
+          <AppBottomNav />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // MAIN APP WITH MEMORYROUTER
+    // ==========================================
+    function App() {
+      return (
+        <MemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route path="/" element={<HomeScreen />} />
+            <Route path="/namozlar" element={<PrayersTrackerScreen />} />
+            <Route path="/qibla" element={<QiblaScreen />} />
+            <Route path="/tasbeh" element={<TasbehScreen />} />
+            <Route path="/masjidlar" element={<NearbyMosquesScreen />} />
+            <Route path="/profil" element={<ProfileScreen />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    const root = createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>

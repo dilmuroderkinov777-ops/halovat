@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Halovat",
+    "slug": "halovat",
+    "scheme": "halovat-expo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/halovat-launcher.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "uz.halovat.expo"
+    },
+    "android": {
+      "package": "uz.halovat.expo",
+      "adaptiveIcon": {
+        "backgroundColor": "#004D2A",
+        "foregroundImage": "./assets/halovat-launcher.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/halovat-launcher.png"
+    },
+    "plugins": [
+      "./plugins/withShortCmakeObjectPaths",
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Halovat yaqin shahar uchun namoz vaqtlarini topish maqsadida joylashuvingizdan foydalanadi.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0D674F",
+          "defaultChannel": "prayer-checkin"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#064e3b",
+          "android": {
+            "drawable": {
+              "icon": "./assets/loading-backdrop.xml"
+            }
+          },
+          "dark": {
+            "backgroundColor": "#064e3b"
+          }
+        }
+      ],
+      "expo-font",
+      "./plugins/withLauncherArtworkInset"
+    ]
+  }
+}

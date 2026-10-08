@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Halovat — loading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#dddbd6;--g:#064e3b;--s:#10b981;--amber:#f59e0b;--cream:#faf9f5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0a120e}}
+:root[data-theme="dark"]{--page:#0a120e}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--page);display:grid;place-items:center;font-family:Plus Jakarta Sans,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.screen{position:relative;width:min(390px,100%);height:min(844px,calc(100% - 32px));min-height:620px;border-radius:38px;overflow:hidden;cursor:pointer;
+background:radial-gradient(70% 42% at 50% 40%,rgba(16,185,129,.28),transparent 72%),var(--g);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px}
+svg{width:176px;height:auto;display:block;overflow:visible}
+.arch{fill:none;stroke:var(--cream);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:0}
+.arch2{stroke:var(--s);stroke-width:1.4;opacity:.8}
+.hz{stroke:var(--cream);stroke-width:1.6;stroke-linecap:round;opacity:.5}
+.glow{fill:var(--amber);opacity:.2;transform-box:fill-box;transform-origin:center}
+.word{display:flex;font-weight:800;font-size:46px;line-height:1;letter-spacing:-.025em;color:var(--cream)}
+.l{display:inline-block}
+.beads{position:absolute;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;gap:16px}
+.beads:before{content:"";position:absolute;left:6px;right:6px;top:50%;height:1px;background:rgba(250,249,245,.16)}
+.b{position:relative;width:12px;height:12px;border-radius:50%;background:var(--s);border:1.5px solid var(--s)}
+/* animation: base styles above are the final state, .play runs the entrance */
+.play .arch{animation:draw 1.1s cubic-bezier(.5,0,.2,1) backwards}
+.play .arch2{animation:draw 1.1s cubic-bezier(.5,0,.2,1) .35s backwards}
+.play .hz{animation:fade .5s ease-out .2s backwards}
+.play .sun{animation:rise 1.5s cubic-bezier(.2,.7,.2,1) .55s backwards}
+.play .glow{animation:fade .6s ease-out 1.7s backwards,breathe 2.6s ease-in-out 2.3s infinite}
+.play .l{animation:up .65s cubic-bezier(.2,.7,.2,1) backwards}
+.play .b{animation:bead 3.2s ease-in-out infinite backwards}
+@keyframes draw{from{stroke-dashoffset:100}}
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{transform:translateY(104px)}}
+@keyframes breathe{0%,100%{transform:scale(.92)}50%{transform:scale(1.18)}}
+@keyframes up{from{opacity:0;transform:translateY(.55em)}}
+@keyframes bead{
+  0%{background:transparent;border-color:rgba(250,249,245,.35);transform:scale(1)}
+  8%{background:var(--s);border-color:var(--s);transform:scale(1.4)}
+  15%{transform:scale(1)}
+  78%{background:var(--s);border-color:var(--s)}
+  90%,100%{background:transparent;border-color:rgba(250,249,245,.35)}}
+@media (max-width:430px){.screen{width:100%;height:100%;border-radius:0}}
+@media (prefers-reduced-motion:reduce){.play *{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="screen play" id="s" role="img" aria-label="Halovat yuklanmoqda">
+  <svg viewBox="0 0 200 240" aria-hidden="true">
+    <defs><clipPath id="c"><rect x="-10" y="-10" width="220" height="200"/></clipPath></defs>
+    <path class="arch" pathLength="100" d="M20 224V112C20 72 60 46 100 10C140 46 180 72 180 112V224"/>
+    <path class="arch arch2" pathLength="100" d="M36 224V116C36 82 68 60 100 32C132 60 164 82 164 116V224"/>
+    <g clip-path="url(#c)"><g class="sun"><circle class="glow" cx="100" cy="104" r="34"/><circle cx="100" cy="104" r="16" fill="#f59e0b"/></g></g>
+    <line class="hz" x1="20" y1="190" x2="180" y2="190"/>
+  </svg>
+  <div class="word" aria-hidden="true">
+    <span class="l" style="animation-delay:1.0s">H</span><span class="l" style="animation-delay:1.07s">a</span><span class="l" style="animation-delay:1.14s">l</span><span class="l" style="animation-delay:1.21s">o</span><span class="l" style="animation-delay:1.28s">v</span><span class="l" style="animation-delay:1.35s">a</span><span class="l" style="animation-delay:1.42s">t</span>
+  </div>
+  <div class="beads" aria-hidden="true">
+    <i class="b" style="animation-delay:1.6s"></i><i class="b" style="animation-delay:1.92s"></i><i class="b" style="animation-delay:2.24s"></i><i class="b" style="animation-delay:2.56s"></i><i class="b" style="animation-delay:2.88s"></i>
+  </div>
+</main>
+<script>
+(function(){var s=document.getElementById("s");
+  s.addEventListener("click",function(){s.classList.remove("play");void s.offsetWidth;s.classList.add("play")});})();
+</script>
+</body>
+</html>

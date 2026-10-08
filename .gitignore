@@ -1,0 +1,40 @@
+# Local dependencies and generated outputs
+**/node_modules/
+**/.expo/
+**/.gradle/
+**/.kotlin/
+**/build/
+**/dist/
+**/web-build/
+**/.idea/
+**/.DS_Store
+**/*.log
+**/*.tsbuildinfo
+**/*.iml
+**/local.properties
+**/expo-env.d.ts
+
+# Expo generates these; modules/halovat-focus/android is maintained source.
+/halovat-expo/android/
+/halovat-expo/ios/
+
+# Credentials and signing material stay outside Git.
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
+**/*.jks
+**/*.keystore
+**/*.pem
+**/*.key
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/credentials.json
+**/*service-account*.json
+**/inst_user_settings.tmp
+
+# Installable binaries belong in private GitHub Releases.
+**/*.apk
+**/*.aab
+**/*.ipa

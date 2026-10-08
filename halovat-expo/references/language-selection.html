@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Halovat — tilni tanlash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--page:#dddbd6;--paper:#faf9f5;--g:#064e3b;--g2:#6ed3ac;--g3:#c7efdf;--tx:#3e4540;--amber:#f59e0b;--line:#e5e2d9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0a120e}}
+:root[data-theme="dark"]{--page:#0a120e}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--page);display:grid;place-items:center;font-family:Plus Jakarta Sans,Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--g)}
+.screen{width:min(390px,100%);height:min(844px,calc(100% - 32px));min-height:660px;background:var(--paper);border-radius:38px;overflow:hidden;display:flex;flex-direction:column;padding:22px 28px calc(26px + env(safe-area-inset-bottom,0px))}
+.logo{font:800 22px Plus Jakarta Sans,Onest,sans-serif;color:var(--g);flex:none}
+.art{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:14px;padding-bottom:22px}
+#star{width:40px;height:40px;flex:none;transition:transform .6s cubic-bezier(.3,.7,.2,1)}
+.hero{margin:0;font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.03em;color:var(--g)}
+h1{margin:0 0 6px;font-size:22px;line-height:1.2;font-weight:700;letter-spacing:-.02em}
+.d{margin:0 0 18px;font-size:14.5px;line-height:1.5;color:var(--tx)}
+.sw{transition:opacity .16s}
+.list{display:flex;flex-direction:column;gap:9px}
+.row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 16px 12px 20px;border:1.5px solid var(--line);border-radius:20px;background:transparent;text-align:left;cursor:pointer;font:inherit;color:var(--g);transition:background .25s,border-color .25s}
+.row b{display:block;font-size:18px;font-weight:700}
+.row small{display:block;margin-top:2px;font-size:12.5px;color:var(--tx);transition:color .25s}
+.row.on{background:var(--g);border-color:var(--g)}
+.row.on b{color:#fff}.row.on small{color:var(--g3)}
+.bead{width:26px;height:26px;flex:none;border-radius:50%;border:1.5px solid var(--g2);display:grid;place-items:center;transition:all .25s}
+.bead svg{width:14px;height:14px;fill:none;stroke:#1b1c1a;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .2s}
+.row.on .bead{background:var(--amber);border-color:var(--amber)}.row.on .bead svg{opacity:1}
+.cta{width:100%;height:56px;margin-top:18px;border:0;border-radius:28px;background:var(--g);color:#fff;font:600 16px Plus Jakarta Sans,Onest,sans-serif;cursor:pointer;transition:transform .15s,background .2s}
+.cta:hover{background:#0b6650}.cta:active{transform:scale(.98)}
+.row:focus-visible,.cta:focus-visible{outline:3px solid var(--g2);outline-offset:3px}
+@media (max-width:430px){.screen{width:100%;height:100%;border-radius:0}}
+@media (max-height:760px){.hero{font-size:32px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="screen">
+  <div class="logo">Halovat</div>
+  <section class="art">
+    <svg id="star" viewBox="0 0 40 40" aria-hidden="true"><rect x="9" y="9" width="22" height="22" fill="none" stroke="#064e3b" stroke-width="2"/><rect x="9" y="9" width="22" height="22" fill="none" stroke="#064e3b" stroke-width="2" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="3.5" fill="#f59e0b"/></svg>
+    <p class="hero sw" id="hero"></p>
+  </section>
+  <h1 class="sw" id="h1"></h1>
+  <p class="d sw" id="d"></p>
+  <div class="list" id="list" role="radiogroup" aria-label="Til"></div>
+  <button class="cta sw" id="cta" type="button"></button>
+</main>
+<script>
+(function(){
+  var D=[
+    {n:"O‘zbekcha",g:"Assalomu alaykum",h:"Tilni tanlang",d:"Ilovani o‘zingizga qulay tilda ishlating.",b:"Davom etish"},
+    {n:"Ўзбекча",g:"Ассалому алайкум",h:"Тилни танланг",d:"Иловани ўзингизга қулай тилда ишлатинг.",b:"Давом этиш"},
+    {n:"Русский",g:"Ассаламу алейкум",h:"Выберите язык",d:"Пользуйтесь приложением на удобном вам языке.",b:"Продолжить"},
+    {n:"English",g:"Peace be upon you",h:"Choose your language",d:"Use the app in the language that feels right to you.",b:"Continue"}
+  ],cur=0,rows=[],$=function(i){return document.getElementById(i)},
+  red=matchMedia("(prefers-reduced-motion: reduce)").matches,sw=document.querySelectorAll(".sw");
+  D.forEach(function(l,i){
+    var b=document.createElement("button");b.type="button";b.className="row";b.setAttribute("role","radio");
+    b.innerHTML='<span><b>'+l.n+'</b><small>'+l.g+'</small></span><i class="bead"><svg viewBox="0 0 24 24"><path d="M6.5 12.5l3.8 3.8L17.5 8.5"/></svg></i>';
+    b.onclick=function(){pick(i)};$("list").appendChild(b);rows.push(b)});
+  function fill(){var l=D[cur];$("hero").textContent=l.g;$("h1").textContent=l.h;$("d").textContent=l.d;$("cta").textContent=l.b;
+    document.documentElement.lang=["uz","uz-Cyrl","ru","en"][cur]}
+  function mark(){rows.forEach(function(r,i){r.classList.toggle("on",i==cur);r.setAttribute("aria-checked",i==cur)})}
+  function pick(i){if(i==cur)return;cur=i;mark();$("star").style.transform="rotate("+(i*45)+"deg)";
+    sw.forEach(function(e){e.style.opacity=0});
+    setTimeout(function(){fill();sw.forEach(function(e){e.style.opacity=1})},red?0:170)}
+  fill();mark();
+})();
+</script>
+</body>
+</html>

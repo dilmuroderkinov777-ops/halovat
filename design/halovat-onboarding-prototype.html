@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Halovat — tanishtiruv</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --green: #176b55;
+      --green-dark: #124d40;
+      --ink: #173c32;
+      --text: #65766e;
+      --muted: #8b9992;
+      --line: #e8eeea;
+      --wash: #f1f7f3;
+      --wash-2: #e6f1eb;
+      --gold: #c2a568;
+      --shadow: 0 24px 80px rgba(24, 58, 45, .14);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% 8%, #fff 0, #fbfcfa 48%, #f1f5f2 100%);
+      color: var(--ink);
+      font-family: Inter, "SF Pro Display", "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; }
+    .stage {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+    .phone {
+      width: min(402px, 100%);
+      height: min(860px, calc(100svh - 44px));
+      min-height: 760px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid rgba(29, 79, 60, .10);
+      border-radius: 34px;
+      box-shadow: var(--shadow);
+      position: relative;
+      isolation: isolate;
+    }
+    .status {
+      flex: 0 0 31px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 25px 0;
+      color: #344a40;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .02em;
+    }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .status-icons svg { display: block; }
+    .topbar {
+      flex: 0 0 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 25px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 9px; }
+    .brand-mark {
+      width: 30px; height: 30px; border-radius: 10px;
+      display: grid; place-items: center;
+      background: var(--wash-2); color: var(--green);
+    }
+    .brand-name { font-size: 19px; font-weight: 750; letter-spacing: -.04em; }
+    .skip {
+      border: 0; background: none; color: #7c8c83; cursor: pointer;
+      padding: 10px 0 10px 12px; font-size: 13px; font-weight: 600;
+    }
+    .skip:hover { color: var(--green); }
+    .content {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 4px 25px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .slide {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      animation: enter .28s ease both;
+    }
+    .slide.active { display: flex; }
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .art {
+      width: 100%;
+      height: 260px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 21px;
+    }
+    .art svg { max-width: 100%; max-height: 100%; overflow: visible; }
+    .copy { text-align: center; padding: 0 2px; }
+    .eyebrow {
+      margin: 0 0 8px; color: var(--green); font-size: 11px;
+      line-height: 1.2; font-weight: 750; text-transform: uppercase;
+      letter-spacing: .15em;
+    }
+    h1 {
+      margin: 0 auto 12px;
+      max-width: 340px;
+      color: var(--ink);
+      font-size: 29px;
+      line-height: 1.12;
+      letter-spacing: -.045em;
+      font-weight: 760;
+    }
+    .description {
+      margin: 0 auto;
+      max-width: 330px;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.55;
+      font-weight: 430;
+    }
+    .footer {
+      flex: 0 0 auto;
+      padding: 14px 25px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.96);
+    }
+    .progress-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin: 0 0 15px;
+    }
+    .progress-count {
+      position: absolute; right: 29px; color: #9aa69f;
+      font-size: 11px; font-weight: 650;
+    }
+    .dot {
+      width: 7px; height: 7px; border: 0; border-radius: 99px;
+      background: #dce5df; padding: 0; cursor: pointer;
+      transition: width .2s ease, background .2s ease;
+    }
+    .dot.active { width: 22px; background: var(--green); }
+    .actions { display: flex; gap: 10px; align-items: center; }
+    .back {
+      display: none; width: 52px; height: 54px; flex: 0 0 52px;
+      border: 1px solid var(--line); border-radius: 17px;
+      background: #fff; color: var(--green); cursor: pointer;
+    }
+    .back.visible { display: grid; place-items: center; }
+    .next {
+      height: 54px; flex: 1; border: 0; border-radius: 17px;
+      color: #fff; background: var(--green); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 16px; font-weight: 700;
+      box-shadow: 0 8px 20px rgba(23,107,85,.16);
+      transition: background .2s ease, transform .16s ease;
+    }
+    .next:hover { background: var(--green-dark); }
+    .next:active { transform: scale(.985); }
+    .gesture {
+      width: 104px; height: 4px; margin: 12px auto 0;
+      border-radius: 8px; background: #d9dfdb;
+    }
+    .toast {
+      position: absolute; left: 50%; bottom: 114px; z-index: 3;
+      transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+      white-space: nowrap; padding: 11px 16px; border-radius: 14px;
+      color: #fff; background: #173c32; font-size: 13px; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,.15); transition: .2s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    @media (max-height: 820px) {
+      .phone { min-height: 700px; }
+      .art { height: 225px; margin-bottom: 14px; }
+      h1 { font-size: 27px; }
+      .footer { padding-top: 9px; }
+    }
+    @media (max-width: 480px) {
+      .stage { padding: 0; display: block; }
+      .phone {
+        width: 100%; height: 100svh; min-height: 650px;
+        max-height: 100svh; border: 0; border-radius: 0; box-shadow: none;
+      }
+      .status { padding-left: 25px; padding-right: 25px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="phone" aria-label="Halovat ilovasi tanishtiruvi">
+      <div class="status">
+        <span>9:41</span>
+        <span class="status-icons" aria-hidden="true">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 4.5C4.7 1.2 11.3 1.2 15 4.5M3.7 7C6 5 10 5 12.3 7M6.5 9.5a2.3 2.3 0 0 1 3 0" stroke="#344A40" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="10.5" r=".9" fill="#344A40"/></svg>
+          <svg width="15" height="12" viewBox="0 0 15 12" fill="none"><path d="M1 10.5h2V8H1v2.5Zm4 0h2V5H5v5.5Zm4 0h2V2H9v8.5Zm4 0h2V.5h-2v10Z" fill="#344A40"/></svg>
+          <svg width="21" height="12" viewBox="0 0 21 12" fill="none"><rect x=".6" y=".6" width="17.2" height="10.8" rx="2.5" stroke="#344A40" stroke-width="1.2"/><rect x="2.5" y="2.5" width="12.6" height="7" rx="1.2" fill="#344A40"/><path d="M19 4v4" stroke="#344A40" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </span>
+      </div>
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="18" height="19" viewBox="0 0 18 19" fill="none">
+              <path d="M3 16V8.3L9 3l6 5.3V16M6.4 16V9.5h5.2V16M8 12h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="brand-name">Halovat</span>
+        </div>
+        <button class="skip" id="skip" type="button">O‘tkazib yuborish</button>
+      </header>
+
+      <section class="content" id="content">
+        <article class="slide active" data-slide="0" aria-label="1-sahifa: Namoz rejimi">
+          <div class="art">
+            <svg viewBox="0 0 340 260" role="img" aria-label="Namoz rejimida ovozi o‘chirilgan telefon">
+              <circle cx="170" cy="128" r="112" fill="#F1F7F3"/>
+              <circle cx="170" cy="128" r="92" fill="#E6F1EB"/>
+              <path d="M65 214c23-22 45-27 64-15 16 10 32 10 48-1 20-14 42-13 69 1 11 6 21 12 29 20H65v-5Z" fill="#D9EADF"/>
+              <rect x="119" y="24" width="102" height="188" rx="23" fill="#fff" stroke="#CFE0D5" stroke-width="2"/>
+              <rect x="127" y="36" width="86" height="158" rx="15" fill="#F8FBF9"/>
+              <rect x="154" y="29" width="32" height="4" rx="2" fill="#CFDAD3"/>
+              <circle cx="170" cy="99" r="35" fill="#E6F1EB"/>
+              <path d="M158 103h24l-3-4V92a9 9 0 0 0-18 0v7l-3 4Z" fill="none" stroke="#176B55" stroke-width="2.6" stroke-linejoin="round"/>
+              <path d="M167 108a3 3 0 0 0 6 0" stroke="#176B55" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="m151 82 38 38" stroke="#C2A568" stroke-width="3" stroke-linecap="round"/>
+              <rect x="137" y="145" width="66" height="31" rx="15.5" fill="#176B55"/>
+              <circle cx="187" cy="160.5" r="11.5" fill="#fff"/>
+              <text x="170" y="188" text-anchor="middle" fill="#61766B" font-family="Arial, sans-serif" font-size="9" font-weight="600">NAMOZ REJIMI</text>
+              <circle cx="91" cy="78" r="20" fill="#fff" stroke="#E5EEE8"/>
+              <path d="M85 78h12M91 72v12" stroke="#176B55" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="251" cy="74" r="15" fill="#fff" stroke="#E5EEE8"/>
+              <path d="M246 74h10M251 69v10" stroke="#C2A568" stroke-width="2" stroke-linecap="round"/>
+              <rect x="217" y="187" width="68" height="30" rx="15" fill="#fff" stroke="#E2ECE5"/>
+              <circle cx="233" cy="202" r="4" fill="#42A17C"/>
+              <text x="258" y="206" text-anchor="middle" fill="#52695E" font-family="Arial, sans-serif" font-size="9" font-weight="600">20 daqiqa</text>
+            </svg>
+          </div>
+          <div class="copy">
+            <p class="eyebrow">Halovat bilan har kun ibodatda</p>
+            <h1>Namoz vaqtida sizni hech kim bezovta qilmaydi</h1>
+            <p class="description">Qo‘ng‘iroq va bildirishnomalar vaqtincha sukutda. Ibodatda halovatli bo‘ling.</p>
+          </div>
+        </article>
+
+        <article class="slide" data-slide="1" aria-label="2-sahifa: Namoz tracker">
+          <div class="art">
+            <svg viewBox="0 0 340 260" role="img" aria-label="Namoz tracker va haftalik natijalar">
+              <circle cx="170" cy="130" r="112" fill="#F1F7F3"/>
+              <rect x="52" y="20" width="236" height="221" rx="23" fill="#fff" stroke="#E2ECE5" stroke-width="1.5"/>
+              <text x="72" y="48" fill="#173C32" font-family="Arial, sans-serif" font-size="13" font-weight="700">Bugungi namozlar</text>
+              <text x="266" y="48" text-anchor="end" fill="#176B55" font-family="Arial, sans-serif" font-size="12" font-weight="700">3 / 5</text>
+              <path d="M70 59h200" stroke="#EDF2EE"/>
+              <g font-family="Arial, sans-serif" font-size="10.5" fill="#53685E">
+                <text x="73" y="81">Bomdod</text><text x="73" y="108">Peshin</text><text x="73" y="135">Asr</text><text x="73" y="162">Shom</text><text x="73" y="189">Xufton</text>
+              </g>
+              <g>
+                <circle cx="254" cy="77" r="8" fill="#E4F2E9"/><path d="m250 77 2.5 2.5 5-5" stroke="#23805F" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="254" cy="104" r="8" fill="#E4F2E9"/><path d="m250 104 2.5 2.5 5-5" stroke="#23805F" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="254" cy="131" r="8" fill="#F8EDE5"/><path d="M251 128l6 6m0-6-6 6" stroke="#B96B4C" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="254" cy="158" r="8" fill="#E4F2E9"/><path d="m250 158 2.5 2.5 5-5" stroke="#23805F" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="254" cy="185" r="8" fill="#F2F4F1" stroke="#DDE6E0"/>
+              </g>
+              <path d="M70 199h200" stroke="#EDF2EE"/>
+              <text x="73" y="216" fill="#839188" font-family="Arial, sans-serif" font-size="8.5">Hafta</text>
+              <text x="117" y="216" fill="#839188" font-family="Arial, sans-serif" font-size="8.5">Oy</text>
+              <text x="145" y="216" fill="#839188" font-family="Arial, sans-serif" font-size="8.5">Yil</text>
+              <rect x="72" y="224" width="14" height="10" rx="3" fill="#A8D2B9"/>
+              <rect x="94" y="219" width="14" height="15" rx="3" fill="#77B993"/>
+              <rect x="116" y="214" width="14" height="20" rx="3" fill="#4D9E76"/>
+              <rect x="138" y="221" width="14" height="13" rx="3" fill="#D9EADF"/>
+              <rect x="160" y="209" width="14" height="25" rx="3" fill="#4D9E76"/>
+              <rect x="182" y="216" width="14" height="18" rx="3" fill="#77B993"/>
+              <rect x="204" y="211" width="14" height="23" rx="3" fill="#A8D2B9"/>
+            </svg>
+          </div>
+          <div class="copy">
+            <p class="eyebrow">Tartib va davomiylik</p>
+            <h1>Namozlaringizni kuzating</h1>
+            <p class="description">O‘qilgan namozlarni belgilang, qazo namozlarini qayd eting. Haftalik, oylik va yillik natijalarni ko‘ring.</p>
+          </div>
+        </article>
+
+        <article class="slide" data-slide="2" aria-label="3-sahifa: Tasbeh va duolar">
+          <div class="art">
+            <svg viewBox="0 0 340 260" role="img" aria-label="Tasbeh sanagichi va duolar">
+              <circle cx="170" cy="130" r="112" fill="#F1F7F3"/>
+              <rect x="46" y="23" width="248" height="215" rx="24" fill="#fff" stroke="#E2ECE5" stroke-width="1.5"/>
+              <text x="67" y="49" fill="#173C32" font-family="Arial, sans-serif" font-size="12" font-weight="700">Tasbeh</text>
+              <rect x="235" y="34" width="42" height="22" rx="11" fill="#F1F7F3"/>
+              <text x="256" y="49" text-anchor="middle" fill="#176B55" font-family="Arial, sans-serif" font-size="9" font-weight="700">33</text>
+              <circle cx="170" cy="124" r="65" fill="none" stroke="#E4EEE8" stroke-width="7"/>
+              <circle cx="170" cy="124" r="65" fill="none" stroke="#2A8A68" stroke-width="7" stroke-dasharray="324 408" stroke-linecap="round" transform="rotate(-90 170 124)"/>
+              <circle cx="170" cy="124" r="49" fill="#F8FBF9"/>
+              <text x="170" y="127" text-anchor="middle" fill="#176B55" font-family="Arial, sans-serif" font-size="35" font-weight="700">26</text>
+              <text x="170" y="146" text-anchor="middle" fill="#849189" font-family="Arial, sans-serif" font-size="11">/ 33</text>
+              <rect x="145" y="165" width="50" height="25" rx="12.5" fill="#176B55"/>
+              <text x="170" y="182" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="12" font-weight="700">+1</text>
+              <rect x="66" y="202" width="208" height="25" rx="10" fill="#F6F9F7"/>
+              <circle cx="83" cy="214.5" r="7" fill="#E3EFE7"/>
+              <path d="M80 215h6M83 212v6" stroke="#176B55" stroke-width="1.4" stroke-linecap="round"/>
+              <text x="98" y="218" fill="#53685E" font-family="Arial, sans-serif" font-size="10" font-weight="600">Duolar</text>
+              <path d="m253 211 4 4 4-4" stroke="#839188" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="copy">
+            <p class="eyebrow">Zikr uchun sokin lahza</p>
+            <h1>Tasbeh va duolar — bir joyda</h1>
+            <p class="description">Istagan zikringizni tanlang, qulay sanang va duolaringizni tez toping.</p>
+          </div>
+        </article>
+
+        <article class="slide" data-slide="3" aria-label="4-sahifa: Qibla va masjidlar">
+          <div class="art">
+            <svg viewBox="0 0 340 260" role="img" aria-label="Qibla kompassi va yaqin masjidlar xaritasi">
+              <rect x="25" y="20" width="290" height="220" rx="24" fill="#F1F7F3"/>
+              <path d="M34 76 105 48l46 26 58-34 97 27M27 130l78-34 45 31 68-34 94 43M40 201l72-37 52 24 71-50 72 37M86 23l18 217M163 20v221M235 21l-18 219" stroke="#DDEBE2" stroke-width="2" fill="none"/>
+              <path d="M45 178c39-14 48-43 87-36 35 6 44-22 77-20 25 2 41 23 88 7" stroke="#BFDAC9" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <circle cx="166" cy="123" r="66" fill="#fff" stroke="#DDEBE2" stroke-width="2"/>
+              <circle cx="166" cy="123" r="51" fill="#F8FBF9" stroke="#EEF3EF"/>
+              <text x="166" y="81" text-anchor="middle" fill="#839188" font-family="Arial, sans-serif" font-size="8" font-weight="700">QIBLA</text>
+              <path d="M166 93 180 138 166 130 152 138 166 93Z" fill="#176B55"/>
+              <path d="M166 153v12M123 123h-11M220 123h-11" stroke="#B7C9BE" stroke-width="2" stroke-linecap="round"/>
+              <path d="M69 90c0-9 7-16 16-16s16 7 16 16c0 13-16 29-16 29S69 103 69 90Z" fill="#fff" stroke="#73A98B" stroke-width="2"/>
+              <path d="M79 91h12M81 91v-5l4-3 4 3v5" stroke="#176B55" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M240 174c0-9 7-16 16-16s16 7 16 16c0 13-16 29-16 29s-16-16-16-29Z" fill="#fff" stroke="#73A98B" stroke-width="2"/>
+              <path d="M250 175h12M252 175v-5l4-3 4 3v5" stroke="#176B55" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="166" cy="123" r="4" fill="#C2A568"/>
+            </svg>
+          </div>
+          <div class="copy">
+            <p class="eyebrow">Yo‘lingizni toping</p>
+            <h1>Qibla va masjidlar doim yoningizda</h1>
+            <p class="description">Qiblani kompasdan, yaqin masjidlarni xaritadan toping. Masjid hududida telefon sukut rejimiga o‘tadi.</p>
+          </div>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <div class="progress-row" aria-label="Tanishtiruv sahifalari">
+          <button class="dot active" type="button" aria-label="1-sahifa" data-dot="0"></button>
+          <button class="dot" type="button" aria-label="2-sahifa" data-dot="1"></button>
+          <button class="dot" type="button" aria-label="3-sahifa" data-dot="2"></button>
+          <button class="dot" type="button" aria-label="4-sahifa" data-dot="3"></button>
+          <span class="progress-count" id="count">1 / 4</span>
+        </div>
+        <div class="actions">
+          <button class="back" id="back" type="button" aria-label="Oldingi sahifa">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4.5 7 10l5.5 5.5M7.5 10H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="next" id="next" type="button">
+            <span id="next-label">Keyingisi</span>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4 9h10M9 4l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="gesture" aria-hidden="true"></div>
+      </footer>
+      <div class="toast" id="toast" role="status">Halovatga xush kelibsiz</div>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+      var dots = Array.prototype.slice.call(document.querySelectorAll(".dot"));
+      var count = document.getElementById("count");
+      var next = document.getElementById("next");
+      var nextLabel = document.getElementById("next-label");
+      var back = document.getElementById("back");
+      var skip = document.getElementById("skip");
+      var toast = document.getElementById("toast");
+      var current = 0;
+      var toastTimer;
+
+      function show(index) {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        slides.forEach(function (slide, i) {
+          slide.classList.toggle("active", i === current);
+          slide.setAttribute("aria-hidden", i === current ? "false" : "true");
+        });
+        dots.forEach(function (dot, i) {
+          dot.classList.toggle("active", i === current);
+          dot.setAttribute("aria-current", i === current ? "step" : "false");
+        });
+        count.textContent = (current + 1) + " / " + slides.length;
+        nextLabel.textContent = current === slides.length - 1 ? "Boshlash" : "Keyingisi";
+        next.setAttribute("aria-label", current === slides.length - 1 ? "Halovatdan boshlash" : "Keyingi sahifa");
+        back.classList.toggle("visible", current > 0);
+        skip.hidden = current === slides.length - 1;
+      }
+      function finish() {
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () { toast.classList.remove("show"); }, 2200);
+      }
+
+      next.addEventListener("click", function () {
+        if (current < slides.length - 1) show(current + 1);
+        else finish();
+      });
+      back.addEventListener("click", function () { show(current - 1); });
+      skip.addEventListener("click", finish);
+      dots.forEach(function (dot) {
+        dot.addEventListener("click", function () { show(Number(dot.getAttribute("data-dot"))); });
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowRight") show(current + 1);
+        if (event.key === "ArrowLeft") show(current - 1);
+      });
+      var startX = null;
+      var content = document.getElementById("content");
+      content.addEventListener("touchstart", function (event) {
+        startX = event.changedTouches[0].clientX;
+      }, {passive:true});
+      content.addEventListener("touchend", function (event) {
+        if (startX === null) return;
+        var delta = event.changedTouches[0].clientX - startX;
+        if (Math.abs(delta) > 55) show(current + (delta < 0 ? 1 : -1));
+        startX = null;
+      }, {passive:true});
+      show(0);
+    })();
+  </script>
+</body>
+</html>
