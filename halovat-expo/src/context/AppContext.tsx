@@ -4,14 +4,17 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, Platform, Vibration } from 'react-native';
+import { Alert, AppState, Linking, Platform, Vibration } from 'react-native';
 import { CalendarMonth, CITIES, City, dateKey, fetchCalendarMonth, getPrayerTimes, nearestCity, PrayerId, PrayerStatus, prayerKey } from '../domain/prayers';
 import tashkentOctober2026 from '../data/toshkent-2026-10.json';
 import { ROUND_TARGET, ZIKR } from '../data/zikr';
 import { focusControl } from '../services/focusControl';
+import { foregroundLocation } from '../services/foregroundLocation';
+import { scheduleLabels, updatePrayerSchedule } from '../services/prayerScheduler';
 import { ensureAutomaticQuietAccess } from '../services/automaticQuiet';
+import { ensureReminderBatteryGuide } from '../services/reminderBattery';
 import { useLanguage } from './LanguageContext';
-import { CHECKIN_CHANNEL, REMINDER_CHANNEL, ensureReminderAlarmAccess, ensureReminderFlashAccess, ensureReminderPopupAccess, isPrayerReminder, prepareReminderChannels, type ReminderPlan } from '../services/reminders';
+import { REMINDER_CHANNEL, ensureReminderAlarmAccess, ensureReminderFlashAccess, ensureReminderPopupAccess, isPrayerReminder, iosReminderWarnings, notificationsAllowed, prepareReminderChannels, reminderAlertContent, type ReminderPlan } from '../services/reminders';
 
 const STORAGE_KEY = 'halovat.expo.state.v1';
 const CALENDAR_PREFIX = 'halovat.expo.calendar.v1:';
@@ -113,13 +116,22 @@ type ContextShape = {
 const AppContext = createContext<ContextShape | null>(null);
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    priority: Notifications.AndroidNotificationPriority.HIGH,
-  }),
+  handleNotification: async notification => {
+    const payload = notification.request.content.data;
+    if (Platform.OS === 'ios' && AppState.currentState === 'active' &&
+      (isPrayerReminder(notification.request) || payload?.halovatReminderPreview === true)) {
+      // Foreground feedback only. Locked-screen alerts are delivered by iOS,
+      // which does not run this JavaScript handler when the app is suspended.
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => undefined);
+    }
+    return {
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      priority: Notifications.AndroidNotificationPriority.HIGH,
+    };
+  },
 });
 
 export function AppProvider({ children }: React.PropsWithChildren) {
@@ -137,9 +149,17 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   const refreshReminders = useCallback(() => setReminderRevision(value => value + 1), []);
   const [now, setNow] = useState(new Date());
   const autoLocationStarted = useRef(false);
-  const notificationQueue = useRef<Promise<void>>(Promise.resolve());
   const mosqueQuietQueue = useRef<Promise<void>>(Promise.resolve());
   const previousRounds = useRef<number | null>(null);
+  const pendingSave = useRef<AppData | null>(null);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const persistData = useCallback(() => {
+    const snapshot = pendingSave.current;
+    if (!snapshot) return;
+    pendingSave.current = null;
+    saveQueue.current = saveQueue.current.catch(() => undefined).then(() => AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)));
+    void saveQueue.current.catch(() => undefined);
+  }, []);
   const notificationDay = dateKey(now);
   const city = CITIES.find(item => item.id === data.cityId) ?? CITIES[0];
 
@@ -163,16 +183,24 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    if (hydrated) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => undefined);
-  }, [data, hydrated]);
+    if (!hydrated) return;
+    pendingSave.current = data;
+    const timer = setTimeout(persistData, 300);
+    return () => clearTimeout(timer);
+  }, [data, hydrated, persistData]);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 15_000);
+    let timer: ReturnType<typeof setInterval> | undefined;
+    // Shared screens only need the calendar day. Second ticks belong to the countdown.
+    const updateDay = () => setNow(previous => dateKey(previous) === dateKey(new Date()) ? previous : new Date());
+    const start = () => { clearInterval(timer); updateDay(); timer = setInterval(updateDay, 60_000); };
+    if (AppState.currentState === 'active') start();
     const listener = AppState.addEventListener('change', state => {
-      if (state === 'active') { setNow(new Date()); refreshReminders(); }
+      if (state === 'active') { start(); refreshReminders(); }
+      else { clearInterval(timer); persistData(); }
     });
-    return () => { clearInterval(timer); listener.remove(); };
-  }, [refreshReminders]);
+    return () => { clearInterval(timer); listener.remove(); persistData(); };
+  }, [refreshReminders, persistData]);
 
   const loadCachedMonths = useCallback(async (selected: City) => {
     const today = new Date();
@@ -258,13 +286,13 @@ export function AppProvider({ children }: React.PropsWithChildren) {
       const permission = await Location.requestForegroundPermissionsAsync();
       setData(current => ({ ...current, locationAttempted: true }));
       if (permission.status !== 'granted') return notify('Joylashuv ruxsati kerak', 'Shaharni avtomatik tanlash uchun joylashuvga ruxsat bering.');
-      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const location = await foregroundLocation({ fresh: !options.automatic });
       const closest = nearestCity(location.coords.latitude, location.coords.longitude);
       if (!closest) return notify('Shahar aniqlanmadi', 'Avtomatik aniqlash hozircha O‘zbekiston shaharlari uchun ishlaydi. Shaharni qo‘lda tanlang.');
       applyDetectedCity(closest.id);
-    } catch {
+    } catch (error) {
       setData(current => ({ ...current, locationAttempted: true }));
-      notify('Joylashuv aniqlanmadi', 'Shaharni qo‘lda tanlab davom etishingiz mumkin.');
+      notify('Joylashuv aniqlanmadi', error instanceof Error ? error.message : 'Shaharni qo‘lda tanlab davom etishingiz mumkin.');
     }
   }, []);
 
@@ -283,13 +311,17 @@ export function AppProvider({ children }: React.PropsWithChildren) {
       await prepareReminderChannels();
       const current = await Notifications.getPermissionsAsync();
       const permission = current.granted ? current : await Notifications.requestPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Bildirishnoma yoqilmadi', 'Eslatmalarni olish uchun bildirishnoma ruxsati kerak.');
+      if (!notificationsAllowed(permission)) {
+        Alert.alert(t('Bildirishnoma yoqilmadi'), t('Eslatmalarni olish uchun bildirishnoma ruxsati kerak.'), [
+          { text: t('Hozir emas'), style: 'cancel' },
+          { text: t('Sozlamalarni ochish'), onPress: () => { void Linking.openSettings(); } },
+        ]);
         return false;
       }
       if (!await ensureReminderAlarmAccess()) return false;
       await ensureReminderPopupAccess();
       await ensureReminderFlashAccess(t);
+      await ensureReminderBatteryGuide(t);
       return true;
     } catch (error) {
       Alert.alert('Eslatma yoqilmadi', error instanceof Error ? error.message : 'Qayta urinib ko‘ring.');
@@ -320,10 +352,13 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     try {
       await Notifications.scheduleNotificationAsync({
         identifier: 'halovat-reminder-preview',
-        content: { title: t('Halovat eslatmasi'), body: t('Bildirishnomalar ishlayapti. Bu sinov eslatmasi.'), sound: 'default', priority: Notifications.AndroidNotificationPriority.HIGH, vibrate: [0, 10_000], data: { halovatReminderPreview: true, halovatPopupClose: t('Yopish'), halovatPopupVibration: t('Vibratsiya · {seconds} soniya').replace(/\{[^}]+\}/, '{seconds}'), halovatPopupFinished: t('Vibratsiya tugadi') } },
+        content: reminderAlertContent({ title: t('Halovat eslatmasi'), body: t('Bu sinov eslatmasi.'), data: { halovatReminderPreview: true, halovatPopupClose: t('Yopish'), halovatPopupVibration: t('Vibratsiya · {seconds} soniya').replace(/\{[^}]+\}/, '{seconds}'), halovatPopupFinished: t('Vibratsiya tugadi') } }),
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(Date.now() + 10_000), channelId: REMINDER_CHANNEL },
       });
-      Alert.alert(t('Eslatma rejalashtirildi'), t('10 soniyadan keyin bildirishnoma keladi. Ilovani yopib yoki ekranini qulflab ko‘rishingiz mumkin. Bezovta qilmang rejimi yoqilgan bo‘lsa, pop-up va ovoz cheklanadi.'));
+      const warnings = Platform.OS === 'ios' ? iosReminderWarnings(await Notifications.getPermissionsAsync()) : [];
+      Alert.alert(t('Eslatma rejalashtirildi'), [t(Platform.OS === 'ios'
+        ? '10 soniyadan keyin bildirishnoma keladi. iPhone’ni qulflab tekshiring. Vibratsiya va chiroq uchun Profil → Vibratsiya, chiroq va Focus qo‘llanmasidagi sozlamalarni yoqing.'
+        : '10 soniyadan keyin bildirishnoma keladi. Ilovani yopib yoki ekranini qulflab ko‘rishingiz mumkin. Bezovta qilmang rejimi yoqilgan bo‘lsa, pop-up va ovoz cheklanadi.'), ...warnings.map(t)].join('\n\n'));
       refreshReminders();
     } catch (error) {
       Alert.alert('Eslatma yaratilmagan', error instanceof Error ? error.message : 'Qayta urinib ko‘ring.');
@@ -389,9 +424,10 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   const setMosque = useCallback((name: string, latitude: number, longitude: number) => setData(current => ({ ...current, mosqueName: name, mosqueLatitude: latitude, mosqueLongitude: longitude })), []);
   const setPrayerAutoQuiet = useCallback(async (enabled: boolean) => {
     if (enabled && !await ensureAutomaticQuietAccess(true)) return;
+    if (enabled) await ensureReminderBatteryGuide(t);
     if (!enabled) focusControl?.setPrayerQuietWindows('[]');
     setData(current => ({ ...current, prayerAutoQuiet: enabled }));
-  }, []);
+  }, [t]);
   const setMosqueAutoQuiet = useCallback(async (enabled: boolean) => {
     if (enabled) {
       if (data.mosqueLatitude === undefined || data.mosqueLongitude === undefined) {
@@ -403,31 +439,21 @@ export function AppProvider({ children }: React.PropsWithChildren) {
       if (!await ensureAutomaticQuietAccess(false)) return;
       const foreground = await Location.requestForegroundPermissionsAsync();
       if (!foreground.granted || foreground.android?.accuracy === 'coarse') { Alert.alert('Aniq joylashuv kerak', 'Masjid hududini aniqlash uchun aniq joylashuv ruxsatini bering.'); return; }
-      const proceed = await new Promise<boolean>(resolve => Alert.alert('Masjid hududini aniqlash', 'Keyingi oynada joylashuvga “Har doim ruxsat berish”ni tanlang. Halovat faqat tanlangan masjidga kirish va undan chiqishni aniqlaydi.', [
+      const proceed = await new Promise<boolean>(resolve => Alert.alert('Masjid hududini aniqlash', 'Halovat tanlangan masjidga kirganda telefonni ovozsiz qilish va chiqqanda ovozni tiklash uchun, ilova yopiq yoki ishlatilmayotgan paytda ham joylashuvingizdan foydalanadi. Bu kuzatuv telefondagi Google Play xizmatlari orqali ishlaydi. Joylashuv reklama uchun ishlatilmaydi. Keyingi oynada “Har doim ruxsat berish”ni tanlang. Bu funksiyani Profil bo‘limida o‘chirishingiz mumkin.', [
         { text: 'Hozir emas', style: 'cancel', onPress: () => resolve(false) },
         { text: 'Davom etish', onPress: () => resolve(true) },
       ], { cancelable: true, onDismiss: () => resolve(false) }));
       if (!proceed) return;
       const background = await Location.requestBackgroundPermissionsAsync();
       if (!background.granted) return;
+      await ensureReminderBatteryGuide(t);
     }
-    try {
-      await focusControl?.setMosqueRegion(data.mosqueLatitude ?? 0, data.mosqueLongitude ?? 0, enabled);
-      setData(current => ({ ...current, mosqueAutoQuiet: enabled }));
-    } catch { Alert.alert('Masjid hududi ulanmagan', 'GPS va Google Play xizmatlarini tekshirib, qayta urinib ko‘ring.'); }
-  }, [data.mosqueLatitude, data.mosqueLongitude]);
+    // The serialized registration effect owns native updates. Persist intent even
+    // when Play services is temporarily unavailable so foreground recovery retries.
+    setData(current => ({ ...current, mosqueAutoQuiet: enabled }));
+  }, [data.mosqueLatitude, data.mosqueLongitude, t]);
   const timesFor = useCallback((day: Date) => getPrayerTimes(city, day, months), [city, months]);
 
-  useEffect(() => {
-    if (!hydrated || !focusControl) return;
-    const startDay = new Date(`${notificationDay}T00:00:00`);
-    const windows = data.prayerAutoQuiet ? Array.from({ length: 30 }, (_, offset) => {
-      const day = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + offset);
-      return timesFor(day).map(prayer => ({ start: prayer.at.getTime() + (data.prayerTimeReminderEnabled ? 10_000 : 0), end: prayer.at.getTime() + 25 * 60_000, leadInMs: data.prayerTimeReminderEnabled ? 10_000 : 0 }));
-    }).flat() : [];
-    try { focusControl.setPrayerQuietWindows(JSON.stringify(windows)); }
-    catch (error) { Alert.alert('Ovozsiz rejim jadvali saqlanmadi', error instanceof Error ? error.message : 'Qayta urinib ko‘ring.'); }
-  }, [hydrated, data.prayerAutoQuiet, data.prayerTimeReminderEnabled, timesFor, notificationDay, reminderRevision]);
 
   useEffect(() => {
     if (!hydrated || !focusControl) return;
@@ -437,9 +463,9 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     const enabled = data.mosqueAutoQuiet;
     mosqueQuietQueue.current = mosqueQuietQueue.current.catch(() => undefined).then(async () => {
       try { await native.setMosqueRegion(latitude, longitude, enabled); }
-      catch { setData(current => ({ ...current, mosqueAutoQuiet: false })); }
+      catch { /* Native diagnostics retains the error; retry on return instead of losing the user's setting. */ }
     });
-  }, [hydrated, data.mosqueAutoQuiet, data.mosqueLatitude, data.mosqueLongitude]);
+  }, [hydrated, data.mosqueAutoQuiet, data.mosqueLatitude, data.mosqueLongitude, reminderRevision]);
 
   useEffect(() => {
     if (!hydrated || Platform.OS === 'web') return;
@@ -473,66 +499,16 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   useEffect(() => {
     if (!hydrated || Platform.OS === 'web') return;
     let active = true;
-    // Serialise cancellation and scheduling so rapid setting changes cannot leave stale alarms.
-    notificationQueue.current = notificationQueue.current.catch(() => undefined).then(async () => {
-      if (!active) return;
-      setReminderPlan(previous => ({ ...previous, busy: true, error: null }));
-      const permission = await Notifications.getPermissionsAsync();
-      const anyEnabled = data.prayerTimeReminderEnabled || data.reminderEnabled || data.duaReminderEnabled;
-      if (!permission.granted && anyEnabled) throw new Error('Bildirishnoma ruxsati berilmagan.');
-      await prepareReminderChannels();
-      const desired = new Set<string>();
-      let count = 0;
-      let nextAt: number | null = null;
-      const failures: string[] = [];
-      // Install replacements first. A failed update must not erase the working queue.
-      const schedule = async (identifier: string, content: Notifications.NotificationContentInput, trigger: Notifications.NotificationTriggerInput, at?: number) => {
-        desired.add(identifier);
-        try {
-          await Notifications.scheduleNotificationAsync({ identifier, content: { ...content, priority: Notifications.AndroidNotificationPriority.HIGH, vibrate: [0, 10_000], data: { ...content.data, halovatPopupClose: t('Yopish'), halovatPopupVibration: t('Vibratsiya · {seconds} soniya').replace(/\{[^}]+\}/, '{seconds}'), halovatPopupFinished: t('Vibratsiya tugadi') } }, trigger });
-          count += 1;
-          if (at !== undefined) nextAt = Math.min(nextAt ?? Infinity, at);
-        } catch (error) { failures.push(error instanceof Error ? error.message : 'Eslatma saqlanmadi.'); }
-      };
-      const current = new Date();
-      for (let offset = 0; offset < (Platform.OS === 'android' ? 30 : 7); offset += 1) {
-        const day = new Date(current.getFullYear(), current.getMonth(), current.getDate() + offset);
-        for (const prayer of getPrayerTimes(city, day, months)) {
-          if (!active) return;
-          if (data.prayerTimeReminderEnabled && prayer.at.getTime() > current.getTime() + 10_000) {
-            await schedule(`halovat-v2-time:${dateKey(day)}:${prayer.id}`,  { title: t(`${prayer.name} vaqti kirdi`), body: t('Namoz vaqti haqida sokin eslatma.'), sound: 'default', data: { halovatTimeReminder: true } },
-              { type: Notifications.SchedulableTriggerInputTypes.DATE, date: prayer.at, channelId: REMINDER_CHANNEL }, prayer.at.getTime());
-          }
-          const status = data.prayerStatus[`${dateKey(day)}:${prayer.id}`];
-          const triggerAt = new Date(prayer.at.getTime() + Math.max(data.reminderMinutes, data.prayerAutoQuiet ? 26 : 0) * 60_000);
-          if (!active) return;
-          if (!data.reminderEnabled || offset >= (Platform.OS === 'android' ? 30 : 3) || triggerAt.getTime() <= current.getTime() + 10_000 || status) continue;
-          await schedule(`halovat-v2-checkin:${dateKey(day)}:${prayer.id}`, {
-              title: t(`${prayer.name} namozini o‘qidingizmi?`), body: t('Bugungi ibodatingizni belgilab qo‘ying.'),
-              sound: 'default', categoryIdentifier: 'prayer-checkin', data: { halovatPrayerCheckin: true, prayer: prayer.id, date: dateKey(day) },
-            },
-            { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerAt, channelId: CHECKIN_CHANNEL }, triggerAt.getTime());
-        }
-      }
-      if (data.duaReminderEnabled) {
-        for (const [hour, minute, title] of [[7, 0, 'Tonggi zikr va duolar'], [19, 30, 'Kechki zikr va duolar']] as const) {
-          if (!active) return;
-          await schedule(`halovat-v2-dua:${hour}`, { title: t(title), body: t('Bir necha daqiqani zikr va duoga ajrating.'), sound: 'default', data: { halovatDuaReminder: true } },
-            { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute, channelId: REMINDER_CHANNEL });
-        }
-      }
-      if (!active) return;
-      if (failures.length) throw new Error(`${failures.length} ta eslatma saqlanmadi. ${failures[0]}`);
-      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-      for (const item of scheduled.filter(item => isPrayerReminder(item) && !desired.has(item.identifier))) {
-        if (!active) return;
-        await Notifications.cancelScheduledNotificationAsync(item.identifier);
-      }
-      const exact = Platform.OS !== 'android' || focusControl?.getStatus().exactAlarmAccess;
-      setReminderPlan({ count, nextAt, busy: false, error: anyEnabled && !exact ? 'Aniq vaqt ruxsati yo‘q. Eslatmalar kechikishi mumkin.' : null });
-    }).catch(async error => {
-      const installed = await Notifications.getAllScheduledNotificationsAsync().catch(() => null);
-      if (active) setReminderPlan(previous => ({ ...previous, count: installed ? installed.filter(isPrayerReminder).length : previous.count, busy: false, error: error instanceof Error ? error.message : 'Eslatma jadvali yaratilmagan.' }));
+    const snapshot = { city, months, labels: scheduleLabels(t), data: {
+      prayerAutoQuiet: data.prayerAutoQuiet, prayerTimeReminderEnabled: data.prayerTimeReminderEnabled,
+      reminderEnabled: data.reminderEnabled, duaReminderEnabled: data.duaReminderEnabled,
+      reminderMinutes: data.reminderMinutes, prayerStatus: data.prayerStatus,
+    } };
+    void Promise.resolve().then(() => {
+      if (active) setReminderPlan(previous => ({ ...previous, busy: true, error: null }));
+      return updatePrayerSchedule(snapshot);
+    }).then(plan => { if (active) setReminderPlan(plan); }).catch(error => {
+      if (active) setReminderPlan(previous => ({ ...previous, busy: false, error: error instanceof Error ? error.message : 'Eslatma jadvali yaratilmagan.' }));
     });
     return () => { active = false; };
   }, [data.reminderEnabled, data.reminderMinutes, data.prayerAutoQuiet, data.prayerStatus, data.prayerTimeReminderEnabled, data.duaReminderEnabled, city, months, hydrated, notificationDay, reminderRevision, t]);

@@ -2,13 +2,14 @@ import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router } from 'expo-router';
 import { ArrowRight, BookOpen, CalendarDays, Check, ChevronRight, CircleDot, Clock3, Compass, Landmark, Moon, Share2, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../ui/AppText';
 import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
-import { formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../domain/prayers';
+import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../domain/prayers';
+import { useForegroundClock } from '../../hooks/useForegroundClock';
 import { Colors } from '../../ui/theme';
 
 function countdown(milliseconds: number) {
@@ -30,6 +31,12 @@ function hijriDate(date: Date) {
 
 const prayerIcons = [Sunrise, Sun, Sun, Sunset, Moon];
 const zikrNames: Record<string, string> = { subhanallah: 'Subhanalloh zikri', alhamdulillah: 'Alhamdulillah zikri', allahuakbar: 'Allohu akbar zikri', astaghfirullah: 'Astaghfirulloh zikri' };
+
+function Countdown({ until }: { until: number }) {
+  const styles = useThemedStyles(baseStyles);
+  const now = useForegroundClock();
+  return <Text style={styles.countdownText}>{countdown(until - now.getTime())}</Text>;
+}
 
 function bearingToKaaba(latitude: number, longitude: number) {
   const radians = (degrees: number) => degrees * Math.PI / 180;
@@ -67,18 +74,16 @@ export default function HomeScreen() {
 function HomeContent() {
   const styles = useThemedStyles(baseStyles);
   const Colors = useThemeColors();
-  const { city, data, now, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
-  const [liveNow, setLiveNow] = useState(now);
+  const { city, data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
+  const liveNow = useForegroundClock(15_000);
   const [dismissedPrayers, setDismissedPrayers] = useState<string[]>([]);
-  useEffect(() => { const id = setInterval(() => setLiveNow(new Date()), 1000); return () => clearInterval(id); }, []);
-
-  const today = useMemo(() => new Date(liveNow.getFullYear(), liveNow.getMonth(), liveNow.getDate()), [liveNow]);
-  const prayers = timesFor(today);
+  const dayKey = dateKey(liveNow);
+  const today = useMemo(() => new Date(`${dayKey}T00:00:00`), [dayKey]);
+  const prayers = useMemo(() => timesFor(today), [timesFor, today]);
   const tomorrow = useMemo(() => new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1), [today]);
-  const tomorrowPrayers = timesFor(tomorrow);
+  const tomorrowPrayers = useMemo(() => timesFor(tomorrow), [timesFor, tomorrow]);
   const nextPrayer = prayers.find(prayer => prayer.at > liveNow) ?? tomorrowPrayers[0];
   const nextAt = nextPrayer.at;
-  const remaining = countdown(nextAt.getTime() - liveNow.getTime());
   const previousPrayer = [...prayers].reverse().find(prayer => prayer.at <= liveNow);
   const previousAt = previousPrayer?.at ?? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, ...(() => {
     const yesterdayIsha = timesFor(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)).find(prayer => prayer.id === 'isha');
@@ -115,7 +120,7 @@ function HomeContent() {
         <View style={styles.heroIcon}>{nextPrayer.id === 'isha' ? <Moon size={19} color="#B0F0D6" /> : <Sun size={19} color="#B0F0D6" />}</View>
       </View>
       <View style={styles.countdownBlock}>
-        <Text style={styles.countdownText}>{remaining}</Text>
+        <Countdown until={nextAt.getTime()} />
         <View style={styles.countdownLabels}><Text style={styles.countdownLabel}>SOAT</Text><Text style={styles.countdownLabel}>DAQIQA</Text><Text style={styles.countdownLabel}>SONIYA</Text></View>
       </View>
       <View style={styles.progressArea}>

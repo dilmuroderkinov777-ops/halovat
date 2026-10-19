@@ -7,6 +7,30 @@ import { focusControl } from './focusControl';
 export const REMINDER_CHANNEL = 'halovat-reminders-v4';
 export const CHECKIN_CHANNEL = 'prayer-checkin-v4';
 
+export function notificationsAllowed(permission: Notifications.NotificationPermissionsStatus) {
+  return permission.granted || permission.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+    || permission.ios?.status === Notifications.IosAuthorizationStatus.EPHEMERAL;
+}
+
+export function reminderAlertContent(content: Notifications.NotificationContentInput): Notifications.NotificationContentInput {
+  if (Platform.OS === 'ios') {
+    // iOS owns alert vibration and LED flash. Android's vibrate array cannot
+    // enable them on an iPhone; deliver a standard audible, active alert.
+    return { ...content, sound: 'default', interruptionLevel: 'active' };
+  }
+  return { ...content, sound: 'default', priority: Notifications.AndroidNotificationPriority.HIGH, vibrate: [0, 10_000] };
+}
+
+export function iosReminderWarnings(permission: Notifications.NotificationPermissionsStatus) {
+  if (Platform.OS !== 'ios') return [];
+  const warnings: string[] = [];
+  if (permission.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) warnings.push('Bildirishnomalar hozir faqat sokin tarzda yetkaziladi.');
+  if (permission.ios?.allowsSound === false) warnings.push('Bildirishnoma ovozi o‘chirilgan. Vibratsiya uchun ham Sounds’ni yoqing.');
+  if (permission.ios?.allowsAlert === false) warnings.push('Bildirishnoma bannerlari o‘chirilgan.');
+  if (permission.ios?.allowsDisplayOnLockScreen === false) warnings.push('Qulf ekranida bildirishnoma ko‘rsatish o‘chirilgan.');
+  return warnings;
+}
+
 export async function prepareReminderChannels() {
   if (Platform.OS !== 'android') return;
   for (const [id, name] of [[REMINDER_CHANNEL, 'Halovat eslatmalari'], [CHECKIN_CHANNEL, 'Namozdan keyingi savollar']]) {

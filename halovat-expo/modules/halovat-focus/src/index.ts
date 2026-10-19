@@ -1,4 +1,4 @@
-import { requireOptionalNativeModule } from 'expo-modules-core';
+import { requireOptionalNativeModule } from 'expo';
 
 export type QuietModeStatus = {
   supported: boolean;
@@ -9,8 +9,16 @@ export type QuietModeStatus = {
   exactAlarmAccess?: boolean;
   batteryUnrestricted?: boolean;
   manufacturer?: string;
+  model?: string;
+  androidVersion?: string;
+  nextQuietBoundary?: number;
+  prayerScheduleThrough?: number;
+  quietAppliedAt?: number;
   quietError?: string | null;
   prayerWindowCount?: number;
+  mosqueInside?: boolean;
+  mosqueQuietError?: string | null;
+  mosqueRegisteredAt?: number;
   reminderPopupAccess?: boolean;
   vibratorPresent?: boolean;
   vibrationError?: string | null;
@@ -43,6 +51,8 @@ type HalovatFocusNative = {
   startVibrationPreview(): { ok: boolean; reason?: string };
   stopVibrationPreview(): boolean;
   setPrayerQuietWindows(json: string): boolean;
+  scheduleQuietPreview(): { start: number; end: number };
+  cancelQuietPreview(): boolean;
   setMosqueRegion(latitude: number, longitude: number, enabled: boolean): Promise<boolean>;
 };
 

@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.role.RoleManager
+import android.media.AudioManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -59,6 +60,10 @@ internal object HalovatFocusController {
     prefs(context).edit().putLong("manualUntil", System.currentTimeMillis() + safeDuration * 1000L)
       .putBoolean("manualCalls", muteCalls).putBoolean("manualNotifications", muteNotifications).apply()
     reconcile(context)
+    if (muteNotifications && prefs(context).contains("lastQuietError")) {
+      end(context)
+      return mapOf("ok" to false, "reason" to "quiet-control", "active" to isSessionActive(context))
+    }
     return mapOf("ok" to true, "active" to true, "expiresInSeconds" to safeDuration)
   }
 
@@ -78,7 +83,10 @@ internal object HalovatFocusController {
     val mosque = HalovatAutoQuiet.mosqueInside(context)
     val automatic = mosque || prayerUntil > now
     val manager = context.getSystemService(NotificationManager::class.java)
-    val muteNotifications = (automatic || (manual && p.getBoolean("manualNotifications", false))) && manager.isNotificationPolicyAccessGranted
+    val wantsQuiet = automatic || (manual && p.getBoolean("manualNotifications", false))
+    var muteNotifications = wantsQuiet && manager.isNotificationPolicyAccessGranted
+    if (wantsQuiet && !manager.isNotificationPolicyAccessGranted)
+      p.edit().putString("lastQuietError", "Bezovta qilmang ruxsati berilmagan.").apply()
     val muteCalls = (automatic || (manual && p.getBoolean("manualCalls", false))) && hasCallScreeningRole(context) &&
       context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
     if (muteNotifications) {
@@ -88,31 +96,55 @@ internal object HalovatFocusController {
         else manager.currentInterruptionFilter
       val desiredFilter = if (Build.VERSION.SDK_INT < 35 && baseline == NotificationManager.INTERRUPTION_FILTER_NONE)
         NotificationManager.INTERRUPTION_FILTER_NONE else NotificationManager.INTERRUPTION_FILTER_ALARMS
+      val audio = context.getSystemService(AudioManager::class.java)
+      val changesRinger = Build.VERSION.SDK_INT < 35 && baseline != NotificationManager.INTERRUPTION_FILTER_NONE &&
+        audio.ringerMode != AudioManager.RINGER_MODE_SILENT
       if (!p.getBoolean(KEY_CHANGED_FILTER, false)) {
         val previous = manager.currentInterruptionFilter
         p.edit().putInt(KEY_PREVIOUS_FILTER, previous).putBoolean(KEY_CHANGED_FILTER,
-          Build.VERSION.SDK_INT >= 35 || previous != desiredFilter).apply()
+          Build.VERSION.SDK_INT >= 35 || previous != desiredFilter || changesRinger).apply()
       }
       try {
+        // Older MIUI versions expose DND and the phone's silent switch separately.
+        // Record the ringer before muting; Android 15+ keeps the app-owned DND rule.
+        if (Build.VERSION.SDK_INT < 35 && baseline != NotificationManager.INTERRUPTION_FILTER_NONE) {
+          if (!p.getBoolean("changedRingerMode", false) && audio.ringerMode != AudioManager.RINGER_MODE_SILENT)
+            p.edit().putInt("previousRingerMode", audio.ringerMode).putBoolean("changedRingerMode", true).apply()
+          if (audio.ringerMode != AudioManager.RINGER_MODE_SILENT) audio.ringerMode = AudioManager.RINGER_MODE_SILENT
+        }
         // Android 15+ uses an app-owned rule. Another owner's active DND is not our rule.
         if (Build.VERSION.SDK_INT >= 35 || manager.currentInterruptionFilter != desiredFilter)
           manager.setInterruptionFilter(desiredFilter)
-        p.edit().putInt("appliedInterruptionFilter", desiredFilter).remove("lastQuietError").apply()
-      } catch (error: SecurityException) { p.edit().putString("lastQuietError", error.message ?: "DND access denied").apply() }
-    } else restoreNotificationFilter(context)
+        p.edit().putInt("appliedInterruptionFilter", desiredFilter).putLong("quietAppliedAt", now).remove("lastQuietError").apply()
+      } catch (error: SecurityException) {
+        muteNotifications = false
+        p.edit().putString("lastQuietError", error.message ?: "DND access denied")
+          .putInt("appliedInterruptionFilter", manager.currentInterruptionFilter).apply()
+      }
+    } else {
+      val owned = Build.VERSION.SDK_INT >= 35 || manager.currentInterruptionFilter == p.getInt("appliedInterruptionFilter", NotificationManager.INTERRUPTION_FILTER_NONE)
+      if (p.getBoolean("changedRingerMode", false) && manager.isNotificationPolicyAccessGranted) {
+        try {
+          val audio = context.getSystemService(AudioManager::class.java)
+          if (owned && audio.ringerMode == AudioManager.RINGER_MODE_SILENT)
+            audio.ringerMode = p.getInt("previousRingerMode", AudioManager.RINGER_MODE_NORMAL)
+          p.edit().remove("changedRingerMode").remove("previousRingerMode").apply()
+        } catch (error: SecurityException) { p.edit().putString("lastQuietError", error.message).apply() }
+      }
+      restoreNotificationFilter(context, owned)
+    }
     val until = if (mosque) Long.MAX_VALUE else maxOf(if (manual) manualUntil else 0L, prayerUntil)
     p.edit().putBoolean(KEY_ACTIVE, muteCalls || muteNotifications).putBoolean(KEY_MUTE_CALLS, muteCalls)
       .putBoolean(KEY_MUTE_NOTIFICATIONS, muteNotifications).putLong(KEY_EXPIRES_AT, until).apply()
     context.getSystemService(AlarmManager::class.java).cancel(restorePendingIntent(context))
     if (manual) scheduleRestore(context, manualUntil - now)
   }
-  private fun restoreNotificationFilter(context: Context) {
+  private fun restoreNotificationFilter(context: Context, owned: Boolean) {
     val preferences = prefs(context)
     if (!preferences.getBoolean(KEY_CHANGED_FILTER, false)) return
     val notificationManager = context.getSystemService(NotificationManager::class.java)
-    if (notificationManager.isNotificationPolicyAccessGranted &&
-      (Build.VERSION.SDK_INT >= 35 || notificationManager.currentInterruptionFilter == preferences.getInt("appliedInterruptionFilter", NotificationManager.INTERRUPTION_FILTER_NONE))
-    ) {
+    if (!notificationManager.isNotificationPolicyAccessGranted) return
+    if (owned) {
       try {
         notificationManager.setInterruptionFilter(
           if (Build.VERSION.SDK_INT >= 35) NotificationManager.INTERRUPTION_FILTER_ALL
@@ -120,6 +152,7 @@ internal object HalovatFocusController {
         )
       } catch (_: SecurityException) {
         // The user may have revoked DND access during the session.
+        return
       }
     }
     preferences.edit().putBoolean(KEY_CHANGED_FILTER, false).remove(KEY_PREVIOUS_FILTER).remove("appliedInterruptionFilter").apply()

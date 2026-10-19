@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
   <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
   <uses-permission android:name="android.permission.READ_CONTACTS" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -38,6 +39,7 @@
         <action android:name="android.intent.action.TIMEZONE_CHANGED" />
         <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
         <action android:name="android.app.action.NOTIFICATION_POLICY_ACCESS_GRANTED_CHANGED" />
+        <action android:name="android.location.PROVIDERS_CHANGED" />
       </intent-filter>
     </receiver>
     <service

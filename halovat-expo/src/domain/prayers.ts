@@ -81,11 +81,17 @@ export function getPrayerTimes(city: City, day: Date, months: Record<string, Cal
 
 export async function fetchCalendarMonth(city: City, year: number, month: number): Promise<CalendarMonth> {
   const url = `https://namozvaqti.uz/uz/oylik/${month}/${city.id}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  let html: string;
+  try {
   const response = await fetch(url, {
+    signal: controller.signal,
     headers: { Accept: 'text/html', 'User-Agent': 'Halovat/1.0 (local prayer calendar)' },
   });
   if (!response.ok) throw new Error(`Jadval sahifasi ${response.status} qaytardi`);
-  const html = await response.text();
+  html = await response.text();
+  } finally { clearTimeout(timeout); }
   const expectedMonth = UZ_MONTHS[month - 1];
   if (!html.toLowerCase().includes(String(year)) || !html.toLowerCase().includes(expectedMonth)) {
     throw new Error('Sahifadagi kalendar tanlangan oyga mos kelmadi');

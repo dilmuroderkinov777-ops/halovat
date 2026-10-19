@@ -1,153 +1,55 @@
 import { useLanguage } from '../../context/LanguageContext';
 import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
 import * as Location from 'expo-location';
-import { router } from 'expo-router';
+import { useFocusEffect, useIsFocused } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Bookmark, Car, Check, ChevronRight, Droplets, Landmark, LocateFixed, MapPin, Navigation, Search, Share2, SlidersHorizontal, Users, VolumeX, X } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ImageSourcePropType, Keyboard, Linking, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
+import { Bookmark, Check, ChevronRight, Landmark, LocateFixed, MapPin, Navigation, RefreshCw, Search, Share2, SlidersHorizontal, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Keyboard, Linking, Modal, Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
 import { Text } from '../../ui/AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { MosqueMap } from '../../components/MosqueMap';
-import type { MosquePlace } from '../../components/mosqueMap.types';
 import { useHalovat } from '../../context/AppContext';
-import { nearestCity } from '../../domain/prayers';
+import { cachedMosques, lookupNearbyMosques, type MosqueLookup, type MosqueResult, type Point } from '../../services/mosques';
+import { foregroundLocation } from '../../services/foregroundLocation';
+import { mosquePhoto, mosquePhotoCredit } from '../../services/mosquePhotos';
 
-const SEARCH_RADIUS_METERS = 7000;
 const MAP_MARKER_LIMIT = 35;
 const BOOKMARKS_KEY = 'halovat:mosque-bookmarks';
 const GREEN = '#003527';
 const EMERALD = '#006C49';
 const INK = '#1B1C1A';
 const MUTED = '#707974';
-const OVERPASS_URLS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter',
-];
-
-type OSMElement = {
-  type: string;
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
-};
-
-type MosqueResult = MosquePlace & { address?: string; amenities: string[] };
-type MosqueCache = { point: { latitude: number; longitude: number }; createdAt: number; places: MosqueResult[] };
-let mosqueCache: MosqueCache | undefined;
-
-function distanceBetween(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
-  const toRadians = (degrees: number) => degrees * Math.PI / 180;
-  const dLatitude = toRadians(b.latitude - a.latitude);
-  const dLongitude = toRadians(b.longitude - a.longitude);
-  const latitudeA = toRadians(a.latitude);
-  const latitudeB = toRadians(b.latitude);
-  const haversine = Math.sin(dLatitude / 2) ** 2 + Math.cos(latitudeA) * Math.cos(latitudeB) * Math.sin(dLongitude / 2) ** 2;
-  return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
-}
-
 function formatDistance(meters: number) {
   return meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
 }
 
-function mosquePhoto(name: string): ImageSourcePropType | undefined {
-  const normalized = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  if (normalized.includes('minor')) return require('../../../assets/mosque-minor.jpg');
-  if (normalized.includes('hazrati imom') || normalized.includes('hastimom') || normalized.includes('hazrati imam')) return require('../../../assets/mosque-hazrati-imom.jpg');
-  if (normalized.includes('kokcha') || normalized.includes('ko kcha') || normalized.includes('shayx zayniddin')) return require('../../../assets/mosque-kokcha.jpg');
-  return undefined;
-}
-
-async function fetchNearbyMosques(point: { latitude: number; longitude: number }) {
-  if (mosqueCache && Date.now() - mosqueCache.createdAt < 5 * 60_000 && distanceBetween(point, mosqueCache.point) < 600) {
-    return mosqueCache.places;
-  }
-
-  const latitude = point.latitude.toFixed(6);
-  const longitude = point.longitude.toFixed(6);
-  const query = `[out:json][timeout:15];(nwr["amenity"="place_of_worship"]["religion"~"muslim|islam",i](around:${SEARCH_RADIUS_METERS},${latitude},${longitude});nwr["building"="mosque"](around:${SEARCH_RADIUS_METERS},${latitude},${longitude}););out center tags;`;
-  const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
-  if (Platform.OS !== 'web') headers['User-Agent'] = 'Halovat/1.0 (Android/iOS mosque finder)';
-  let lastError: Error | undefined;
-
-  for (const endpoint of OVERPASS_URLS) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 18_000);
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: `data=${encodeURIComponent(query)}`,
-        signal: controller.signal,
-      });
-      if (!response.ok) {
-        lastError = new Error(response.status === 406 || response.status === 429
-          ? `Xarita xizmati so‘rovni vaqtincha chekladi (${response.status}). 30 soniyadan so‘ng qayta urinib ko‘ring.`
-          : `Xarita xizmati vaqtincha javob bermadi (${response.status}).`);
-        // Overpass asks clients to back off after rate-limit / policy responses.
-        // Do not immediately retry the same user request against another mirror.
-        if (response.status === 406 || response.status === 429) break;
-        continue;
-      }
-
-      const result = await response.json() as { elements?: OSMElement[] };
-      const unique = new Map<string, MosqueResult>();
-      for (const element of result.elements ?? []) {
-        const coordinates = element.center ?? (typeof element.lat === 'number' && typeof element.lon === 'number' ? { lat: element.lat, lon: element.lon } : undefined);
-        if (!coordinates) continue;
-        const tags = element.tags ?? {};
-        const distanceMeters = distanceBetween(point, { latitude: coordinates.lat, longitude: coordinates.lon });
-        const name = tags['name:uz'] || tags.name || tags['name:ru'] || 'Nomi ko‘rsatilmagan masjid';
-        const id = `${element.type}/${element.id}`;
-        const address = [tags['addr:street'], tags['addr:district'] || tags['addr:city']].filter(Boolean).join(', ');
-        const amenities = [
-          (tags.toilets === 'yes' || tags['toilets:access'] === 'yes') && 'Tahoratxona',
-          (tags['female'] === 'yes' || tags['gender_segregation'] === 'yes') && 'Ayollar xonasi',
-          (tags.parking === 'yes' || tags['parking'] === 'surface') && 'Avtoturargoh',
-        ].filter((item): item is string => Boolean(item));
-        unique.set(id, { id, name, latitude: coordinates.lat, longitude: coordinates.lon, distanceMeters, address: address || undefined, amenities });
-      }
-
-      const places = Array.from(unique.values()).sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, 100);
-      mosqueCache = { point, createdAt: Date.now(), places };
-      return places;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Masjidlarni yuklab bo‘lmadi.');
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  if (lastError?.name === 'AbortError' || /fetch request has been canceled|aborted|timeout/i.test(lastError?.message ?? '')) {
-    throw new Error('Masjidlar ro‘yxatini yuklash kechikdi. Internetni tekshirib qayta urinib ko‘ring.');
-  }
-  throw lastError ?? new Error('Masjidlarni yuklab bo‘lmadi.');
-}
-
 export default function MosqueScreen() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const styles = useThemedStyles(baseStyles);
   const colors = useThemeColors();
-  const { city, data, setCity, setMosque } = useHalovat();
-  const [initialCenter] = useState(() => ({ latitude: city.latitude, longitude: city.longitude }));
-  const [center, setCenter] = useState(initialCenter);
+  const { city, data, setMosque } = useHalovat();
+  const focused = useIsFocused();
+  const [center, setCenter] = useState<Point>({ latitude: city.latitude, longitude: city.longitude });
+  const [isUserLocation, setIsUserLocation] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const requests = useRef(0);
+  const locationRequests = useRef(0);
   const [places, setPlaces] = useState<MosqueResult[]>([]);
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
-  const [nearbyOnly, setNearbyOnly] = useState(true);
+  const [sourceInfo, setSourceInfo] = useState<Pick<MosqueLookup, 'source' | 'updatedAt'> | null>(null);
+  const [nearbyOnly, setNearbyOnly] = useState(false);
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
-  const [amenityFilter, setAmenityFilter] = useState<string | null>(null);
   const [sortByName, setSortByName] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [visibleLimit, setVisibleLimit] = useState(8);
+  const [failedPhotos, setFailedPhotos] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     let active = true;
@@ -159,63 +61,87 @@ export default function MosqueScreen() {
     return () => { active = false; };
   }, []);
 
-  const loadPlaces = useCallback(async (point: { latitude: number; longitude: number }) => {
+  const loadPlaces = useCallback(async (point: Point, force = false) => {
+    const request = ++requests.current;
     setBusy(true);
     setError('');
+    setSourceInfo(null);
+    setVisibleLimit(8);
+    if (force) setFailedPhotos(new Set());
+    let cached: MosqueResult[] | null = null;
     try {
-      const found = await fetchNearbyMosques(point);
+      cached = await cachedMosques(point);
+      if (request !== requests.current) return;
+      setPlaces(cached ?? []);
+      const result = await lookupNearbyMosques(point, force);
+      if (request !== requests.current) return;
+      const found = result.places;
       setPlaces(found);
+      setSourceInfo({ source: result.source, updatedAt: result.updatedAt });
       setSelectedId(current => current && found.some(item => item.id === current) ? current : found[0]?.id);
-      if (!found.length) setError('Bu joyga yaqin masjid OpenStreetMap’da topilmadi.');
+      setError(result.warning ?? (!found.length ? 'Bu joyga yaqin masjid topilmadi.' : ''));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Masjidlarni yuklab bo‘lmadi.');
-    } finally {
-      setBusy(false);
-    }
+      if (request !== requests.current) return;
+      const message = reason instanceof Error ? reason.message : 'Masjidlarni yuklab bo‘lmadi.';
+      setError(cached?.length ? 'Saqlangan masjidlar ko‘rsatilmoqda. ' + message : message);
+    } finally { if (request === requests.current) setBusy(false); }
   }, []);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let active = true;
-    void fetchNearbyMosques(initialCenter)
-      .then(found => {
-        if (!active) return;
-        setPlaces(found);
-        setSelectedId(found[0]?.id);
-        if (!found.length) setError('Bu joyga yaqin masjid OpenStreetMap’da topilmadi.');
-      })
-      .catch(reason => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Masjidlarni yuklab bo‘lmadi.');
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
-    return () => { active = false; };
-  }, [initialCenter]);
+    const fallback = { latitude: city.latitude, longitude: city.longitude };
+    const locationRequest = ++locationRequests.current;
+    setLocating(false);
+    setCenter(fallback);
+    setIsUserLocation(false);
+    void loadPlaces(fallback);
+    // Use existing permission on entry; the locate button can request it.
+    void Location.getForegroundPermissionsAsync().then(async permission => {
+      if (!permission.granted || !active) return;
+      const position = await foregroundLocation();
+      if (!active || locationRequest !== locationRequests.current) return;
+      const point = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+      setCenter(point);
+      setIsUserLocation(true);
+      void loadPlaces(point);
+    }).catch(reason => {
+      if (active && locationRequest === locationRequests.current) setError(reason instanceof Error ? reason.message : 'Joylashuv aniqlanmadi.');
+    });
+    return () => { active = false; requests.current++; locationRequests.current++; };
+  }, [city.latitude, city.longitude, loadPlaces]));
 
   const filteredPlaces = useMemo(() => {
     const term = query.trim().toLocaleLowerCase();
     return places
-      .filter(place => (!term || place.name.toLocaleLowerCase().includes(term) || place.address?.toLocaleLowerCase().includes(term)) && (!nearbyOnly || place.distanceMeters < 5000) && (!bookmarksOnly || savedIds.includes(place.id)) && (!amenityFilter || place.amenities.includes(amenityFilter)))
+      .filter(place => (!term || place.name.toLocaleLowerCase().includes(term) || place.address?.toLocaleLowerCase().includes(term)) && (!nearbyOnly || place.distanceMeters < 5000) && (!bookmarksOnly || savedIds.includes(place.id)))
       .sort((a, b) => sortByName ? a.name.localeCompare(b.name) : a.distanceMeters - b.distanceMeters);
-  }, [places, query, nearbyOnly, bookmarksOnly, amenityFilter, savedIds, sortByName]);
+  }, [places, query, nearbyOnly, bookmarksOnly, savedIds, sortByName]);
   const selectedPlace = filteredPlaces.find(place => place.id === selectedId) ?? filteredPlaces[0];
+  const mapPlaces = useMemo(() => {
+    const markers = filteredPlaces.slice(0, MAP_MARKER_LIMIT);
+    if (selectedPlace && !markers.some(place => place.id === selectedPlace.id)) {
+      return [...markers.slice(0, MAP_MARKER_LIMIT - 1), selectedPlace];
+    }
+    return markers;
+  }, [filteredPlaces, selectedPlace]);
+  const updatedDate = sourceInfo ? new Date(sourceInfo.updatedAt).toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'en' ? 'en-GB' : 'uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
   const locate = async () => {
-    setBusy(true);
+    const request = ++locationRequests.current;
+    setLocating(true);
     setError('');
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
-      if (permission.status !== 'granted') throw new Error('Yaqin masjidlarni aniq qidirish uchun joylashuv ruxsati kerak.');
-      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      if (!permission.granted) throw new Error('Yaqin masjidlarni aniq qidirish uchun joylashuv ruxsati kerak.');
+      const position = await foregroundLocation({ fresh: true });
+      if (request !== locationRequests.current) return;
       const point = { latitude: position.coords.latitude, longitude: position.coords.longitude };
       setCenter(point);
-      const closestCity = nearestCity(point.latitude, point.longitude);
-      if (closestCity && closestCity.id !== city.id) await setCity(closestCity.id);
+      setIsUserLocation(true);
       await loadPlaces(point);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Joylashuv aniqlanmadi.');
-      setBusy(false);
-    }
+      if (request === locationRequests.current) setError(reason instanceof Error ? reason.message : 'Joylashuv aniqlanmadi.');
+    } finally { if (request === locationRequests.current) setLocating(false); }
   };
 
   const selectPlace = (place: MosqueResult) => {
@@ -250,15 +176,10 @@ export default function MosqueScreen() {
       <Pressable onPress={() => setFilterOpen(true)} style={styles.filterButton} accessibilityLabel="Masjidlarni filtrlash"><SlidersHorizontal size={19} color={colors.green} /></Pressable>
     </View>
 
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll} contentContainerStyle={styles.chips}>
-      <Pressable onPress={() => setNearbyOnly(value => !value)} style={[styles.chip, nearbyOnly && styles.chipActive]}><Navigation size={14} color={nearbyOnly ? '#FFFFFF' : EMERALD} /><Text style={[styles.chipText, nearbyOnly && styles.chipTextActive]}>Yaqin atrofda (&lt;5 km)</Text></Pressable>
-      {([{ title: 'Tahoratxona', icon: Droplets }, { title: 'Ayollar xonasi', icon: Users }, { title: 'Avtoturargoh', icon: Car }] as const).map(item => { const Icon = item.icon; const active = amenityFilter === item.title; return <Pressable key={item.title} onPress={() => setAmenityFilter(active ? null : item.title)} style={[styles.chip, active && styles.chipActive]}><Icon size={14} color={active ? '#FFFFFF' : EMERALD} /><Text style={[styles.chipText, active && styles.chipTextActive]}>{item.title}</Text></Pressable>; })}
-    </ScrollView>
-
     <View style={styles.map}>
-      <MosqueMap center={center} places={filteredPlaces.slice(0, MAP_MARKER_LIMIT)} onSelect={id => { const place = places.find(item => item.id === id); if (place) selectPlace(place); }} />
-      <View pointerEvents="none" style={styles.liveMapPill}><View style={styles.liveDot} /><Text style={styles.liveMapText}>Jonli xarita rejimi</Text></View>
-      <Pressable onPress={() => void locate()} style={styles.mapLocate} accessibilityLabel="Hozirgi joylashuv"><LocateFixed size={20} color={colors.green} /></Pressable>
+      {focused && <MosqueMap center={center} isUserLocation={isUserLocation} selectedId={selectedPlace?.id} places={mapPlaces} onSelect={id => { const place = places.find(item => item.id === id); if (place) selectPlace(place); }} />}
+      <View pointerEvents="none" style={styles.liveMapPill}><View style={styles.liveDot} /><Text style={styles.liveMapText}>{isUserLocation ? 'Joylashuvingiz atrofida' : 'Shahar markazi bo‘yicha'}</Text></View>
+      <Pressable disabled={locating} onPress={() => void locate()} style={styles.mapLocate} accessibilityLabel="Hozirgi joylashuv">{locating ? <ActivityIndicator size="small" color={EMERALD} /> : <LocateFixed size={20} color={colors.green} />}</Pressable>
       {busy ? <View pointerEvents="none" style={styles.loading}><ActivityIndicator size="small" color={EMERALD} /><Text style={styles.loadingText}>Masjidlar qidirilmoqda</Text></View> : null}
       {selectedPlace ? <View style={styles.mapSelection}>
         <View style={styles.mapSelectionIcon}><Navigation size={20} color={colors.green} /></View>
@@ -267,31 +188,34 @@ export default function MosqueScreen() {
       </View> : null}
     </View>
 
-    <Pressable accessibilityRole="button" accessibilityLabel="Namoz jim rejimini ochish" onPress={() => router.push('/prayer-mode' as never)} style={styles.quietCard}>
-      <View style={styles.quietIcon}><VolumeX size={18} color="#B0F0D6" /></View>
-      <View style={styles.quietCopy}><Text style={styles.quietTitle}>Ovozsiz namoz rejimi</Text><Text style={styles.quietSubtitle}>Masjidga kirganda qo‘lda yoqing</Text></View>
-      <ChevronRight size={19} color="#B0F0D6" />
-    </Pressable>
-
     <View style={styles.resultsHead}>
       <View style={styles.resultsTitleRow}><Text style={styles.resultsTitle}>Yaqin atrofdagi masjidlar</Text><Text style={styles.resultCount}>{busy ? 'Yuklanmoqda' : filteredPlaces.length + ' ta topildi'}</Text></View>
       <Pressable onPress={() => setSortByName(value => !value)}><Text style={styles.sortText}>{sortByName ? 'Nom bo‘yicha' : 'Masofa bo‘yicha'}</Text></Pressable>
     </View>
 
-    {error ? <View style={styles.messageCard}><Text style={styles.messageText}>{error}</Text>{!busy ? <Pressable onPress={() => void (error.includes('joylashuv ruxsati') ? locate() : loadPlaces(center))}><Text style={styles.retryText}>{error.includes('joylashuv ruxsati') ? 'Ruxsat berish' : 'Qayta urinish'}</Text></Pressable> : null}</View> : null}
+    <View style={styles.sourceRow}>
+      <Text style={styles.sourceText}>{sourceInfo ? `${t(sourceInfo.source === 'live' ? 'Yangilangan ro‘yxat' : 'Saqlangan ro‘yxat')} · ${updatedDate}` : busy ? 'Masjidlar qidirilmoqda' : ''}</Text>
+      <Pressable disabled={busy} accessibilityRole="button" accessibilityLabel={t('Masjidlar ro‘yxatini yangilash')} onPress={() => void loadPlaces(center, true)} style={styles.refreshButton}>
+        <RefreshCw size={13} color={EMERALD} /><Text style={styles.sortText}>{busy ? 'Yuklanmoqda' : 'Yangilash'}</Text>
+      </Pressable>
+    </View>
+
+    {error ? <View style={styles.messageCard}><Text style={styles.messageText}>{error}</Text>{!busy ? <Pressable onPress={() => void (error.includes('joylashuv ruxsati') ? locate() : loadPlaces(center, true))}><Text style={styles.retryText}>{error.includes('joylashuv ruxsati') ? 'Ruxsat berish' : 'Qayta urinish'}</Text></Pressable> : null}</View> : null}
     {!busy && !error && filteredPlaces.length === 0 ? <View style={styles.messageCard}><Text style={styles.messageText}>Bu mezonlarga mos masjid topilmadi.</Text></View> : null}
 
     {filteredPlaces.slice(0, visibleLimit).map(place => {
       const selected = place.id === selectedPlace?.id || (!selectedId && place.name === data.mosqueName);
       const bookmarked = savedIds.includes(place.id);
-      const photo = mosquePhoto(place.name);
+      const photo = failedPhotos.has(place.id) ? undefined : mosquePhoto(place);
+      const credit = photo ? mosquePhotoCredit(place) : undefined;
       return <Pressable key={place.id} onPress={() => selectPlace(place)} style={[styles.placeCard, selected && styles.placeCardSelected]}>
-        <View style={styles.placeHero}>
-          {photo ? <><Image source={photo} resizeMode="cover" style={StyleSheet.absoluteFill} /><LinearGradient pointerEvents="none" colors={['#00352712', '#00352788']} style={StyleSheet.absoluteFill} /></> : <LinearGradient colors={selected ? ['#D8F1E4', '#98CBB0', '#0E5C43'] : ['#E5F1E9', '#BFDBC8', '#709C81']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill}><View style={styles.heroCircleLarge} /><View style={styles.heroCircleSmall} /><Landmark size={66} color="#FFFFFF" strokeWidth={1.2} style={styles.heroMosqueIcon} /></LinearGradient>}
+        <View style={[styles.placeHero, !photo && styles.placeHeroCompact]}>
+          {photo ? <><Image source={photo} resizeMode="cover" onError={event => { console.warn('Halovat mosque photo', place.id, event.nativeEvent.error); setFailedPhotos(current => new Set(current).add(place.id)); }} style={StyleSheet.absoluteFill} /><LinearGradient pointerEvents="none" colors={['#00352712', '#00352788']} style={StyleSheet.absoluteFill} /></> : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Landmark size={20} color={EMERALD} /><Text style={styles.photoMissing}>{failedPhotos.has(place.id) ? 'Surat yuklanmadi' : 'Surat mavjud emas'}</Text></View>}
           <View style={styles.distancePill}><LocateFixed size={13} color={colors.green} /><Text style={styles.distancePillText}>{formatDistance(place.distanceMeters)}</Text></View>
           <Pressable onPress={event => { event.stopPropagation(); toggleBookmark(place.id); }} style={styles.bookmarkButton} accessibilityLabel={bookmarked ? 'Saqlanganlardan olib tashlash' : 'Masjidni saqlash'}><Bookmark size={20} color={colors.green} fill={bookmarked ? GREEN : 'none'} /></Pressable>
         </View>
         <View style={styles.cardBody}>
+          {credit ? <Pressable accessibilityRole="link" onPress={event => { event.stopPropagation(); void Linking.openURL(credit.source); }}><Text translate={false} numberOfLines={2} style={styles.sourceText}>{`${credit.artist} · ${credit.license} · Wikimedia Commons · kesilgan`}</Text></Pressable> : null}
           <View style={styles.nameRow}><Text numberOfLines={2} style={styles.placeName}>{place.name}</Text>{selected ? <View style={styles.selectedPill}><Check size={11} color={colors.green} /><Text style={styles.selectedPillText}>Tanlangan</Text></View> : null}</View>
           {place.address ? <View style={styles.addressRow}><MapPin size={14} color={colors.muted} /><Text numberOfLines={2} style={styles.addressText}>{place.address}</Text></View> : null}
           {place.amenities.length ? <View style={styles.amenities}>{place.amenities.map(item => <Text key={item} style={styles.amenity}>{item}</Text>)}</View> : null}
@@ -315,7 +239,7 @@ export default function MosqueScreen() {
           <Text style={styles.filterLabel}>Saralash</Text>
           <View style={styles.filterOptions}><Pressable onPress={() => setSortByName(false)} style={[styles.filterOption, !sortByName && styles.filterOptionActive]}><Text style={[styles.filterOptionText, !sortByName && styles.filterOptionTextActive]}>Eng yaqin</Text></Pressable><Pressable onPress={() => setSortByName(true)} style={[styles.filterOption, sortByName && styles.filterOptionActive]}><Text style={[styles.filterOptionText, sortByName && styles.filterOptionTextActive]}>Nom bo‘yicha</Text></Pressable></View>
           <Pressable onPress={() => setBookmarksOnly(value => !value)} style={styles.savedFilter}><Bookmark size={18} color={EMERALD} fill={bookmarksOnly ? EMERALD : 'none'} /><Text style={styles.savedFilterText}>Faqat saqlanganlar</Text><View style={[styles.filterCheck, bookmarksOnly && styles.filterCheckActive]}>{bookmarksOnly ? <Check size={13} color="#FFFFFF" /> : null}</View></Pressable>
-          <View style={styles.filterActions}><Pressable onPress={() => { setNearbyOnly(false); setBookmarksOnly(false); setSortByName(false); setAmenityFilter(null); }} style={styles.clearButton}><Text style={styles.clearText}>Tozalash</Text></Pressable><Pressable onPress={() => setFilterOpen(false)} style={styles.applyButton}><Text style={styles.applyText}>Qo‘llash</Text></Pressable></View>
+          <View style={styles.filterActions}><Pressable onPress={() => { setNearbyOnly(false); setBookmarksOnly(false); setSortByName(false); }} style={styles.clearButton}><Text style={styles.clearText}>Tozalash</Text></Pressable><Pressable onPress={() => setFilterOpen(false)} style={styles.applyButton}><Text style={styles.applyText}>Qo‘llash</Text></Pressable></View>
         </View>
       </View>
     </Modal>
@@ -348,9 +272,14 @@ const baseStyles = StyleSheet.create({
   resultsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   resultsTitleRow: { flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }, resultsTitle: { color: INK, fontSize: 17, fontWeight: '700' }, resultCount: { color: MUTED, fontSize: 10 },
   sortText: { color: EMERALD, fontSize: 10, fontWeight: '600' },
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -7 },
+  sourceText: { flex: 1, color: MUTED, fontSize: 10, lineHeight: 15 },
+  refreshButton: { minHeight: 36, paddingHorizontal: 6, flexDirection: 'row', alignItems: 'center', gap: 5 },
   messageCard: { backgroundColor: '#FFFFFF', borderRadius: 15, padding: 13, gap: 7 }, messageText: { color: MUTED, fontSize: 12, lineHeight: 17 }, retryText: { color: EMERALD, fontSize: 12, fontWeight: '700' },
   placeCard: { borderRadius: 19, backgroundColor: '#FFFFFF', padding: 12, borderWidth: 1, borderColor: '#ECEFEA', gap: 11 },
   placeCardSelected: { borderColor: '#BFDBC8' },
+  photoMissing: { color: MUTED, fontSize: 10 },
+  placeHeroCompact: { height: 66, paddingTop: 32 },
   placeHero: { height: 132, borderRadius: 13, overflow: 'hidden', position: 'relative', alignItems: 'center', justifyContent: 'center' },
   heroCircleLarge: { position: 'absolute', width: 190, height: 190, borderRadius: 95, backgroundColor: '#FFFFFF25', right: -55, top: -60 },
   heroCircleSmall: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: '#FFFFFF20', left: -26, bottom: -60 },

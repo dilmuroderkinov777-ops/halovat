@@ -32,8 +32,16 @@ class HalovatFocusModule : Module() {
         "exactAlarmAccess" to (Build.VERSION.SDK_INT < 31 || context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()),
         "batteryUnrestricted" to context.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(context.packageName),
         "manufacturer" to Build.MANUFACTURER,
+        "model" to Build.MODEL,
+        "androidVersion" to Build.VERSION.RELEASE,
+        "nextQuietBoundary" to context.getSharedPreferences("halovat.auto.quiet.v1", Context.MODE_PRIVATE).getLong("nextBoundary", 0L),
+        "prayerScheduleThrough" to context.getSharedPreferences("halovat.auto.quiet.v1", Context.MODE_PRIVATE).getLong("scheduleThrough", 0L),
+        "quietAppliedAt" to context.getSharedPreferences("halovat.focus.native.v1", Context.MODE_PRIVATE).getLong("quietAppliedAt", 0L),
         "quietError" to context.getSharedPreferences("halovat.focus.native.v1", Context.MODE_PRIVATE).getString("lastQuietError", null),
         "prayerWindowCount" to org.json.JSONArray(context.getSharedPreferences("halovat.auto.quiet.v1", Context.MODE_PRIVATE).getString("windows", "[]")).length(),
+        "mosqueInside" to HalovatAutoQuiet.mosqueInside(context),
+        "mosqueQuietError" to context.getSharedPreferences("halovat.auto.quiet.v1", Context.MODE_PRIVATE).getString("regionError", null),
+        "mosqueRegisteredAt" to context.getSharedPreferences("halovat.auto.quiet.v1", Context.MODE_PRIVATE).getLong("regionRegisteredAt", 0L),
         "reminderPopupAccess" to (Build.VERSION.SDK_INT < 34 || notificationManager.canUseFullScreenIntent()),
         "interruptionFilter" to notificationManager.currentInterruptionFilter,
         "ringerMode" to context.getSystemService(AudioManager::class.java).ringerMode,
@@ -59,10 +67,22 @@ class HalovatFocusModule : Module() {
 
     Function("openBatterySettings") {
       val context = appContext.reactContext?.applicationContext ?: return@Function false
-      val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-      if (intent.resolveActivity(context.packageManager) != null) context.startActivity(intent)
-      else context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-      true
+      // MIUI battery saver is separate from Android's Doze exemption. App details
+      // provides the supported entry point to its per-app battery/autostart controls.
+      val appDetails = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+      val optimizationList = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+      val miui = Build.MANUFACTURER.lowercase().let { it.contains("xiaomi") || it.contains("redmi") || it.contains("poco") }
+      val candidates = if (miui) listOf(appDetails, optimizationList) else listOf(optimizationList, appDetails)
+      candidates.any { intent ->
+        try {
+          context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+          true
+        } catch (_: android.content.ActivityNotFoundException) {
+          false
+        } catch (_: SecurityException) {
+          false
+        }
+      }
     }
 
     Function("openReminderPopupSettings") {
@@ -97,6 +117,16 @@ class HalovatFocusModule : Module() {
       else HalovatAutoQuiet.configureMosque(context, latitude, longitude, enabled) { error ->
         if (error == null) promise.resolve(true) else promise.reject("E_GEOFENCE", error.message, error)
       }
+    }
+
+    Function("scheduleQuietPreview") {
+      val context = appContext.reactContext?.applicationContext ?: throw IllegalStateException("Android context unavailable")
+      HalovatAutoQuiet.preview(context)
+    }
+    Function("cancelQuietPreview") {
+      val context = appContext.reactContext?.applicationContext ?: return@Function false
+      HalovatAutoQuiet.cancelPreview(context)
+      true
     }
 
     Function("requestCallScreeningRole") {

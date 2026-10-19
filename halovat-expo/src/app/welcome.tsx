@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OnboardingArt } from '../components/OnboardingArt';
 import { LanguageSelection } from '../components/LanguageSelection';
@@ -102,13 +102,18 @@ export default function WelcomeScreen() {
 function WelcomePage({ index, width, active, compact, largeText, reducedMotion }: { index: number; width: number; active: boolean; compact: boolean; largeText: boolean; reducedMotion: boolean }) {
   const [artHeight, setArtHeight] = useState(300);
   const item = WELCOME_PAGES[index];
+  const description = Platform.OS === 'ios' && index === 0
+    ? 'Halovat namoz vaqtini eslatadi. iPhone’da ovozsiz rejimni Focus orqali yoqing va halovat bilan ibodat qiling.'
+    : Platform.OS === 'ios' && index === 5
+      ? 'Masjidda chalg‘imasdan ibodat qilish uchun iPhone’da Focus rejimini yoqing. Bu rejim iPhone sozlamalaridan boshqariladi.'
+      : item.description;
   const content = <>
     <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.art, largeText && styles.largeTextArt]}
       onLayout={event => setArtHeight(event.nativeEvent.layout.height)}>
       <OnboardingArt page={index} width={width - 56} height={artHeight} active={active} reducedMotion={reducedMotion} />
     </View>
     <Text accessibilityRole="header" style={[styles.title, compact && styles.compactTitle]}>{item.title}</Text>
-    <Text style={styles.description}>{item.description}</Text>
+    <Text style={styles.description}>{description}</Text>
   </>;
   return <View style={[styles.slide, { width }]} accessibilityElementsHidden={!active} importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
     {largeText ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.largeTextContent}>{content}</ScrollView> : content}

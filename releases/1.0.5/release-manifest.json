@@ -1,0 +1,25 @@
+{
+  "version": "1.0.5",
+  "versionCode": 6,
+  "date": "2026-10-19",
+  "change": "Preserve counters in onboarding SVG text with explicit evenodd fill rule",
+  "matchingCodeEntries": 52,
+  "affectedPhysicalDeviceRetest": "pending",
+  "artifacts": [
+    {
+      "file": "Halovat-1.0.5-test.apk",
+      "bytes": 62397234,
+      "sha256": "d01fa004d3d80c759b8fdb4a774ac644e292657bbe9a3e5b3f40524cbf80f87f"
+    },
+    {
+      "file": "Halovat-1.0.5-production.aab",
+      "bytes": 46806608,
+      "sha256": "631fa943e82783bc365c448768e7e8de9556cf576868d4577a7a1a4028583b9c"
+    },
+    {
+      "file": "production-mapping.txt",
+      "bytes": 58763938,
+      "sha256": "b46a5dda3a73a0171ead5a505ed8467a36f83a96de6a9461c38bf43e205a4b08"
+    }
+  ]
+}

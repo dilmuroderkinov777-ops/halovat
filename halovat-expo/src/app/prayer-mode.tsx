@@ -25,10 +25,17 @@ export default function PrayerModeScreen() {
   useEffect(() => { secondsRef.current = seconds; }, [seconds]);
 
   useEffect(() => {
-    if (!running || seconds <= 0) return;
-    const timer = setInterval(() => setSeconds(value => Math.max(0, value - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [running, seconds]);
+    if (!running || finished) return;
+    const deadline = Date.now() + secondsRef.current * 1000;
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      secondsRef.current = remaining;
+      setSeconds(remaining);
+    };
+    const timer = setInterval(update, 1000);
+    const listener = AppState.addEventListener('change', state => { if (state === 'active') update(); });
+    return () => { clearInterval(timer); listener.remove(); };
+  }, [running, finished]);
 
   useEffect(() => {
     const nativeFocus = focusControl;

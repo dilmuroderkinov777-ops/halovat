@@ -1,8 +1,10 @@
 # Halovat — dasturchiga topshirish
 
-## Snapshot: 2026-10-08, Asia/Tashkent
+## Snapshot: 2026-10-19, Asia/Tashkent — 1.0.5 (6)
 
-Asosiy loyiha `halovat-expo/`. TypeScript UI, Expo Router, custom Android native modul, fontlar, rasmlar, taqvim cache namunasi, npm lockfile va config pluginlar to‘liq nusxalangan. Mahalliy build keshlar, node_modules, SDK yo‘llari va imzolash kalitlari repositoryga kiritilmaydi; ular mashinada qayta yaratiladi. Original lokal loyiha va uning Git indeksi saqlangan.
+Asosiy loyiha `halovat-expo/`. Joriy Android sinov versiyasi **1.0.5**, versionCode **6**. TypeScript UI, Expo Router, custom Android modulining Kotlin manbalari/testlari, rasmlar/litsenziyalar, taqvim cache namunasi, npm lockfile, vendor URI decoder va config pluginlar yangilangan. Mahalliy build keshlar, node_modules, SDK yo‘llari va imzolash kalitlari repositoryga kiritilmaydi. Original lokal loyiha va uning Git indeksi saqlangan.
+
+[So‘nggi o‘zgarishlar](./halovat-expo/LATEST_RELEASE.md) · [Telefon tekshiruvi](./halovat-expo/device-audit/RELEASE_TEST_CHECKLIST_1.0.5.md) · [GitHub sinov paketlari](https://github.com/dilmuroderkinov777-ops/halovat/releases/tag/v1.0.5-test)
 
 ## Ish muhiti va build
 
@@ -20,15 +22,14 @@ npx expo run:android
 Release APK uchun:
 
 ```powershell
-Set-Location android
-.\gradlew.bat :app:assembleRelease '-PreactNativeArchitectures=arm64-v8a,x86_64' --console=plain
+powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1 -Mode test
 ```
 
 Natija: `halovat-expo/android/app/build/outputs/apk/release/app-release.apk`.
 
 `android/` va `ios/` Expo generatsiya qiladigan papkalar. Ularni qo‘lda tahrirlash o‘rniga `app.json` va `plugins/`ni o‘zgartiring. **`modules/halovat-focus/android/` esa custom Kotlin manbasi**, uni saqlash va tahrirlash kerak. SDK 57 Expo notifications’ni prebuilt Maven artifact sifatida ulashi mumkin; modulning `build.gradle` fayli bu holatni hisobga oladi.
 
-Ilova versiyasi hozir `1.0.0`. Play Store/TestFlight tarqatish, production signing, versiya kodini oshirish va release konfiguratsiyasi alohida tayyorlanishi kerak. Topshirilgan APK lokal sinov buildidir; private signing kalitlari Git’ga joylanmaydi.
+Ilova versiyasi `1.0.5` (Android code 6, iOS build 6). Test APK eski test kaliti, production AAB yangi upload kaliti bilan imzolangan. Production AAB uchun `scripts/build-android.ps1 -Mode production -Credentials <private-credentials.json>` ishlatiladi. Android unit testlari build skriptida bajariladi. `-SkipPrebuild` faqat native loyiha joriy konfiguratsiya uchun tayyorlanganida ishlatiladi. Play Store/TestFlight nashri bajarilmagan; private signing kalitlari Git’ga joylanmaydi.
 
 ## Kod xaritasi
 
@@ -51,9 +52,11 @@ Ilova versiyasi hozir `1.0.0`. Play Store/TestFlight tarqatish, production signi
 - Android’da namoz vaqti va namozdan keyingi eslatmalar 30 kunga rejalashtiriladi. Ilovani yana ochganda va kun almashganda jadval yangilanadi. iOS’da limitlarga mos qisqaroq jadval qo‘llanadi.
 - Qazo faqat foydalanuvchi “Qazo” deb belgilasa qayd etiladi. Javobsiz bildirishnoma avtomatik qazo hisoblanmaydi.
 - Tasbeh har 33 ta sanashda uzun vibratsiya beradi va keyingi zikrga o‘tadi. Orqaga qaytarish oxirgi sanash/davra almashishini ham qaytaradi.
-- Masjidlar OSM/Overpass orqali olinadi; ichki xarita ishlatiladi, marshrut tashqi Maps’da ochiladi. Masjid ovozsiz rejimi tanlangan masjid markazi atrofidagi 150 m geofence bilan bog‘langan.
-- Qibla `expo-location` heading sensori va koordinatalardan foydalanadi; sensori yo‘q emulator haqiqiy telefon natijasini isbotlamaydi.
+- Masjidlar 2347 ta yozuvli mahalliy O‘zbekiston katalogi, cache va OSM/Overpass yangilanishidan foydalanadi. Ichki xarita, ayrim masjidlar uchun Wikimedia suratlari va litsenziya havolalari bor. Marshrut tashqi Maps’da ochiladi. Masjid ovozsiz rejimi tanlangan masjid markazi atrofidagi 150 m geofence bilan bog‘langan.
+- Qibla `expo-location` heading sensori va koordinatalardan foydalanadi. Qora Ka’ba tepada joyida, telefon strelkasi aylanadi. Android’da foreground joylashuv ruxsati kerak; GPS natijasini kutish watcher start’ini to‘xtatmaydi. Native compass moduli saqlangan, ammo joriy ekran undan foydalanmaydi. Har Qibla fokusida 5.2 soniyalik sakkiz animatsiyasi popupda chiqadi; sensor/GPS shu vaqtda ishga tushadi. Tugma yoki Android Back popupni darhol yopadi. Emulator haqiqiy telefon aniqligini isbotlamaydi.
 - Language selection va undan keyin 6 ta welcome sahifa bor. Dizayn matnlari foydalanuvchi HTML’lariga mos saqlanishi kerak.
+- 1.0.5 da tanishtiruv SVG matnlarining `4`, `a`, `A` ichki bo‘shliqlari uchun `evenodd` qoidasi qo‘shilgan. Muammo chiqqan haqiqiy telefonda qayta sinash kerak; API 36 emulatorda eski APK’da ham bu buzilish kuzatilmagan.
+- Faol sahifadagi taymerlar, tab freeze, muddatli umumiy GPS so‘rovlari, Android DND/ringer holatini egalik qoidasi bilan tiklash va batareya/avtomatik rejim diagnostikasi saqlangan. Namoz jadvalini yangilovchi fon vazifasi tizim scheduler’iga bog‘liq; ilovani ochish ham jadvalni yangilaydi.
 
 ## Android eslatma engine v5
 
@@ -69,6 +72,7 @@ Ilova versiyasi hozir `1.0.0`. Play Store/TestFlight tarqatish, production signi
 ## Tasdiqlangan va hali tasdiqlanmagan natijalar
 
 - Oxirgi manbada `npx expo lint`, `npx tsc --noEmit` va Android `assembleRelease` muvaffaqiyatli o‘tdi.
+- 1.0.5 test APK va production AAB yig‘ilishi, Android unit testlari, imzo/bundletool tekshiruvlari o‘tgan. 48 native kutubxona 16 KB ELF alignment talabidan o‘tgan, APK/AAB ichidagi 52 kod fayli bir xil. Kompas, popup va tanishtiruv SVG matnlari API 36 emulatorda tekshirilgan.
 - Foydalanuvchi Redmi Note 8’da **bildirishnoma vaqtida vibratsiya ishlayotganini tasdiqladi**.
 - **v5 ekran uyg‘onishi va flashlight miltillashi fizik telefonda hali tasdiqlanmagan.** Yangi dasturchi birinchi bo‘lib ekran qulflangan holatda Sinov bildirishnomasi, Yopish va 10 soniyalik avtomatik to‘xtashni tekshirishi kerak.
 - Masjidga haqiqiy kirish/chiqish, ishlab chiqaruvchi battery/autostart siyosatlari va sensor aniqligi fizik qurilmalarda tekshiriladi. Manba arxitekturasi borligi barcha telefonlarda ish tasdiqlanganini anglatmaydi.
@@ -76,11 +80,13 @@ Ilova versiyasi hozir `1.0.0`. Play Store/TestFlight tarqatish, production signi
 
 Redmi’da Profil → Eslatmalarni tekshirish → Sinov bildirishnomasi orqali kamera ruxsatini bering, keyin ekranni qulflang. MIUI autostart, battery “Cheklovlarsiz”, suzuvchi bildirishnomalar, qulf ekranida ko‘rsatish va fon pop-up ruxsatlari ta’sir qiladi. Android 14+ full-screen intent ruxsati alohida.
 
-## Oxirgi APK
+## Joriy paketlar va ochiq release ishlari
 
-Private GitHub Releases’ga `Halovat-screen-flash-v5-2026-10-08.apk` qo‘yiladi.
+Private [GitHub Releases 1.0.5](https://github.com/dilmuroderkinov777-ops/halovat/releases/tag/v1.0.5-test): `Halovat-1.0.5-test.apk`, `Halovat-1.0.5-production.aab` va production mapping. Hash/o‘lchamlar [manifest](./releases/1.0.5/release-manifest.json)da. APK/AAB source commitga qo‘shilmaydi.
 
-SHA-256: `20FDE39741E96ADB5F3027D15C5CD8F57E062509C2808E0609ED9249162BF177`
+Redmi Note 8, 10 Lite va uchinchi telefonda [sinov jadvali](./halovat-expo/device-audit/RELEASE_TEST_CHECKLIST_1.0.5.md) to‘ldiriladi. Play uchun privacy URL, aloqa ma’lumoti, listing va ruxsat deklaratsiyalari ochiq. [Tayyorgarlik hisoboti](./halovat-expo/device-audit/PLAY_RELEASE_PREPARATION_2026-10-18.md) tarixiy 1.0.1 holatini ham o‘z ichiga oladi; native compass haqidagi band joriy engine’ni bildirmaydi.
+
+2026-10-18 auditida 18 high build-tool ogohlantirishi ikki ildiz advisory (`braces`, `node-forge`) ta’siri sifatida qolgan. Runtime URI decoder tuzatilgan; build-tool masalalari yopilgan deb belgilanmagan. `device-audit/` dagi sana/versiyali oldingi hisobotlar tarixiy dalillardir; joriy holat uchun ushbu fayl va `LATEST_RELEASE.md` asos bo‘ladi.
 
 ## Dizayn manbalari
 

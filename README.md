@@ -1,6 +1,8 @@
 # Halovat
 
-Namoz va ibodat hamrohi. Joriy mahsulot **Expo SDK 57 + React Native 0.86 + TypeScript** asosida qurilgan. Bu repository 2026-10-08 dagi loyiha manbalari va dizayn resurslarini boshqa dasturchiga topshirish uchun tayyorlangan.
+Namoz va ibodat hamrohi. Joriy mahsulot **Expo SDK 57 + React Native 0.86 + TypeScript** asosida qurilgan. Repository **2026-10-19 dagi 1.0.5 (Android code 6)** manbalari bilan yangilangan.
+
+[So‘nggi Android sinov APK/AAB](https://github.com/dilmuroderkinov777-ops/halovat/releases/tag/v1.0.5-test) · [O‘zgarishlar va tekshiruvlar](./halovat-expo/LATEST_RELEASE.md) · [Fizik telefon sinov jadvali](./halovat-expo/device-audit/RELEASE_TEST_CHECKLIST_1.0.5.md)
 
 ## Qayerdan boshlash kerak
 
@@ -28,4 +30,4 @@ npx expo run:android
 
 Expo Go va brauzer preview Android ovozsiz rejimi, qo‘ng‘iroq screening, kamera chirog‘i yoki native eslatma oynasini bajarmaydi. Bu funksiyalar `modules/halovat-focus` Kotlin modulida joylashgan.
 
-Android install fayli private repositoryning **Releases** bo‘limiga alohida qo‘yiladi. Dasturchiga repository egasi GitHub **Settings → Collaborators** orqali kirish beradi.
+Android install fayli private repositoryning **Releases** bo‘limida alohida saqlanadi. APK/AAB va imzolash kalitlari source commitga kiritilmaydi. Haqiqiy Redmi sinovi va Play release uchun ochiq ishlar HANDOFF’da qayd etilgan. Dasturchiga repository egasi GitHub **Settings → Collaborators** orqali kirish beradi.

@@ -1,0 +1,1 @@
+CommonJS backport of SamVerschueren/decode-uri-component v0.5.0. Only the default export was converted to module.exports for Expo Router SDK 57 / query-string 7 compatibility. Upstream: https://raw.githubusercontent.com/SamVerschueren/decode-uri-component/v0.5.0/index.js

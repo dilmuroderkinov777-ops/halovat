@@ -43,7 +43,7 @@ function BottomBar({ state, navigation }: BottomTabBarProps) {
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false, lazy: true }} tabBar={props => <BottomBar {...props} />}>
+    <Tabs screenOptions={{ headerShown: false, lazy: true, freezeOnBlur: true }} tabBar={props => <BottomBar {...props} />}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="tracker" />
       <Tabs.Screen name="tasbeeh" />

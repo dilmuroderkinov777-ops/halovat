@@ -3,13 +3,17 @@
     "name": "Halovat",
     "slug": "halovat",
     "scheme": "halovat-expo",
-    "version": "1.0.0",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/halovat-launcher.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "uz.halovat.expo"
+      "bundleIdentifier": "uz.halovat.expo",
+      "buildNumber": "6",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "uz.halovat.expo",
@@ -17,7 +21,8 @@
         "backgroundColor": "#004D2A",
         "foregroundImage": "./assets/halovat-launcher.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "versionCode": 6
     },
     "web": {
       "favicon": "./assets/halovat-launcher.png"
@@ -55,7 +60,18 @@
         }
       ],
       "expo-font",
-      "./plugins/withLauncherArtworkInset"
+      "./plugins/withLauncherArtworkInset",
+      "expo-background-task",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "./plugins/withReleaseSigning"
     ]
   }
 }

@@ -1,10 +1,11 @@
-import { Host, Switch as ExpoSwitch } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
+import * as Haptics from 'expo-haptics';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useFocusEffect } from 'expo-router';
-import { BellRing, CalendarDays, Check, CheckCheck, ChevronRight, Copy, Globe, Landmark, HandHeart, ListChecks, LocateFixed, MapPin, Moon, Pencil, PhoneIncoming, RefreshCw, ShieldCheck, Sunrise, Trash2, VolumeX, X } from 'lucide-react-native';
+import { Battery, BellRing, CalendarDays, Check, CheckCheck, ChevronRight, Copy, Globe, Landmark, HandHeart, ListChecks, LocateFixed, MapPin, Moon, Pencil, PhoneIncoming, RefreshCw, ShieldCheck, Sunrise, Trash2, VolumeX, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, AppState, Linking, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, AppState, Linking, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
@@ -13,27 +14,31 @@ import { LANGUAGES } from '../../data/languages';
 import { SUPPORT_CARDS, SUPPORT_DESCRIPTION } from '../../data/support';
 import { CITIES, formatUzDate } from '../../domain/prayers';
 import { focusControl, type FocusCallEvent, type QuietModeStatus } from '../../services/focusControl';
-import { CHECKIN_CHANNEL, REMINDER_CHANNEL, ensureReminderFlashAccess } from '../../services/reminders';
+import { CHECKIN_CHANNEL, REMINDER_CHANNEL, ensureReminderFlashAccess, iosReminderWarnings, notificationsAllowed } from '../../services/reminders';
+import { needsManufacturerBatterySetup, reminderBatteryInstructions, showReminderBatteryGuide } from '../../services/reminderBattery';
+import { ensureAutomaticQuietAccess } from '../../services/automaticQuiet';
+import { scheduleDiagnostics } from '../../services/prayerScheduler';
 import { Text } from '../../ui/AppText';
-import { useAppTheme, useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
+import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
 
 const DELAYS = [15, 20, 30];
-type Panel = 'name' | 'city' | 'reminders' | 'language' | 'delivery' | null;
-const PANEL_TITLES = { name: 'Profilni tahrirlash', city: 'Shaharni tanlang', reminders: 'Eslatmalar va Bildirishnomalar', language: 'Ilova tili', delivery: 'Eslatmalar holati' };
+const expoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+type Panel = 'name' | 'city' | 'reminders' | 'language' | 'delivery' | 'ios-setup' | null;
+const PANEL_TITLES = { name: 'Profilni tahrirlash', city: 'Shaharni tanlang', reminders: 'Eslatmalar va Bildirishnomalar', language: 'Ilova tili', delivery: 'Eslatmalar holati', 'ios-setup': 'iPhone sozlamalari' };
 
 export default function ProfileScreen() {
   const styles = useThemedStyles(baseStyles);
   const colors = useThemeColors();
-  const { dark } = useAppTheme();
   const { language, setLanguage, t } = useLanguage();
   const selectedLanguage = LANGUAGES.find(item => item.id === language) ?? LANGUAGES[0];
   const { city, data, setCity, detectCity, setReminderEnabled, setPrayerTimeReminderEnabled, setDuaReminderEnabled, setReminderMinutes, setDisplayName, setArabicFontSize, setDarkMode, setPrayerAutoQuiet, setMosqueAutoQuiet, now, reminderPlan, refreshReminders, sendReminderPreview } = useHalovat();
-  const [delivery, setDelivery] = useState<{ allowed: boolean; popup: boolean; native: QuietModeStatus | null } | null>(null);
+  const [delivery, setDelivery] = useState<{ allowed: boolean; popup: boolean; sound: boolean; lockScreen: boolean; warnings: string[]; native: QuietModeStatus | null } | null>(null);
   const [deliveryRevision, setDeliveryRevision] = useState(0);
   const [panel, setPanel] = useState<Panel>(null);
   const [nameDraft, setNameDraft] = useState(data.displayName);
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
   const [callEvents, setCallEvents] = useState<FocusCallEvent[]>([]);
+  const [batteryStatus, setBatteryStatus] = useState<QuietModeStatus | null>(null);
   const completed = Object.values(data.prayerStatus).filter(status => status === 'done').length;
   const missed = Object.values(data.prayerStatus).filter(status => status === 'missed').length;
   const memberDays = Math.max(1, Math.floor((now.getTime() - data.firstOpenedAt) / 86400000) + 1);
@@ -41,8 +46,14 @@ export default function ProfileScreen() {
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    void Promise.resolve().then(() => { if (active) setCallEvents(focusControl?.getCallEvents() ?? []); });
-    return () => { active = false; };
+    const update = () => {
+      if (!active) return;
+      setCallEvents(focusControl?.getCallEvents() ?? []);
+      setBatteryStatus(focusControl?.getStatus() ?? null);
+    };
+    void Promise.resolve().then(update);
+    const subscription = AppState.addEventListener('change', state => { if (state === 'active') update(); });
+    return () => { active = false; subscription.remove(); };
   }, []));
 
   useEffect(() => {
@@ -52,7 +63,12 @@ export default function ProfileScreen() {
       try {
         const permission = await Notifications.getPermissionsAsync();
         const channels = Platform.OS === 'android' ? await Promise.all([REMINDER_CHANNEL, CHECKIN_CHANNEL].map(id => Notifications.getNotificationChannelAsync(id))) : [];
-        if (active) setDelivery({ allowed: permission.granted, popup: Platform.OS !== 'android' || channels.every(channel => !!channel && channel.importance >= Notifications.AndroidImportance.HIGH), native: focusControl?.getStatus() ?? null });
+        if (active) setDelivery({ allowed: notificationsAllowed(permission),
+          popup: Platform.OS === 'ios' ? permission.ios?.allowsAlert === true && permission.ios.alertStyle !== Notifications.IosAlertStyle.NONE : channels.every(channel => !!channel && channel.importance >= Notifications.AndroidImportance.HIGH),
+          sound: Platform.OS === 'ios' ? permission.ios?.allowsSound === true : true,
+          lockScreen: Platform.OS === 'ios' ? permission.ios?.allowsDisplayOnLockScreen === true : true,
+          warnings: iosReminderWarnings(permission),
+          native: focusControl?.getStatus() ?? null });
       } catch { if (active) setDelivery(null); }
     };
     void update();
@@ -61,6 +77,12 @@ export default function ProfileScreen() {
   }, [panel, reminderPlan, deliveryRevision]);
 
   const previewVibration = () => {
+    if (Platform.OS === 'ios') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).then(() => {
+        Alert.alert(t('Vibratsiya sinovi'), t('Bu tugma ilova ochiq paytdagi tebranishni tekshiradi. Qulf ekranidagi eslatmani alohida “Sinov bildirishnomasi” orqali tekshiring.'));
+      }).catch(() => Alert.alert(t('Vibratsiya boshlanmadi'), t('Telefon sozlamalarini tekshiring.')));
+      return;
+    }
     if (!focusControl || (focusControl.getStatus().reminderEngineVersion ?? 0) < 4) {
       Alert.alert(t('Yangi APK kerak'), t('Vibratsiya tuzatilgan yangi APKni o‘rnating.'));
       return;
@@ -73,7 +95,43 @@ export default function ProfileScreen() {
   };
 
   const closePanel = () => { Keyboard.dismiss(); setPanel(null); };
+  const previewQuiet = async () => {
+    const native = focusControl;
+    if (!native || !await ensureAutomaticQuietAccess(true)) return;
+    if (native.getStatus().sessionActive) {
+      Alert.alert(t('Ovozsiz rejim'), t('Ovozsiz rejim hozir faol. Sinovni rejim tugagandan keyin boshlang.'));
+      return;
+    }
+    const result = native.setQuietSession(15, false, true);
+    setDeliveryRevision(value => value + 1);
+    if (!result.ok) {
+      Alert.alert(t('Ovozsiz rejim yoqilmadi'), native.getStatus().quietError ?? t('Telefon ruxsatlarini tekshiring.'));
+      return;
+    }
+    Alert.alert(t('Ovozsiz rejim sinovi'), t('Telefon 15 soniyaga ovozsiz rejimga o‘tdi. So‘ng avvalgi ovoz holati tiklanadi.'), [
+      { text: t('To‘xtatish'), onPress: () => { native.endQuietSession(); setDeliveryRevision(value => value + 1); } },
+    ]);
+  };
   const saveName = () => { setDisplayName(nameDraft); closePanel(); };
+  const previewScheduledQuiet = async () => {
+    if (!focusControl || !await ensureAutomaticQuietAccess(true)) return;
+    if (focusControl.getStatus().sessionActive) { Alert.alert(t('Ovozsiz rejim'), t('Ovozsiz rejim hozir faol. Sinovni rejim tugagandan keyin boshlang.')); return; }
+    try {
+      focusControl.scheduleQuietPreview();
+      Alert.alert('Fon rejimi sinovi', 'Ekranni qulflang. 15 soniyadan keyin ovozsiz rejim boshlanadi va 30 soniya davom etadi. So‘ng avvalgi ovoz qaytishi kerak.', [
+        { text: 'Boshlash' }, { text: 'Bekor qilish', style: 'cancel', onPress: () => focusControl?.cancelQuietPreview() },
+      ]);
+    } catch { Alert.alert('Sinov boshlanmadi', 'DND va aniq alarm ruxsatlarini tekshiring.'); }
+  };
+  const copyDiagnostics = async () => {
+    try {
+      const report = { version: Constants.expoConfig?.version, time: new Date().toISOString(),
+        native: focusControl?.getStatus(), compass: { engine: 'expo-location', layout: 'fixed-kaaba' },
+        schedule: await scheduleDiagnostics(), reminders: reminderPlan };
+      await Clipboard.setStringAsync(JSON.stringify(report, null, 2));
+      Alert.alert('Nusxalandi', 'Sinov natijasiga ushbu diagnostikani qo‘shishingiz mumkin.');
+    } catch { Alert.alert('Nusxa olinmadi', 'Qayta urinib ko‘ring.'); }
+  };
   useEffect(() => {
     if (!copiedCard) return;
     const timer = setTimeout(() => setCopiedCard(null), 2500);
@@ -89,7 +147,7 @@ export default function ProfileScreen() {
       Alert.alert('Nusxa olinmadi', 'Karta raqamini nusxalash uchun qayta urinib ko‘ring.');
     }
   };
-  const switchControl = (value: boolean, onChange: (value: boolean) => void) => <Host colorScheme={dark ? 'dark' : 'light'} seedColor="#006C49" style={styles.switchHost}><ExpoSwitch value={value} onValueChange={onChange} /></Host>;
+  const switchControl = (value: boolean, onChange: (value: boolean) => void) => <Switch value={value} onValueChange={onChange} trackColor={{ false: '#BFC9C3', true: '#006C49' }} thumbColor="#FFFFFF" style={styles.switchHost} />;
 
   return <Screen header={<AppTopBar subtitle="Profil" />} style={styles.screen} contentStyle={styles.content}>
     <View style={[styles.card, styles.identityCard]}>
@@ -123,10 +181,19 @@ export default function ProfileScreen() {
         <View style={styles.row}><View style={styles.iconBox}><BellRing size={20} color={colors.green} /></View><Pressable onPress={() => setPanel('reminders')} style={styles.rowCopy}><Text style={styles.rowTitle}>Namoz vaqti eslatmasi</Text><Text style={styles.rowSubtitle}>5 vaqt uchun bildirishnoma</Text></Pressable>{switchControl(data.prayerTimeReminderEnabled, value => void setPrayerTimeReminderEnabled(value))}</View>
         <View style={styles.row}><View style={styles.iconBox}><ListChecks size={20} color={colors.green} /></View><Pressable onPress={() => setPanel('reminders')} style={styles.rowCopy}><Text style={styles.rowTitle}>Namozdan keyin so‘rash</Text><Text style={styles.rowSubtitle}>O‘qidim yoki qazo deb hisobga olish</Text></Pressable>{switchControl(data.reminderEnabled, value => void setReminderEnabled(value))}</View>
         <View style={styles.row}><View style={styles.iconBox}><Sunrise size={20} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Tonggi va kechki zikrlar</Text><Text style={styles.rowSubtitle}>07:00 va 19:30 da sokin eslatma</Text></View>{switchControl(data.duaReminderEnabled, value => void setDuaReminderEnabled(value))}</View>
-        <View style={styles.row}><View style={styles.iconBox}><VolumeX size={20} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Namoz vaqtida ovozsiz rejim</Text><Text style={styles.rowSubtitle}>Har namoz vaqtida 25 daqiqaga</Text></View>{switchControl(data.prayerAutoQuiet, value => void setPrayerAutoQuiet(value))}</View>
-        <View style={styles.row}><View style={styles.iconBox}><Landmark size={20} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Masjid hududida ovozsiz rejim</Text><Text numberOfLines={1} style={styles.rowSubtitle}>{data.mosqueName ? `${data.mosqueName} · 150 m hudud` : 'Tanlangan masjidga kirganda'}</Text></View>{switchControl(data.mosqueAutoQuiet, value => void setMosqueAutoQuiet(value))}</View>
+        {Platform.OS !== 'ios' ? <>
+          <View style={styles.row}><View style={styles.iconBox}><VolumeX size={20} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Namoz vaqtida ovozsiz rejim</Text><Text style={styles.rowSubtitle}>Har namoz vaqtida 25 daqiqaga</Text></View>{switchControl(data.prayerAutoQuiet, value => void setPrayerAutoQuiet(value))}</View>
+          <View style={styles.row}><View style={styles.iconBox}><Landmark size={20} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Masjid hududida ovozsiz rejim</Text><Text numberOfLines={1} style={styles.rowSubtitle}>{data.mosqueName ? `${data.mosqueName} · 150 m hudud` : 'Tanlangan masjidga kirganda'}</Text></View>{switchControl(data.mosqueAutoQuiet, value => void setMosqueAutoQuiet(value))}</View>
+        </> : <Pressable accessibilityRole="button" onPress={() => setPanel('ios-setup')} style={styles.row}><View style={styles.iconBox}><Moon size={20} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Vibratsiya, chiroq va Focus</Text><Text style={styles.rowSubtitle}>iPhone uchun sozlash qo‘llanmasi</Text></View><ChevronRight size={18} color={colors.green} /></Pressable>}
       </View>
     </View>
+
+    {Platform.OS === 'android' && batteryStatus ? <View style={[styles.card, styles.batteryCard]}>
+      <View style={styles.row}><View style={styles.iconBox}><Battery size={21} color={colors.green} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>Eslatmalar fonda ishlashi</Text><Text style={styles.rowSubtitle}>{needsManufacturerBatterySetup(batteryStatus) ? 'Redmi / MIUI uchun qo‘llanma' : batteryStatus.batteryUnrestricted ? 'Android batareya cheklovi olib tashlangan' : 'Batareya cheklovini tekshiring'}</Text></View></View>
+      <Text style={styles.rowSubtitle}>{reminderBatteryInstructions(batteryStatus)}</Text>
+      <Pressable accessibilityRole="button" onPress={() => { void showReminderBatteryGuide(t); }} style={styles.gpsButton}><Text style={styles.gpsText}>Batareya sozlamalarini ochish</Text><ChevronRight size={16} color={colors.green} /></Pressable>
+      {needsManufacturerBatterySetup(batteryStatus) ? <Text style={styles.rowSubtitle}>MIUI sozlamasini ilova avtomatik tekshira olmaydi. Sozlagach, sinov eslatmasini ekran o‘chiq holatda tekshiring.</Text> : null}
+    </View> : null}
 
     <Pressable accessibilityRole="button" onPress={() => { refreshReminders(); setPanel('delivery'); }} style={styles.gpsButton}><BellRing size={17} color={colors.green} /><Text style={styles.gpsText}>Eslatmalarni tekshirish</Text><ChevronRight size={16} color={colors.green} /></Pressable>
 
@@ -158,11 +225,39 @@ export default function ProfileScreen() {
       <KeyboardAvoidingView enabled={panel === 'name'} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.modalRoot, panel === 'name' && styles.nameModalRoot]}><Pressable accessibilityLabel="Yopish" onPress={closePanel} style={StyleSheet.absoluteFill} /><View style={[styles.sheet, panel === 'name' && styles.nameDialog]}>{panel !== 'name' ? <View style={styles.sheetHandle} /> : null}<View style={styles.sectionHeading}><Text style={styles.sectionTitle}>{panel ? PANEL_TITLES[panel] : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Yopish" onPress={closePanel}><X size={22} color={colors.body} /></Pressable></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetContent}>
         {panel === 'name' ? <><Text style={styles.rowTitle}>Ismingiz</Text><TextInput accessibilityLabel="Ismingiz" value={nameDraft} onChangeText={setNameDraft} maxLength={40} autoFocus selectTextOnFocus placeholder={t('Ismingiz')} placeholderTextColor={colors.muted} style={styles.nameInput} returnKeyType="done" onSubmitEditing={saveName} /><Pressable accessibilityRole="button" onPress={saveName} style={styles.saveButton}><Text style={styles.saveText}>Saqlash</Text></Pressable></> : null}
         {panel === 'city' ? <View style={styles.cityList}>{CITIES.map(item => <Pressable accessibilityRole="button" accessibilityState={{ selected: item.id === city.id }} key={item.id} onPress={() => { void setCity(item.id); setPanel(null); }} style={[styles.cityOption, item.id === city.id && styles.cityOptionActive]}><Text style={styles.cityText}>{item.name}</Text>{item.id === city.id ? <Check size={16} color={colors.green} /> : null}</Pressable>)}</View> : null}
-        {panel === 'reminders' ? <><Text style={styles.rowTitle}>Namoz vaqtidan keyin</Text><View style={styles.optionRow}>{DELAYS.map(minutes => <Pressable key={minutes} accessibilityState={{ selected: data.reminderMinutes === minutes }} onPress={() => setReminderMinutes(minutes)} style={[styles.option, data.reminderMinutes === minutes && styles.optionActive]}><Text style={[styles.optionText, data.reminderMinutes === minutes && styles.optionSelected]}>{minutes} daq.</Text></Pressable>)}</View><Text style={styles.rowSubtitle}>{Platform.OS === 'android' ? 'Eslatmalar 30 kun uchun saqlanadi.' : 'Namoz vaqti eslatmalari 7 kun, namozdan keyingi savollar 3 kun uchun saqlanadi.'} Ilovani ochganingizda jadval yangilanadi. Ovozsiz rejim yoqilgan bo‘lsa, savol rejim tugagandan keyin keladi.</Text></> : null}
+        {panel === 'reminders' ? <><Text style={styles.rowTitle}>Namoz vaqtidan keyin</Text><View style={styles.optionRow}>{DELAYS.map(minutes => <Pressable key={minutes} accessibilityState={{ selected: data.reminderMinutes === minutes }} onPress={() => setReminderMinutes(minutes)} style={[styles.option, data.reminderMinutes === minutes && styles.optionActive]}><Text style={[styles.optionText, data.reminderMinutes === minutes && styles.optionSelected]}>{minutes} daq.</Text></Pressable>)}</View><Text style={styles.rowSubtitle}>{Platform.OS === 'android' ? 'Eslatmalar 30 kun uchun saqlanadi. Ilovani ochganingizda jadval yangilanadi. Ovozsiz rejim yoqilgan bo‘lsa, savol rejim tugagandan keyin keladi.' : 'Namoz vaqti eslatmalari 7 kun, namozdan keyingi savollar 3 kun uchun saqlanadi. Ilovani ochganingizda jadval yangilanadi.'}</Text></> : null}
+        {panel === 'ios-setup' ? <>
+          <Text style={styles.rowTitle}>Bildirishnoma ruxsatlari</Text>
+          <Text style={styles.rowSubtitle}>{expoGo ? 'Sozlamalar → Bildirishnomalar → Expo Go: bildirishnomalar, ovoz va qulf ekranida ko‘rsatishni yoqing.' : 'Sozlamalar → Bildirishnomalar → Halovat: bildirishnomalar, ovoz va qulf ekranida ko‘rsatishni yoqing.'}</Text>
+          <Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Telefon sozlamalarini ochish</Text></Pressable>
+          <Text style={styles.rowTitle}>Eslatma vibratsiyasi</Text>
+          <Text style={styles.rowSubtitle}>Sozlamalar → Sounds & Haptics → Haptics → Always Play’ni tanlang. So‘ng Accessibility → Touch → Vibration yoqilganini tekshiring.</Text>
+          <Pressable accessibilityRole="button" onPress={previewVibration} style={styles.gpsButton}><Text style={styles.gpsText}>Vibratsiyani tekshirish</Text></Pressable>
+          <Text style={styles.rowSubtitle}>Bu sinov faqat ilova ochiq paytda ishlaydi. Qulf ekranidagi eslatma vibratsiyasini iOS boshqaradi.</Text>
+          <Pressable accessibilityRole="button" onPress={() => void Linking.openURL('https://support.apple.com/en-mide/guide/iphone/iph07c867f28/26/ios/26')} style={styles.gpsButton}><Text style={styles.gpsText}>Apple: vibratsiyani sozlash</Text></Pressable>
+          <Text style={styles.rowTitle}>Eslatma chirog‘i</Text>
+          <Text style={styles.rowSubtitle}>Sozlamalar → Accessibility → Audio & Visual → Flash for Alerts’ni yoqing. LED Flash yoki Both’ni tanlang. Telefon jim rejimda bo‘lsa, Flash in Silent Mode’ni ham yoqing.</Text>
+          <Text style={styles.rowSubtitle}>Ekran ochiq paytda ham chiroq kerak bo‘lsa, Flash While Unlocked’ni yoqing. Chiroq va vibratsiya davomiyligini iOS boshqaradi.</Text>
+          <Pressable accessibilityRole="button" onPress={() => void Linking.openURL('https://support.apple.com/guide/iphone/flash-indicator-light-screen-notifications-iph79ced06b1/ios')} style={styles.gpsButton}><Text style={styles.gpsText}>Apple: chiroqni sozlash</Text></Pressable>
+          <Text style={styles.rowTitle}>Focus rejimi</Text>
+          <Text style={styles.rowSubtitle}>iPhone’da ovozsiz rejimni Boshqaruv markazi → Focus orqali yoqing. Halovat uni avtomatik yoqmaydi va qo‘ng‘iroqlar tarixini o‘qimaydi.</Text>
+          <Text style={styles.rowSubtitle}>Eslatmalar Focus paytida ham kerak bo‘lsa, Sozlamalar → Focus → tanlangan rejim → Ilovalar orqali Halovatga ruxsat bering.</Text>
+          {expoGo ? <Text style={styles.rowSubtitle}>Expo Go testida ruxsatlar Expo Go ilovasiga beriladi.</Text> : null}
+        </> : null}
         {panel === 'delivery' ? <>
           <Text style={styles.rowSubtitle}>Ruxsat berishdan tashqari, kerakli funksiyaning tugmasi ham yoqilgan bo‘lishi kerak.</Text>
           <View style={styles.row}><Text style={styles.rowTitle}>Bildirishnomalar</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.allowed ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View>
           <View style={styles.row}><Text style={styles.rowTitle}>Pop-up bildirishnomalar</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.popup ? 'Yoqilgan' : 'Sozlash kerak'}</Text></View>
+          {Platform.OS === 'ios' ? <>
+            <View style={styles.row}><Text style={styles.rowTitle}>Bildirishnoma ovozi</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.sound ? 'Yoqilgan' : 'Sozlash kerak'}</Text></View>
+            <View style={styles.row}><Text style={styles.rowTitle}>Qulf ekranida ko‘rsatish</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.lockScreen ? 'Yoqilgan' : 'Sozlash kerak'}</Text></View>
+            {delivery?.warnings.map(warning => <Text key={warning} style={[styles.rowSubtitle, { color: colors.red }]}>{warning}</Text>)}
+            <Text style={styles.rowSubtitle}>Banner, ovoz va vibratsiya iPhone’ning bildirishnoma hamda Focus sozlamalariga bog‘liq.</Text>
+            <Text style={styles.rowSubtitle}>Vibratsiya va chiroqning umumiy iPhone sozlamalarini ilova o‘qiy olmaydi. Ularni telefon sozlamalarida tekshiring.</Text>
+            {expoGo ? <Text style={styles.rowSubtitle}>Expo Go testida ruxsatlar Expo Go ilovasiga beriladi.</Text> : null}
+            <Pressable accessibilityRole="button" onPress={() => setPanel('ios-setup')} style={styles.gpsButton}><Text style={styles.gpsText}>Vibratsiya va chiroqni sozlash</Text><ChevronRight size={16} color={colors.green} /></Pressable>
+            <Pressable accessibilityRole="button" onPress={previewVibration} style={styles.gpsButton}><Text style={styles.gpsText}>Vibratsiyani tekshirish</Text></Pressable>
+          </> : null}
           {Platform.OS === 'android' ? <><View style={styles.row}><Text style={styles.rowTitle}>Aniq vaqt ruxsati</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.native?.exactAlarmAccess ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View><View style={styles.row}><Text style={styles.rowTitle}>Bezovta qilmang ruxsati</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.native?.dndAccess ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View></> : null}
           {Platform.OS === 'android' ? <><View style={styles.row}><Text style={styles.rowTitle}>Eslatma oynasi ruxsati</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.native?.reminderPopupAccess ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View><Pressable accessibilityRole="button" onPress={() => focusControl?.openReminderPopupSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Eslatma oynasini sozlash</Text></Pressable></> : null}
           {Platform.OS === 'android' ? <>
@@ -181,12 +276,21 @@ export default function ProfileScreen() {
           </> : null}
           <Text style={styles.rowTitle}>{reminderPlan.busy ? 'Jadval yangilanmoqda…' : `${reminderPlan.count} ta eslatma rejalashtirilgan`}</Text>
           {reminderPlan.nextAt ? <Text style={styles.rowSubtitle}>Keyingi eslatma: {new Date(reminderPlan.nextAt).toLocaleString()}</Text> : null}
-          <Text style={styles.rowSubtitle}>{data.prayerAutoQuiet ? `Ovozsiz rejim: yoqilgan · ${delivery?.native?.prayerWindowCount ?? 0} ta namoz vaqti` : 'Namoz vaqtida ovozsiz rejim: o‘chirilgan'}</Text>
+          {Platform.OS === 'android' ? <Text style={styles.rowSubtitle}>{data.prayerAutoQuiet ? `Ovozsiz rejim: yoqilgan · ${delivery?.native?.prayerWindowCount ?? 0} ta namoz vaqti` : 'Namoz vaqtida ovozsiz rejim: o‘chirilgan'}</Text> : null}
+          {Platform.OS === 'android' ? <>
+            <Text style={styles.rowSubtitle}>{delivery?.native?.ringerMode === 0 ? 'Telefon ovozi: ovozsiz' : delivery?.native?.ringerMode === 1 ? 'Telefon ovozi: tebranish' : 'Telefon ovozi: yoqilgan'}</Text>
+            <Text style={styles.rowSubtitle}>{data.mosqueAutoQuiet ? delivery?.native?.mosqueInside ? 'Masjid hududi: ichkarida' : 'Masjid hududi: kirish kutilmoqda' : 'Masjid hududida ovozsiz rejim: o‘chirilgan'}</Text>
+            {delivery?.native?.mosqueQuietError ? <Text style={[styles.rowSubtitle, { color: colors.red }]}>{delivery.native.mosqueQuietError}</Text> : null}
+            <Pressable accessibilityRole="button" onPress={() => void previewQuiet()} style={styles.gpsButton}><Text style={styles.gpsText}>Ovozsiz rejimni tekshirish · 15 soniya</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => void previewScheduledQuiet()} style={styles.gpsButton}><Text style={styles.gpsText}>Ekran qulflanganda ovozsiz rejim sinovi</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => { focusControl?.cancelQuietPreview(); setDeliveryRevision(value => value + 1); }} style={styles.gpsButton}><Text style={styles.gpsText}>Fon sinovini to‘xtatish</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => void copyDiagnostics()} style={styles.gpsButton}><Text style={styles.gpsText}>Diagnostikani nusxalash</Text></Pressable>
+          </> : null}
           {reminderPlan.error || delivery?.native?.quietError ? <Text style={[styles.rowSubtitle, { color: colors.red }]}>{reminderPlan.error ?? delivery?.native?.quietError}</Text> : null}
           <Pressable accessibilityRole="button" onPress={() => void sendReminderPreview()} style={styles.saveButton}><Text style={styles.saveText}>Sinov bildirishnomasi</Text></Pressable>
-          <Text style={styles.rowSubtitle}>Sinov eslatmasi 10 soniyadan keyin keladi. Bezovta qilmang rejimi pop-up va ovozni cheklaydi.</Text>
+          <Text style={styles.rowSubtitle}>{Platform.OS === 'ios' ? 'Sinov eslatmasi 10 soniyadan keyin keladi. iPhone’ni qulflab tekshiring. Focus rejimi bildirishnomani cheklashi mumkin.' : 'Sinov eslatmasi 10 soniyadan keyin keladi. Bezovta qilmang rejimi pop-up va ovozni cheklaydi.'}</Text>
           <Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Telefon sozlamalarini ochish</Text></Pressable>
-          {focusControl ? <><Pressable accessibilityRole="button" onPress={() => focusControl?.openExactAlarmSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Aniq vaqt ruxsatini sozlash</Text></Pressable><Pressable accessibilityRole="button" onPress={() => focusControl?.openDndSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Ovozsiz rejim ruxsatini sozlash</Text></Pressable><Pressable accessibilityRole="button" onPress={() => focusControl?.openBatterySettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Batareya cheklovlarini sozlash</Text></Pressable><Text style={styles.rowSubtitle}>Telefon fon ishlarini cheklasa, Halovat uchun batareya cheklovini olib tashlang.</Text>{/xiaomi|redmi|poco/i.test(delivery?.native?.manufacturer ?? '') ? <><Text style={styles.rowSubtitle}>Redmi / MIUI: Halovat uchun avtomatik ishga tushirishni va suzuvchi bildirishnomalarni ham yoqing. Batareya bo‘limida “Cheklovlarsiz”ni tanlang.</Text><Text style={styles.rowSubtitle}>Qulf ekranida ko‘rsatish va fonda qalqib chiquvchi oynalar ruxsatini ham yoqing.</Text></> : null}</> : null}
+          {focusControl ? <><Pressable accessibilityRole="button" onPress={() => focusControl?.openExactAlarmSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Aniq vaqt ruxsatini sozlash</Text></Pressable><Pressable accessibilityRole="button" onPress={() => focusControl?.openDndSettings()} style={styles.gpsButton}><Text style={styles.gpsText}>Ovozsiz rejim ruxsatini sozlash</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { void showReminderBatteryGuide(t); }} style={styles.gpsButton}><Text style={styles.gpsText}>Batareya cheklovlarini sozlash</Text></Pressable><Text style={styles.rowSubtitle}>{reminderBatteryInstructions(delivery?.native ?? null)}</Text>{needsManufacturerBatterySetup(delivery?.native ?? null) ? <Text style={styles.rowSubtitle}>Qulf ekranida ko‘rsatish va fonda qalqib chiquvchi oynalar ruxsatini ham yoqing.</Text> : null}</> : null}
         </> : null}
         {panel === 'language' ? <><View accessibilityRole="radiogroup" accessibilityLabel={t('Ilova tili')}>{LANGUAGES.map(item => <Pressable key={item.id} accessibilityRole="radio" accessibilityState={{ checked: item.id === language }} onPress={() => void setLanguage(item.id)} style={styles.row}><Globe size={20} color={colors.green} /><View style={styles.rowCopy}><Text translate={false} style={styles.rowTitle}>{item.name}</Text><Text translate={false} style={styles.rowSubtitle}>{item.greeting}</Text></View>{item.id === language ? <Check size={20} color={colors.green} /> : null}</Pressable>)}</View><Text style={styles.rowTitle}>Arabcha matn o‘lchami</Text><View style={styles.optionRow}>{[{ label: 'Kichik', size: 20 }, { label: 'O‘rta', size: 23 }, { label: 'Katta', size: 28 }].map(item => <Pressable key={item.size} accessibilityState={{ selected: data.arabicFontSize === item.size }} onPress={() => setArabicFontSize(item.size)} style={[styles.option, data.arabicFontSize === item.size && styles.optionActive]}><Text style={[styles.optionText, data.arabicFontSize === item.size && styles.optionSelected]}>{item.label}</Text></Pressable>)}</View><Text style={{ color: colors.green, fontSize: data.arabicFontSize, lineHeight: data.arabicFontSize * 1.8, textAlign: 'center' }}>رَبِّ زِدْنِي عِلْمًا</Text></> : null}
       </ScrollView></View></KeyboardAvoidingView>
@@ -198,6 +302,7 @@ const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 30, gap: 24 },
   card: { borderRadius: 24, padding: 16, backgroundColor: '#FFFFFF', gap: 16, shadowColor: '#064E3B', shadowOpacity: 0.04, shadowRadius: 16, shadowOffset: { width: 0, height: 4 } },
+  batteryCard: { gap: 10 },
   identityCard: { borderRadius: 28, padding: 20, overflow: 'hidden', gap: 24 },
   identityGlow: { position: 'absolute', top: -70, right: -65, width: 170, height: 170, borderRadius: 85, backgroundColor: '#6CF8BB14' },
   identityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

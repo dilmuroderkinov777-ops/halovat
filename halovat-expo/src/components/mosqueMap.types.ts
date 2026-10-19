@@ -9,5 +9,7 @@ export type MosquePlace = {
 export type MosqueMapProps = {
   center: { latitude: number; longitude: number };
   places: MosquePlace[];
+  isUserLocation?: boolean;
+  selectedId?: string;
   onSelect: (id: string) => void;
 };

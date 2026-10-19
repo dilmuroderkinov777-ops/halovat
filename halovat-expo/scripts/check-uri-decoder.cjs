@@ -1,0 +1,12 @@
+const assert = require('node:assert/strict');
+const { performance } = require('node:perf_hooks');
+const decode = require('decode-uri-component');
+const query = require('query-string');
+assert.equal(decode('%D0%9C%D0%B0%D1%81%D0%B6%D0%B8%D0%B4'), 'Масжид');
+assert.equal(decode('hello%20world'), 'hello world');
+assert.equal(query.parse('name=hello%20world&count=2').name, 'hello world');
+const malformed = '%FF'.repeat(10000);
+const start = performance.now();
+assert.equal(decode(malformed), malformed);
+assert.ok(performance.now() - start < 2000, 'Malformed URI must not cause exponential decoding');
+console.log('PASS: Unicode/query-string compatibility and long malformed URI decoding.');

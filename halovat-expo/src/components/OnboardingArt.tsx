@@ -4,6 +4,12 @@ import Svg, { Circle, ClipPath, Defs, G, Line, Path, Rect, Text as SvgText } fro
 import { Text } from '../ui/AppText';
 import { useLanguage } from '../context/LanguageContext';
 
+// Android glyph paths can lose their counter fill type when SVG combines them.
+// Keep the holes in letters/numerals (a, A, 4) instead of painting them solid.
+function ArtText(props: React.ComponentProps<typeof SvgText>) {
+  return <SvgText {...props} fillRule="evenodd" />;
+}
+
 const GREEN = '#064E3B';
 const MINT = '#6ED3AC';
 const LIGHT = '#C7EFDF';
@@ -90,10 +96,10 @@ function SunArt({ width, height, time, onPillsHeight }: ArtProps & { onPillsHeig
       <Path d="M27 200A140 140 0 0 1 307 200" fill="none" stroke="#10B981" strokeWidth={3} strokeLinecap="round" strokeDasharray={`${(180 - angle) / 180 * Math.PI * 140} ${Math.PI * 140}`} />
       {angles.map((marker, index) => <G key={marker}>
         <Circle cx={167 + 140 * Math.cos(marker * RAD)} cy={200 - 140 * Math.sin(marker * RAD)} r={5} fill={index <= passed ? '#10B981' : PAPER} stroke={index <= passed ? '#10B981' : MINT} strokeWidth={1.5} />
-        <SvgText x={167 + 104 * Math.cos(marker * RAD)} y={200 - 104 * Math.sin(marker * RAD) + 4} textAnchor="middle" fontFamily={index <= passed ? FONT.bold : FONT.medium} fontSize={11} fill={index <= passed ? GREEN : BODY}>{t(NAMES[index])}</SvgText>
+        <ArtText x={167 + 104 * Math.cos(marker * RAD)} y={200 - 104 * Math.sin(marker * RAD) + 4} textAnchor="middle" fontFamily={index <= passed ? FONT.bold : FONT.medium} fontSize={11} fill={index <= passed ? GREEN : BODY}>{t(NAMES[index])}</ArtText>
       </G>)}
-      <SvgText x={167} y={158} textAnchor="middle" fontFamily={FONT.extra} fontSize={40} fill={GREEN} letterSpacing={-1}>{clock}</SvgText>
-      <SvgText x={167} y={182} textAnchor="middle" fontFamily={FONT.medium} fontSize={14} fill={BODY}>{t(passed < 0 ? 'Tong' : NAMES[passed])}</SvgText>
+      <ArtText x={167} y={158} textAnchor="middle" fontFamily={FONT.extra} fontSize={40} fill={GREEN} letterSpacing={-1}>{clock}</ArtText>
+      <ArtText x={167} y={182} textAnchor="middle" fontFamily={FONT.medium} fontSize={14} fill={BODY}>{t(passed < 0 ? 'Tong' : NAMES[passed])}</ArtText>
       <G transform={`translate(${sunX} ${sunY})`}>
         <Circle r={26} fill="#FDEBC8" />
         <Circle r={20 * (1 + 2.2 * ripple)} fill="none" stroke="#F59E0B" strokeWidth={2} opacity={time >= 3.8 ? 0.8 * (1 - ripple) : 0} />
@@ -113,9 +119,9 @@ function WeekArt({ width, height, time }: ArtProps) {
   const legendPositions = language === 'ru' ? [0, 105, 225] : language === 'en' ? [0, 110, 205] : language === 'uz-Cyrl' ? [0, 92, 172] : [0, 80, 152];
   const rows = ['1111110', '111q111', '11q1011', '1111q11', '111qnnn'];
   return <Svg width={width} height={height} viewBox="0 0 334 268" style={svgStyle}>
-    {['Du', 'Se', 'Cho', 'Pay', 'Ju', 'Sha', 'Ya'].map((day, index) => <SvgText key={day} x={78 + index * 40} y={12} fontFamily={index >= 4 && index !== 5 ? FONT.bold : FONT.medium} fontSize={12} fill={index === 4 ? '#006C49' : index === 6 ? GREEN : BODY} textAnchor="middle">{t(day)}</SvgText>)}
+    {['Du', 'Se', 'Cho', 'Pay', 'Ju', 'Sha', 'Ya'].map((day, index) => <ArtText key={day} x={78 + index * 40} y={12} fontFamily={index >= 4 && index !== 5 ? FONT.bold : FONT.medium} fontSize={12} fill={index === 4 ? '#006C49' : index === 6 ? GREEN : BODY} textAnchor="middle">{t(day)}</ArtText>)}
     {rows.map((row, rowIndex) => <G key={NAMES[rowIndex]}>
-      <SvgText x={0} y={46 + rowIndex * 43} fontFamily={FONT.regular} fontSize={12} fill={BODY}>{t(NAMES[rowIndex])}</SvgText>
+      <ArtText x={0} y={46 + rowIndex * 43} fontFamily={FONT.regular} fontSize={12} fill={BODY}>{t(NAMES[rowIndex])}</ArtText>
       {row.split('').map((state, column) => {
         const progress = clamp((time - (rowIndex * 7 + column) * 0.03) / 0.4);
         const scale = 0.2 + 0.8 * (1 - Math.pow(1 - progress, 3));
@@ -129,7 +135,7 @@ function WeekArt({ width, height, time }: ArtProps) {
       })}
     </G>)}
     {[['O‘qildi', '#006C49'], ['Qazo', '#BA1A1A'], ['Kutilmoqda', '#EFEEEA']].map(([label, color], index) => <G key={label} transform={`translate(${legendPositions[index]} 252)`}>
-      <Circle cx={6} cy={-4} r={6} fill={String(color)} /><SvgText x={18} y={0} fontFamily={FONT.regular} fontSize={12} fill={BODY}>{t(String(label))}</SvgText>
+      <Circle cx={6} cy={-4} r={6} fill={String(color)} /><ArtText x={18} y={0} fontFamily={FONT.regular} fontSize={12} fill={BODY}>{t(String(label))}</ArtText>
     </G>)}
   </Svg>;
 }
@@ -145,11 +151,11 @@ function TasbeehArt({ width, height, time }: ArtProps) {
       const on = index < count;
       return <Circle key={index} cx={167 + 118 * Math.cos(angle)} cy={140 + 118 * Math.sin(angle)} r={on ? 8 : 6} fill={on ? '#10B981' : PAPER} stroke={on ? '#10B981' : MINT} strokeWidth={1.5} />;
     })}
-    <SvgText x={167} y={158} textAnchor="middle" fontFamily={FONT.bold} fontSize={92} fill={GREEN} letterSpacing={-3}>{count}</SvgText>
-    <SvgText x={167} y={190} textAnchor="middle" fontFamily={FONT.regular} fontSize={14} fill={BODY}>{t('33 tadan')}</SvgText>
+    <ArtText x={167} y={158} textAnchor="middle" fontFamily={FONT.bold} fontSize={92} fill={GREEN} letterSpacing={-3}>{count}</ArtText>
+    <ArtText x={167} y={190} textAnchor="middle" fontFamily={FONT.regular} fontSize={14} fill={BODY}>{t('33 tadan')}</ArtText>
     <G transform={`translate(167 257) scale(${scale}) translate(-167 -257)`}>
       <Rect x={127} y={238} width={80} height={38} rx={19} fill={GREEN} />
-      <SvgText x={167} y={263} textAnchor="middle" fontFamily={FONT.semibold} fontSize={16} fill="#FFFFFF">+1</SvgText>
+      <ArtText x={167} y={263} textAnchor="middle" fontFamily={FONT.semibold} fontSize={16} fill="#FFFFFF">+1</ArtText>
     </G>
   </Svg>;
 }
@@ -168,13 +174,13 @@ function QiblaArt({ width, height, time }: ArtProps) {
       {['Sh', 'Shq', 'J', 'G‘'].map((label, index) => {
         const x = 167 + 96 * Math.sin(index * Math.PI / 2);
         const y = 162 - 96 * Math.cos(index * Math.PI / 2);
-        return <SvgText key={label} x={x} y={y} alignmentBaseline="central" transform={`rotate(${-rotation} ${x} ${y})`} textAnchor="middle" fontFamily={FONT.bold} fontSize={13} fill={index === 0 ? GREEN : BODY}>{t(label)}</SvgText>;
+        return <ArtText key={label} x={x} y={y} alignmentBaseline="central" transform={`rotate(${-rotation} ${x} ${y})`} textAnchor="middle" fontFamily={FONT.bold} fontSize={13} fill={index === 0 ? GREEN : BODY}>{t(label)}</ArtText>;
       })}
     </G>
     <Path d="M167 64 176 162 167 154 158 162Z" fill={GREEN} />
     <Circle cx={167} cy={162} r={6} fill={PAPER} stroke={GREEN} strokeWidth={2} />
     <Rect x={151} y={-10} width={32} height={32} rx={4} fill="#1B1C1A" /><Path d="M151 2h32" stroke="#F59E0B" strokeWidth={2.5} />
-    <SvgText x={167} y={348} textAnchor="middle" fontFamily={FONT.bold} fontSize={30} fill={GREEN}>{`${Math.round((-rotation % 360 + 360) % 360)}°`}</SvgText>
+    <ArtText x={167} y={348} textAnchor="middle" fontFamily={FONT.bold} fontSize={30} fill={GREEN}>{`${Math.round((-rotation % 360 + 360) % 360)}°`}</ArtText>
   </Svg>;
 }
 
@@ -202,8 +208,8 @@ function NearbyArt({ width, height, time, reducedMotion }: ArtProps & { reducedM
     <Circle cx={100} cy={165} r={16 * (0.5 + 2.1 * pulse)} fill={GREEN} opacity={0.5 * (1 - pulse)} />
     <Circle cx={100} cy={165} r={8} fill={GREEN} stroke="#FFFFFF" strokeWidth={3} />
     <Rect x={22} y={210} width={172} height={46} rx={23} fill={GREEN} />
-    <SvgText x={44} y={228} fontFamily={FONT.regular} fontSize={11} fill={LIGHT}>{t('Eng yaqin masjid')}</SvgText>
-    <SvgText x={44} y={246} fontFamily={FONT.bold} fontSize={15} fill="#FFFFFF">{t('350 m · 4 daqiqa')}</SvgText>
+    <ArtText x={44} y={228} fontFamily={FONT.regular} fontSize={11} fill={LIGHT}>{t('Eng yaqin masjid')}</ArtText>
+    <ArtText x={44} y={246} fontFamily={FONT.bold} fontSize={15} fill="#FFFFFF">{t('350 m · 4 daqiqa')}</ArtText>
   </Svg>;
 }
 
@@ -230,7 +236,7 @@ function MosqueZoneArt({ width, height, time }: ArtProps) {
       </G>;
     })}
     <Rect x={57} y={236} width={220} height={38} rx={19} fill={GREEN} /><G transform="translate(77 247)"><MuteGlyph color="#FFFFFF" /></G>
-    <SvgText x={101} y={260} fontFamily={FONT.semibold} fontSize={13.5} fill="#FFFFFF">{t('Ovozsiz rejim yoqildi')}</SvgText>
+    <ArtText x={101} y={260} fontFamily={FONT.semibold} fontSize={13.5} fill="#FFFFFF">{t('Ovozsiz rejim yoqildi')}</ArtText>
   </Svg>;
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, ClipPath, Defs, G, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -58,9 +58,11 @@ export function LoadingScreen({ fontsReady, appReady, onFinished }: Props) {
   useEffect(() => {
     let mounted = true;
     void AccessibilityInfo.isReduceMotionEnabled().then(value => {
-      if (mounted) setReducedMotion(value);
-    }).catch(() => { if (mounted) setReducedMotion(false); });
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
+      if (mounted) setReducedMotion(Platform.OS === 'android' || value);
+    }).catch(() => { if (mounted) setReducedMotion(Platform.OS === 'android'); });
+    // Android enters as soon as storage/fonts are ready; avoid a mandatory 3.2s
+    // JS-driven SVG animation on slower devices.
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', value => setReducedMotion(Platform.OS === 'android' || value));
     return () => { mounted = false; subscription.remove(); };
   }, []);
 
