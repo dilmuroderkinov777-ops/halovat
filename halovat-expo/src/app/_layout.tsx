@@ -7,6 +7,8 @@ import { LanguageProvider } from '../context/LanguageContext';
 import { Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold, Onest_800ExtraBold } from '@expo-google-fonts/onest';
 import { AppProvider, useHalovat } from '../context/AppContext';
 import { LoadingScreen } from '../components/LoadingScreen';
+import { useLaunchAnimation } from '../hooks/useLaunchAnimation';
+import { LaunchAnimationContext } from '../context/LaunchAnimationContext';
 import { useFonts, PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
 
 if (Platform.OS !== 'web') {
@@ -17,32 +19,29 @@ if (Platform.OS !== 'web') {
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold, Onest_800ExtraBold });
   const [appReady, setAppReady] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { visible: loading, revision, onFinished } = useLaunchAnimation();
   const fontsReady = fontsLoaded || Boolean(fontError);
   const handleReady = useCallback(() => setAppReady(true), []);
-  const handleFinished = useCallback(() => setLoading(false), []);
+  const revealLoading = useCallback(() => { if (Platform.OS !== 'web') SplashScreen.hide(); }, []);
   return (
-    <View style={{ flex: 1, backgroundColor: '#064e3b' }} onLayout={() => {
-      // Reveal the React animation immediately, including while storage/fonts load.
-      if (Platform.OS !== 'web') SplashScreen.hide();
-    }}>
+    <LaunchAnimationContext.Provider value={loading}><View style={{ flex: 1, backgroundColor: '#064e3b' }}>
       <View style={{ flex: 1 }} accessibilityElementsHidden={loading} importantForAccessibility={loading ? 'no-hide-descendants' : 'auto'}>
         {fontsReady && <LanguageProvider><AppProvider>
-          <RootNavigator onReady={handleReady} />
+          <RootNavigator onReady={handleReady} loading={loading} />
         </AppProvider></LanguageProvider>}
       </View>
-      {loading && <LoadingScreen fontsReady={fontsReady} appReady={appReady} onFinished={handleFinished} />}
-    </View>
+      {loading && <LoadingScreen key={revision} fontsReady={fontsReady} appReady={appReady} onFinished={onFinished} onReady={revealLoading} />}
+    </View></LaunchAnimationContext.Provider>
   );
 }
 
-function RootNavigator({ onReady }: { onReady: () => void }) {
+function RootNavigator({ onReady, loading }: { onReady: () => void; loading: boolean }) {
   const { hydrated, data } = useHalovat();
 
   if (!hydrated) return null;
 
   return <View style={{ flex: 1 }} onLayout={onReady}>
-    <StatusBar style={data.darkMode ? 'light' : 'dark'} />
+    <StatusBar style={loading || data.darkMode ? 'light' : 'dark'} />
     <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: data.darkMode ? '#0E1914' : '#FAF9F5' } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="welcome" options={{ animation: 'fade' }} />

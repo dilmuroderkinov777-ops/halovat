@@ -3,6 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { AppState, Platform } from 'react-native';
 import { useCallback, useState } from 'react';
 import { foregroundLocation } from '../services/foregroundLocation';
+import { createHeadingFilter, headingDelta, HEADING_STABILITY } from '../domain/compassHeading';
 
 type Point = { latitude: number; longitude: number };
 type Reading = { heading: number | null; accuracy: number; trueNorth: boolean; source: string; tilt: number };
@@ -18,6 +19,7 @@ export function useCompass(city: Point) {
     let run = generation;
     let subscription: { remove(): void } | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let settleTimer: ReturnType<typeof setInterval> | undefined;
     let permissionRequested = false;
     let permissionRequest: ReturnType<typeof Location.requestForegroundPermissionsAsync> | undefined;
     const locationPermission = async () => {
@@ -32,11 +34,12 @@ export function useCompass(city: Point) {
       return permissionRequest ?? current;
     };
     const stop = () => {
-      run++; subscription?.remove(); subscription = undefined; clearTimeout(timer);
+      run++; subscription?.remove(); subscription = undefined; clearTimeout(timer); clearInterval(settleTimer); settleTimer = undefined;
     };
     const start = async () => {
       stop();
       const current = run;
+      const filterHeading = createHeadingFilter();
       const alive = () => !disposed && current === run;
       setReading(empty); setStatus('waiting'); setPosition(null);
       if (Platform.OS === 'web') { setStatus('unavailable'); return; }
@@ -58,9 +61,21 @@ export function useCompass(city: Point) {
           const raw = realNorth ? value.trueHeading : value.magHeading;
           if (!Number.isFinite(raw) || raw < 0) return;
           clearTimeout(timer);
-          setReading({ heading: (raw + 360) % 360, accuracy: value.accuracy, trueNorth: realNorth, source: 'expo_location', tilt: 0 });
-          setStatus('ready');
-        }, () => { if (alive()) { setReading(empty); setStatus('unavailable'); } });
+          clearInterval(settleTimer); settleTimer = undefined;
+          const publish = () => {
+            if (!alive()) return true;
+            const heading = filterHeading(raw, Date.now());
+            setReading(previous => previous.heading === heading && previous.accuracy === value.accuracy && previous.trueNorth === realNorth
+              ? previous : { heading, accuracy: value.accuracy, trueNorth: realNorth, source: 'expo_location', tilt: 0 });
+            setStatus('ready');
+            return Math.abs(headingDelta(heading, raw)) <= HEADING_STABILITY;
+          };
+          // Expo can stop emitting when the phone stops. Finish the turn even
+          // when no second sensor callback arrives, then stop the timer.
+          if (!publish()) settleTimer = setInterval(() => {
+            if (publish()) { clearInterval(settleTimer); settleTimer = undefined; }
+          }, 50);
+        }, () => { if (alive()) { clearInterval(settleTimer); settleTimer = undefined; setReading(empty); setStatus('unavailable'); } });
         if (alive()) subscription = watcher; else watcher.remove();
       } catch { if (alive()) { clearTimeout(timer); setStatus('unavailable'); } }
     };

@@ -2,7 +2,7 @@
 
 Expo SDK 57, React Native va TypeScript asosida Android/iOS uchun umumiy ilova. `@expo/ui` Android’da Jetpack Compose, iOS’da SwiftUI boshqaruvlarini beradi; qolgan ekranlar responsiv React Native layout’da qurilgan.
 
-Joriy sinov versiyasi **1.0.5**, Android versionCode **6** (2026-10-19). [So‘nggi o‘zgarishlar va tekshiruvlar](./LATEST_RELEASE.md). Haqiqiy Redmi sinovi va Play release tayyorgarligining ochiq ishlari hali qolgan.
+Joriy sinov versiyasi **1.0.6**, Android versionCode **7** (2026-10-20). [So‘nggi o‘zgarishlar va tekshiruvlar](./LATEST_RELEASE.md). Haqiqiy Redmi sinovi va Play release tayyorgarligining ochiq ishlari hali qolgan.
 
 ## Ishga tushirish
 

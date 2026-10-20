@@ -1,10 +1,11 @@
 import { useFocusEffect } from 'expo-router';
 import { Compass } from 'lucide-react-native';
-import React, { memo, useCallback, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, AppState, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../ui/AppText';
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
+import { useAppLoading } from '../context/LaunchAnimationContext';
 
 const DURATION = 5200;
 const STEPS = 128;
@@ -22,6 +23,10 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
   const progress = useRef(new Animated.Value(0)).current;
   const dismiss = useRef<() => void>(() => undefined);
   const [visible, setVisible] = useState(true);
+  const appLoading = useAppLoading();
+  const loading = useRef(appLoading);
+  loading.current = appLoading;
+  const playback = useRef({ play: () => {}, stop: () => {} });
 
   useFocusEffect(useCallback(() => {
     let focused = true;
@@ -37,7 +42,7 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
     };
     const play = () => {
       stop();
-      if (!focused || dismissed || AppState.currentState !== 'active') return;
+      if (!focused || dismissed || loading.current || AppState.currentState !== 'active') return;
       progress.setValue(0);
       timer = setTimeout(finish, DURATION);
       if (!reducedMotion) {
@@ -49,6 +54,7 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
       }
     };
     dismiss.current = finish;
+    playback.current = { play, stop };
     setVisible(true);
     play();
     void AccessibilityInfo.isReduceMotionEnabled().then(value => {
@@ -70,7 +76,11 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
     };
   }, [progress]));
 
-  return <Modal transparent visible={visible} animationType="fade" onRequestClose={() => dismiss.current()}>
+  useEffect(() => {
+    if (appLoading) playback.current.stop(); else playback.current.play();
+  }, [appLoading]);
+
+  return <Modal transparent visible={visible && !appLoading} animationType="fade" onRequestClose={() => dismiss.current()}>
     <View style={styles.backdrop}>
       <View style={styles.card} accessibilityViewIsModal>
         <View style={styles.badge}><Compass size={17} color={colors.green} /><Text style={styles.badgeText}>Kompasni tayyorlash</Text></View>

@@ -1,8 +1,8 @@
 # Halovat
 
-Namoz va ibodat hamrohi. Joriy mahsulot **Expo SDK 57 + React Native 0.86 + TypeScript** asosida qurilgan. Repository **2026-10-19 dagi 1.0.5 (Android code 6)** manbalari bilan yangilangan.
+Namoz va ibodat hamrohi. Joriy mahsulot **Expo SDK 57 + React Native 0.86 + TypeScript** asosida qurilgan. Repository **2026-10-20 dagi 1.0.6 (Android code 7)** manbalari bilan yangilangan.
 
-[So‘nggi Android sinov APK/AAB](https://github.com/dilmuroderkinov777-ops/halovat/releases/tag/v1.0.5-test) · [O‘zgarishlar va tekshiruvlar](./halovat-expo/LATEST_RELEASE.md) · [Fizik telefon sinov jadvali](./halovat-expo/device-audit/RELEASE_TEST_CHECKLIST_1.0.5.md)
+[So‘nggi Android sinov APK/AAB](https://github.com/dilmuroderkinov777-ops/halovat/releases/tag/v1.0.6-test) · [O‘zgarishlar va tekshiruvlar](./halovat-expo/LATEST_RELEASE.md) · [Fizik telefon sinov jadvali](./halovat-expo/device-audit/RELEASE_TEST_CHECKLIST_1.0.6.md)
 
 ## Qayerdan boshlash kerak
 

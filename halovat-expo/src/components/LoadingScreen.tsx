@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, ClipPath, Defs, G, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -36,13 +36,14 @@ const riseEase = Easing.bezier(0.2, 0.7, 0.2, 1);
 const drawEase = Easing.bezier(0.5, 0, 0.2, 1);
 const gentleEase = Easing.bezier(0.42, 0, 0.58, 1);
 
-type Props = { fontsReady: boolean; appReady: boolean; onFinished: () => void };
+type Props = { fontsReady: boolean; appReady: boolean; onFinished: () => void; onReady: () => void };
 
 /** Native rendition of “Halovat — loading screen.html”, with its original copy and timing. */
-export function LoadingScreen({ fontsReady, appReady, onFinished }: Props) {
+export function LoadingScreen({ fontsReady, appReady, onFinished, onReady }: Props) {
   const insets = useSafeAreaInsets();
   const [reducedMotion, setReducedMotion] = useState<boolean | null>(null);
   const [entranceDone, setEntranceDone] = useState(false);
+  const [laidOut, setLaidOut] = useState(false);
   const [motion] = useState(() => ({
     outer: new Animated.Value(OUTER_LENGTH),
     inner: new Animated.Value(INNER_LENGTH),
@@ -58,16 +59,15 @@ export function LoadingScreen({ fontsReady, appReady, onFinished }: Props) {
   useEffect(() => {
     let mounted = true;
     void AccessibilityInfo.isReduceMotionEnabled().then(value => {
-      if (mounted) setReducedMotion(Platform.OS === 'android' || value);
-    }).catch(() => { if (mounted) setReducedMotion(Platform.OS === 'android'); });
-    // Android enters as soon as storage/fonts are ready; avoid a mandatory 3.2s
-    // JS-driven SVG animation on slower devices.
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', value => setReducedMotion(Platform.OS === 'android' || value));
+      if (mounted) setReducedMotion(value);
+    }).catch(() => { if (mounted) setReducedMotion(false); });
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
     return () => { mounted = false; subscription.remove(); };
   }, []);
 
   useEffect(() => {
-    if (!fontsReady || reducedMotion === null) return;
+    if (!fontsReady || !laidOut || reducedMotion === null) return;
+    onReady();
     if (reducedMotion) {
       motion.outer.setValue(0);
       motion.inner.setValue(0);
@@ -81,12 +81,16 @@ export function LoadingScreen({ fontsReady, appReady, onFinished }: Props) {
     }
     const timing = (value: Animated.Value, toValue: number, duration: number, delay = 0, easing = riseEase, native = false) =>
       Animated.timing(value, { toValue, duration, delay, easing, useNativeDriver: native, isInteraction: false });
-    const animation = Animated.parallel([
+    const entrance = Animated.parallel([
       timing(motion.outer, 0, 1100, 0, drawEase),
       timing(motion.inner, 0, 1100, 350, drawEase),
       timing(motion.horizon, 0.5, 500, 200, Easing.out(Easing.ease)),
       timing(motion.sun, 104, 1500, 550),
       timing(motion.glow, 0.2, 600, 1700, Easing.out(Easing.ease)),
+      ...motion.letters.map((letter, index) => timing(letter, 1, 650, 1000 + index * 70, riseEase, true)),
+      Animated.delay(3200),
+    ]);
+    const loops = Animated.parallel([
       Animated.sequence([
         Animated.delay(2300),
         Animated.loop(Animated.sequence([
@@ -94,17 +98,15 @@ export function LoadingScreen({ fontsReady, appReady, onFinished }: Props) {
           timing(motion.breath, 0.92, 1300, 0, gentleEase),
         ])),
       ]),
-      ...motion.letters.map((letter, index) => timing(letter, 1, 650, 1000 + index * 70, riseEase, true)),
       ...motion.beads.map((bead, index) => Animated.sequence([
         Animated.delay(1600 + index * 320),
         Animated.loop(timing(bead, 1, 3200, 0, Easing.linear)),
       ])),
     ]);
-    animation.start();
-    // Let all seven letters appear and all five beads begin before entering the app.
-    const timer = setTimeout(() => setEntranceDone(true), 3200);
-    return () => { clearTimeout(timer); animation.stop(); };
-  }, [fontsReady, motion, reducedMotion]);
+    entrance.start(({ finished }) => { if (finished) setEntranceDone(true); });
+    loops.start();
+    return () => { entrance.stop(); loops.stop(); };
+  }, [fontsReady, laidOut, motion, onReady, reducedMotion]);
 
   useEffect(() => {
     if (!appReady || !fontsReady || (!entranceDone && reducedMotion !== true)) return;
@@ -116,7 +118,7 @@ export function LoadingScreen({ fontsReady, appReady, onFinished }: Props) {
   }, [appReady, entranceDone, fontsReady, onFinished, opacity, reducedMotion]);
 
   return (
-    <Animated.View style={[styles.screen, { opacity }]} accessibilityRole="image" accessibilityLabel="Halovat yuklanmoqda">
+    <Animated.View onLayout={() => setLaidOut(true)} style={[styles.screen, { opacity }]} accessibilityRole="image" accessibilityLabel="Halovat yuklanmoqda">
       <StatusBar style="light" />
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} accessible={false}>
         <Defs>

@@ -1,0 +1,25 @@
+{
+  "version": "1.0.6",
+  "versionCode": 7,
+  "date": "2026-10-20",
+  "change": "Native welcome text, stable compass needle, complete launch/foreground animation with calibration popup coordination",
+  "matchingCodeEntries": 52,
+  "physicalDeviceRetest": "pending",
+  "artifacts": [
+    {
+      "file": "Halovat-1.0.6-test.apk",
+      "bytes": 62401986,
+      "sha256": "ba3f4470399ec68923543048c747f4f6fe120160b6178a85028d01740c3dc6a0"
+    },
+    {
+      "file": "Halovat-1.0.6-production.aab",
+      "bytes": 46810079,
+      "sha256": "36c8ddac70ed457b3635288b7298fc682dd1a64100d1600581ac99d1d31dbe92"
+    },
+    {
+      "file": "production-mapping.txt",
+      "bytes": 58763938,
+      "sha256": "b46a5dda3a73a0171ead5a505ed8467a36f83a96de6a9461c38bf43e205a4b08"
+    }
+  ]
+}

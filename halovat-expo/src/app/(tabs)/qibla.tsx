@@ -4,10 +4,11 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../ui/AppText';
 import { ChevronRight, Compass, Landmark, LocateFixed } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import Svg, { Circle as SvgCircle, G, Line, Path } from 'react-native-svg';
+import Svg, { Circle as SvgCircle, Line } from 'react-native-svg';
 import { AppTopBar } from '../../components/AppTopBar';
 import { KaabaIcon } from '../../components/KaabaIcon';
 import { CompassCalibrationGuide } from '../../components/CompassCalibrationGuide';
+import { QiblaNeedle } from '../../components/QiblaNeedle';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { nearestCity } from '../../domain/prayers';
@@ -61,12 +62,10 @@ export default function QiblaScreen() {
           <SvgCircle cx="150" cy="150" r="139" fill="none" stroke="#DCE6DF" strokeWidth="1.5" strokeDasharray="1 7" />
           <Line x1="150" y1="60" x2="150" y2="240" stroke="#BFC9C3" strokeWidth="0.8" strokeDasharray="3 4" />
           <Line x1="60" y1="150" x2="240" y2="150" stroke="#BFC9C3" strokeWidth="0.8" strokeDasharray="3 4" />
-          <G opacity={heading === null ? 0.25 : 1} transform={`rotate(${phoneAngle} 150 150)`}>
-            <Path d="M150 85 L164 119 L155 114 L155 151 L145 151 L145 114 L136 119 Z" fill={colors.green} />
-          </G>
           <SvgCircle cx="150" cy="150" r="18" fill={colors.paper} stroke="#DDE8E0" strokeWidth="2" />
           <SvgCircle cx="150" cy="150" r="8" fill={EMERALD} />
         </Svg>
+        <QiblaNeedle angle={phoneAngle} ready={heading !== null} size={dialSize} color={colors.green} />
         {['N', 'E', 'S', 'W'].map((label, index) => {
           const angle = radians(index * 90 - bearing);
           const radius = dialSize * 139 / 300;
