@@ -10,16 +10,17 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
   visible: boolean; onClose: () => void; title: string; children: React.ReactNode; compact?: boolean;
 }) {
   const colors = useThemeColors();
-  const { height, width } = useWindowDimensions();
+  const { height, width, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const fitContents = compact && height >= 700 && fontScale <= 1.2;
   return <BottomSheet isPresented={visible} onDismiss={onClose} containerColor={colors.paper}
-    contentPadding={0} snapPoints={compact ? undefined : ['full']}>
-    <View style={[styles.sheet, { width, ...(compact ? {} : { height: height - insets.top - 72 }) }]}>
+    contentPadding={0} snapPoints={fitContents ? undefined : ['full']}>
+    <View style={[styles.sheet, { width, ...(fitContents ? {} : { height: height - insets.top - 72 }) }]}>
       <View style={styles.heading}>
         <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>{title}</Text>
         <NativeAction label="Yopish" variant="text" compact onPress={onClose} />
       </View>
-      {compact ? <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</View>
+      {fitContents ? <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</View>
         : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
           contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</ScrollView>}
     </View>

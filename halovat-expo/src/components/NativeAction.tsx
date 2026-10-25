@@ -10,9 +10,10 @@ export function NativeAction({ label, onPress, disabled = false, variant = 'fill
   const { t } = useLanguage();
   const { dark } = useAppTheme();
   const colors = useThemeColors();
+  const scheme = colorScheme ?? (dark ? 'dark' : 'light');
   return (
     <Host matchContents={compact ? true : { vertical: true }} ignoreSafeArea="all"
-      colorScheme={colorScheme ?? (dark ? 'dark' : 'light')} seedColor={colors.green}
+      colorScheme={scheme} seedColor={scheme === 'dark' ? '#78E3AF' : colors.green}
       style={compact ? { flexShrink: 1 } : { width: '100%' }}>
       <Button label={translate ? t(label) : label} onPress={onPress} disabled={disabled} variant={variant}
         style={{ ...(compact ? {} : { width: '100%' }), height: 44 }} />
