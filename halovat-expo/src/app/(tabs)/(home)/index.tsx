@@ -1,7 +1,7 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { BookOpen, CalendarDays, Check, ChevronRight, CircleDot, Clock3, Compass, Landmark, Moon, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
+import { CalendarDays, Check, ChevronRight, Clock3, Moon, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -32,22 +32,11 @@ function hijriDate(date: Date) {
 }
 
 const prayerIcons = [Sunrise, Sun, Sun, Sunset, Moon];
-const zikrNames: Record<string, string> = { subhanallah: 'Subhanalloh zikri', alhamdulillah: 'Alhamdulillah zikri', allahuakbar: 'Allohu akbar zikri', astaghfirullah: 'Astaghfirulloh zikri' };
 
 function Countdown({ until }: { until: number }) {
   const styles = useThemedStyles(baseStyles);
   const now = useForegroundClock();
   return <Text style={styles.countdownText}>{countdown(until - now.getTime())}</Text>;
-}
-
-function bearingToKaaba(latitude: number, longitude: number) {
-  const radians = (degrees: number) => degrees * Math.PI / 180;
-  const lat = radians(latitude);
-  const kaabaLat = radians(21.4225);
-  const deltaLongitude = radians(39.8262 - longitude);
-  const y = Math.sin(deltaLongitude) * Math.cos(kaabaLat);
-  const x = Math.cos(lat) * Math.sin(kaabaLat) - Math.sin(lat) * Math.cos(kaabaLat) * Math.cos(deltaLongitude);
-  return Math.round((Math.atan2(y, x) * 180 / Math.PI + 360) % 360);
 }
 
 function Checkin({ prayer, choose, close }: { prayer: PrayerClock; choose: (status: PrayerStatus) => void; close: () => void }) {
@@ -72,7 +61,7 @@ function HomeContent() {
   const appLoading = useAppLoading();
   const styles = useThemedStyles(baseStyles);
   const Colors = useThemeColors();
-  const { city, data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
+  const { data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
   const liveNow = useForegroundClock(15_000);
   const [dismissedPrayers, setDismissedPrayers] = useState<string[]>([]);
   const dayKey = dateKey(liveNow);
@@ -100,7 +89,6 @@ function HomeContent() {
     setDismissedPrayers(current => [...current, key]);
   };
   const missedCount = Object.values(data.prayerStatus).filter(status => status === 'missed').length;
-  const qiblaBearing = bearingToKaaba(city.latitude, city.longitude);
 
   return <Screen contentStyle={styles.content}>
     <View style={styles.dateSection}>
@@ -143,29 +131,6 @@ function HomeContent() {
             </View>
           </Pressable>;
         })}
-      </View>
-    </View>
-
-
-    <View style={styles.shortcutsSection}>
-      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Ibodat yo‘ldoshi</Text><Text style={styles.sectionHint}>Tezkor xizmatlar</Text></View>
-      <View style={styles.shortcuts}>
-        <Pressable onPress={() => router.push('/(tabs)/tasbeeh' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
-          <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconMint]}><CircleDot size={21} color={Colors.green} /></View><Text style={styles.shortcutBadge}>{Math.min(data.tasbeehCounts[data.tasbeehId] ?? 0, 33)}/33</Text></View>
-          <View><Text style={styles.shortcutTitle}>Tasbeh</Text><Text style={styles.shortcutSub}>{zikrNames[data.tasbeehId] ?? 'Zikrni davom ettiring'}</Text></View>
-        </Pressable>
-        <Pressable onPress={() => router.push('/duas' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
-          <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconGold]}><BookOpen size={21} color="#875407" /></View><ChevronRight size={17} color={Colors.muted} /></View>
-          <View><Text style={styles.shortcutTitle}>Duolar</Text><Text style={styles.shortcutSub}>Tonggi va kechki zikrlar</Text></View>
-        </Pressable>
-        <Pressable onPress={() => router.push('/mosque' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
-          <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconDeep]}><Landmark size={21} color={Colors.greenDeep} /></View><ChevronRight size={17} color={Colors.muted} /></View>
-          <View><Text style={styles.shortcutTitle}>Masjidlar</Text><Text numberOfLines={1} style={styles.shortcutSub}>{data.mosqueName || 'Yaqin masjidlarni qidiring'}</Text></View>
-        </Pressable>
-        <Pressable onPress={() => router.push('/(tabs)/qibla' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
-          <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconNeutral]}><Compass size={21} color={Colors.green} /></View><Text style={styles.shortcutBadge}>{qiblaBearing}°</Text></View>
-          <View><Text style={styles.shortcutTitle}>Qibla</Text><Text style={styles.shortcutSub}>Janubi-g‘arb tomon</Text></View>
-        </Pressable>
       </View>
     </View>
 
@@ -218,7 +183,6 @@ const baseStyles = StyleSheet.create({
   prayerSection: { gap: 10 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sectionTitle: { ...Typography.sectionTitle, color: Colors.ink },
-  sectionHint: { color: Colors.muted, fontSize: 10 },
   prayerRow: { flexDirection: 'row', gap: 6 },
   prayerCard: { flex: 1, minWidth: 0, height: 94, borderRadius: 17, backgroundColor: '#F4F4F0', paddingVertical: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'space-between', borderColor: 'transparent', borderWidth: 1 },
   prayerCardActive: { backgroundColor: '#DDF8EB', borderColor: '#DDF8EB' },
@@ -234,18 +198,6 @@ const baseStyles = StyleSheet.create({
   statusActive: { backgroundColor: '#006C49' },
   statusDefault: { backgroundColor: '#E9E8E4' },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
-  shortcutsSection: { gap: 10 },
-  shortcuts: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  shortcutCard: { width: '48.4%', minHeight: 112, borderRadius: 20, padding: 14, backgroundColor: '#FFFFFF', justifyContent: 'space-between', borderWidth: 1, borderColor: '#F0F0EB', shadowColor: '#003527', shadowOpacity: 0.035, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
-  shortcutTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  shortcutIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  shortcutIconMint: { backgroundColor: '#D8F5E7' },
-  shortcutIconGold: { backgroundColor: '#FFF0D7' },
-  shortcutIconDeep: { backgroundColor: '#DFF0E8' },
-  shortcutIconNeutral: { backgroundColor: '#EFEEEA' },
-  shortcutBadge: { borderRadius: 12, paddingHorizontal: 7, paddingVertical: 4, color: Colors.green, backgroundColor: '#EFEEEA', overflow: 'hidden', fontSize: 9, fontWeight: '700' },
-  shortcutTitle: { color: Colors.ink, fontSize: 14, fontWeight: '700' },
-  shortcutSub: { color: Colors.muted, fontSize: 10, marginTop: 3 },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   verseTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
