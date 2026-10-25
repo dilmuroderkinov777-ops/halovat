@@ -112,13 +112,6 @@ export default function TrackerScreen() {
   return (
     <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.page}>
-        <View style={styles.headingRow}>
-          <View>
-            <Text style={styles.eyebrow}>IBODAT HISOBI</Text>
-            <Text style={styles.title}>Namozlar daftari</Text>
-          </View>
-        </View>
-
         <NativeSegments value={period} options={PERIODS.map(item => ({ value: item.id, label: item.title }))} onChange={setPeriod} />
 
         <View style={styles.dateSection}>
@@ -242,9 +235,6 @@ const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
   content: { paddingHorizontal: 16, paddingTop: 17, paddingBottom: 30, gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 20 },
-  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  eyebrow: { color: EMERALD, fontSize: 11, fontWeight: '700', letterSpacing: 1.1, marginBottom: 4 },
-  title: { color: INK, fontSize: 24, lineHeight: 30, fontWeight: '700', letterSpacing: -0.4 },
   dateSection: { gap: 9 },
   dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   dateRangeText: { color: '#404944', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },

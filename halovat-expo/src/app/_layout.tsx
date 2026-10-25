@@ -44,7 +44,7 @@ function RootNavigator({ onReady, loading }: { onReady: () => void; loading: boo
   const { t } = useLanguage();
   const pathname = usePathname();
   const titles: Record<string, string> = {
-    '/': 'Bosh sahifa', '/tracker': 'Namozlar', '/tasbeeh': 'Zikr Va Tasbeh',
+    '/': 'Bosh sahifa', '/tracker': 'Namozlar daftari', '/tasbeeh': 'Zikr Va Tasbeh',
     '/qibla': 'Qibla', '/settings': 'Profil',
   };
   const baseTheme = data.darkMode ? DarkTheme : DefaultTheme;
@@ -62,7 +62,7 @@ function RootNavigator({ onReady, loading }: { onReady: () => void; loading: boo
           </Stack.Toolbar.Button>
         </Stack.Toolbar>
       </Stack.Screen>
-      <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="welcome" options={{ title: 'Halovat', animation: 'fade', headerBackVisible: false, headerStyle: { backgroundColor: '#FAF9F5' }, headerTintColor: '#064E3B', headerShadowVisible: false }} />
       <Stack.Screen name="mosque" options={{ title: t('Masjidlar') }} />
       <Stack.Screen name="duas" options={{ title: t('Kundalik duolar') }} />
       <Stack.Screen name="prayer-mode" options={{ title: t('Halovat vaqti'), headerStyle: { backgroundColor: '#00784B' }, headerTintColor: '#FFFFFF' }}>

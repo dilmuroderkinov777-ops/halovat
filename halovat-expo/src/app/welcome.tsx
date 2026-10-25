@@ -22,6 +22,7 @@ export default function WelcomeScreen() {
   const [languageStep, setLanguageStep] = useState(true);
   const [busy, setBusy] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [contentHeight, setContentHeight] = useState(height);
   const scroll = useRef<ScrollView>(null);
   const pageRef = useRef(page);
   const finishing = useRef(false);
@@ -74,14 +75,13 @@ export default function WelcomeScreen() {
     router.replace('/(tabs)');
   };
 
-  return <SafeAreaView edges={['top', 'bottom']} style={[styles.safe, desktop && styles.desktop]}>
+  return <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.safe, desktop && styles.desktop]}>
     <StatusBar style="dark" />
-    <View style={[styles.frame, { width: frameWidth }, desktop && { maxHeight: Math.min(844, height - 32), borderRadius: 38, marginVertical: 16 }]}>
-      <View style={styles.header}><Text translate={false} style={styles.logo}>Halovat</Text></View>
-      {languageStep ? <LanguageSelection compact={height < 760} reducedMotion={reducedMotion} busy={busy} onContinue={continueWithLanguage} /> : <>
+    <View onLayout={event => setContentHeight(event.nativeEvent.layout.height)} style={[styles.frame, { width: frameWidth }, desktop && { maxHeight: Math.min(844, height - 32), borderRadius: 38, marginVertical: 16 }]}>
+      {languageStep ? <LanguageSelection compact={contentHeight < 700} reducedMotion={reducedMotion} busy={busy} onContinue={continueWithLanguage} /> : <>
       <ScrollView ref={scroll} horizontal pagingEnabled bounces={false} scrollEnabled={!busy} showsHorizontalScrollIndicator={false} style={styles.pages}
         onMomentumScrollEnd={event => setPage(Math.max(0, Math.min(WELCOME_PAGES.length - 1, Math.round(event.nativeEvent.contentOffset.x / frameWidth))))}>
-        {WELCOME_PAGES.map((item, index) => <WelcomePage key={item.title} index={index} width={frameWidth} compact={height < 760} largeText={fontScale > 1.25} active={index === page} reducedMotion={reducedMotion} />)}
+        {WELCOME_PAGES.map((item, index) => <WelcomePage key={item.title} index={index} width={frameWidth} compact={contentHeight < 700} largeText={fontScale > 1.25} active={index === page} reducedMotion={reducedMotion} />)}
       </ScrollView>
       <View style={styles.footer}>
         <View style={styles.beads} accessibilityLabel={`${page + 1} / ${WELCOME_PAGES.length}`}>
@@ -122,8 +122,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FAF9F5', alignItems: 'center' },
   desktop: { backgroundColor: '#DDDBD6' },
   frame: { flex: 1, backgroundColor: '#FAF9F5', overflow: 'hidden' },
-  header: { paddingTop: 22, paddingHorizontal: 28 },
-  logo: { color: '#064E3B', fontSize: 22, lineHeight: 28, fontWeight: '800' },
   pages: { flex: 1 },
   slide: { height: '100%', paddingHorizontal: 28 },
   art: { flex: 1, minHeight: 0, justifyContent: 'center', alignItems: 'center' },

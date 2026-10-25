@@ -26,16 +26,6 @@ export function Eyebrow({ children, color = Colors.muted }: { children: React.Re
   return <Text style={[styles.eyebrow, { color }]}>{children}</Text>;
 }
 
-export function ScreenHeading({ title, subtitle }: { title: string; subtitle?: string }) {
-  const styles = useThemedStyles(baseStyles);
-  return (
-    <View style={styles.heading}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-    </View>
-  );
-}
-
 export function SectionTitle({ title, action }: { title: string; action?: React.ReactNode }) {
   const styles = useThemedStyles(baseStyles);
   return <View style={styles.sectionTitle}><Text style={styles.sectionText}>{title}</Text>{action}</View>;
@@ -50,9 +40,6 @@ const baseStyles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.canvas, width: '100%', alignItems: 'center' },
   scroll: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: 440 },
   content: { alignSelf: 'stretch', maxWidth: 440, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32, gap: 20 },
-  heading: { gap: 4, paddingTop: 10 },
-  title: { color: Colors.ink, fontSize: 28, fontWeight: '700', letterSpacing: -0.8 },
-  subtitle: { color: Colors.body, fontSize: 14, lineHeight: 20 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, textTransform: 'uppercase' },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: -10 },
   sectionText: { color: Colors.ink, fontSize: 17, fontWeight: '700', letterSpacing: -0.2 },

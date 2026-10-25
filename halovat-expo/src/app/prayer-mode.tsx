@@ -144,7 +144,6 @@ export default function PrayerModeScreen() {
     <StatusBar style="light" />
     <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.center}>
-      <Text style={styles.title}>Halovat vaqti</Text>
       <Text style={styles.prayer}>{prayer.name} namozi</Text>
       <View style={styles.ringWrap}>
         <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
@@ -168,7 +167,6 @@ export default function PrayerModeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, paddingTop: 12, paddingBottom: 18 },
   center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 20 },
-  title: { color: '#FFFFFF', fontSize: 23, fontWeight: '500' },
   prayer: { color: '#D4E9DD', fontSize: 16, marginTop: 4 },
   ringWrap: { width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center', marginTop: 28, marginBottom: 22, shadowColor: '#72F4A0', shadowOpacity: 0.2, shadowRadius: 24 },
   timeCenter: { position: 'absolute', alignItems: 'center' },
