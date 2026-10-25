@@ -2,7 +2,7 @@ import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { Typography } from '../../../ui/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, usePathname } from 'expo-router';
-import { CircleDot, GraduationCap, Moon, RotateCw, Sparkles, Sunrise } from 'lucide-react-native';
+import { CalendarDays, CircleDot, GraduationCap, Moon, RotateCw, Sunrise } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Switch, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -100,7 +100,7 @@ export default function TasbeehScreen() {
               <Text style={styles.meaning}>{selected.meaning}</Text>
             </View>
 
-            <TasbeehCounter count={count} target={ROUND_TARGET} size={circleSize} onCount={countTasbeeh} />
+            <TasbeehCounter count={count} target={ROUND_TARGET} size={circleSize} onCount={countTasbeeh} zikrId={selected.id} />
 
             <View style={styles.roundPanel}>
               <NativeAction label="Orqaga" onPress={() => { undoTasbeeh(); setRoundNotice(''); }} compact variant="outlined" colorScheme="dark" />
@@ -116,7 +116,7 @@ export default function TasbeehScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statCard}><CircleDot size={19} color={EMERALD} /><Text style={styles.statNumber}>{data.tasbeehTotal ?? 0}</Text><Text style={styles.statLabel}>Jami zikr</Text></View>
             <View style={styles.statCard}><RotateCw size={19} color={EMERALD} /><Text style={styles.statNumber}>{data.tasbeehRounds ?? 0}</Text><Text style={styles.statLabel}>To‘liq davra</Text></View>
-            <View style={styles.statCard}><Sparkles size={19} color={EMERALD} /><Text style={styles.statNumber}>{data.tasbeehStreak ?? 0} kun</Text><Text style={styles.statLabel}>Davomiylik</Text></View>
+            <View style={styles.statCard}><CalendarDays size={19} color={EMERALD} /><Text style={styles.statNumber}>{data.tasbeehStreak ?? 0} kun</Text><Text style={styles.statLabel}>Davomiylik</Text></View>
           </View>
 
           {recommendedDuas}

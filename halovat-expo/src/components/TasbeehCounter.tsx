@@ -6,13 +6,14 @@ import type { GestureResponderEvent } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Text } from '../ui/AppText';
 import { NativeCountdownText } from './NativeCountdownText';
+import { TasbeehProgressRing } from './TasbeehProgressRing';
 
-type Props = { count: number; target: number; size: number; onCount: () => void };
+type Props = { count: number; target: number; size: number; onCount: () => void; zikrId?: string };
 type TouchId = string | number;
 const MINT = '#6FFBBE';
 const spring = { stiffness: 450, damping: 28, mass: 0.65, useNativeDriver: true };
 
-export function TasbeehCounter({ count, target, size, onCount }: Props) {
+export function TasbeehCounter({ count, target, size, onCount, zikrId }: Props) {
   const { fontScale } = useWindowDimensions();
   const [reduceMotion, setReduceMotion] = useState(true);
   const [motion] = useState(() => new Animated.Value(0));
@@ -74,7 +75,6 @@ export function TasbeehCounter({ count, target, size, onCount }: Props) {
     opacity: motion.interpolate({ inputRange: [0, 1], outputRange: [1, 0.96], extrapolate: 'clamp' }),
   }), [motion]);
   const radius = size / 2 - 11;
-  const circumference = 2 * Math.PI * radius;
   const numberWidth = size - 52;
   const numberScale = Math.min(fontScale, numberWidth / 132);
 
@@ -113,10 +113,8 @@ export function TasbeehCounter({ count, target, size, onCount }: Props) {
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
         <Circle cx={size / 2} cy={size / 2} r={size / 2 - 26} fill="#003527" stroke="#146148" strokeWidth={1} />
         <Circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#003527" strokeWidth={10} />
-        <Circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#4EDEA3" strokeWidth={10}
-          strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - count / target)}
-          transform={'rotate(-90 ' + size / 2 + ' ' + size / 2 + ')'} />
       </Svg>
+      <TasbeehProgressRing key={zikrId} count={count} target={target} size={size} reduceMotion={reduceMotion} />
       <View style={styles.counterText}>
         <NativeCountdownText text={String(count)} seconds={count} color={MINT} fontSize={65} lineHeight={72}
           scale={numberScale} width={numberWidth} animate={!reduceMotion} reduceMotion={reduceMotion} countsDown={transition.countsDown} />
