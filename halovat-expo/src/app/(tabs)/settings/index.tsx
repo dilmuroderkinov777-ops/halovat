@@ -23,6 +23,7 @@ import { ensureAutomaticQuietAccess } from '../../../services/automaticQuiet';
 import { scheduleDiagnostics } from '../../../services/prayerScheduler';
 import { Text } from '../../../ui/AppText';
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
+import { Typography } from '../../../ui/theme';
 
 const DELAYS = [15, 20, 30];
 const expoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
@@ -311,7 +312,7 @@ export default function ProfileScreen() {
 
 const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
-  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 30, gap: 24 },
+  content: { gap: 24 },
   card: { borderRadius: 24, padding: 16, backgroundColor: '#FFFFFF', gap: 16, shadowColor: '#064E3B', shadowOpacity: 0.04, shadowRadius: 16, shadowOffset: { width: 0, height: 4 } },
   batteryCard: { gap: 10 },
   identityCard: { borderRadius: 28, padding: 20, overflow: 'hidden', gap: 24 },
@@ -334,7 +335,7 @@ const baseStyles = StyleSheet.create({
   metricValueMissed: { color: '#BA1A1A' },
   metricLabel: { color: '#404944', fontSize: 9, lineHeight: 12, marginTop: 3 },
   section: { gap: 10 },
-  sectionTitle: { color: '#1B1C1A', fontSize: 18, lineHeight: 24, fontWeight: '600', letterSpacing: -0.25, paddingHorizontal: 3 },
+  sectionTitle: { ...Typography.sectionTitle, color: '#1B1C1A' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 },
   iconBox: { width: 40, height: 40, borderRadius: 15, backgroundColor: '#D5F8E7', alignItems: 'center', justifyContent: 'center' },
   neutralIcon: { backgroundColor: '#EFEEEA' },
@@ -362,5 +363,5 @@ const baseStyles = StyleSheet.create({
   footerTitle: { color: '#404944', fontSize: 12, fontWeight: '600' },
   footerVersion: { color: '#707974', fontSize: 10 },
   callEntry: { gap: 3, paddingVertical: 6 },
-  nameInput: { minHeight: 48, borderRadius: 12, paddingHorizontal: 12, backgroundColor: '#F4F4F0', color: '#1B1C1A', fontFamily: 'PlusJakartaSans_500Medium', fontSize: 16 },
+  nameInput: { minHeight: 48, borderRadius: 12, paddingHorizontal: 12, backgroundColor: '#F4F4F0', color: '#1B1C1A', fontSize: 16 },
 });

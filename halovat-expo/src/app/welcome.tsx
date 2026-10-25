@@ -23,6 +23,7 @@ export default function WelcomeScreen() {
   const [busy, setBusy] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [contentHeight, setContentHeight] = useState(height);
+  const [pageHeight, setPageHeight] = useState(Math.max(240, height - 180));
   const scroll = useRef<ScrollView>(null);
   const pageRef = useRef(page);
   const finishing = useRef(false);
@@ -80,8 +81,9 @@ export default function WelcomeScreen() {
     <View onLayout={event => setContentHeight(event.nativeEvent.layout.height)} style={[styles.frame, { width: frameWidth }, desktop && { maxHeight: Math.min(844, height - 32), borderRadius: 38, marginVertical: 16 }]}>
       {languageStep ? <LanguageSelection compact={contentHeight < 700} reducedMotion={reducedMotion} busy={busy} onContinue={continueWithLanguage} /> : <>
       <ScrollView ref={scroll} horizontal pagingEnabled bounces={false} scrollEnabled={!busy} showsHorizontalScrollIndicator={false} style={styles.pages}
+        onLayout={event => setPageHeight(event.nativeEvent.layout.height)}
         onMomentumScrollEnd={event => setPage(Math.max(0, Math.min(WELCOME_PAGES.length - 1, Math.round(event.nativeEvent.contentOffset.x / frameWidth))))}>
-        {WELCOME_PAGES.map((item, index) => <WelcomePage key={item.title} index={index} width={frameWidth} compact={contentHeight < 700} largeText={fontScale > 1.25} active={index === page} reducedMotion={reducedMotion} />)}
+        {WELCOME_PAGES.map((item, index) => <WelcomePage key={item.title} index={index} width={frameWidth} height={pageHeight} compact={contentHeight < 700} largeText={fontScale > 1.25} active={index === page} reducedMotion={reducedMotion} />)}
       </ScrollView>
       <View style={styles.footer}>
         <View style={styles.beads} accessibilityLabel={`${page + 1} / ${WELCOME_PAGES.length}`}>
@@ -97,24 +99,24 @@ export default function WelcomeScreen() {
   </SafeAreaView>;
 }
 
-function WelcomePage({ index, width, active, compact, largeText, reducedMotion }: { index: number; width: number; active: boolean; compact: boolean; largeText: boolean; reducedMotion: boolean }) {
-  const [artHeight, setArtHeight] = useState(300);
+function WelcomePage({ index, width, height, active, compact, largeText, reducedMotion }: { index: number; width: number; height: number; active: boolean; compact: boolean; largeText: boolean; reducedMotion: boolean }) {
+  // Use the same artwork height on every page so copy length cannot move the title.
+  const artHeight = Math.max(120, Math.min(largeText ? 230 : 300, height * 0.45));
   const item = WELCOME_PAGES[index];
   const description = Platform.OS === 'ios' && index === 0
     ? 'Halovat namoz vaqtini eslatadi. iPhone’da ovozsiz rejimni Focus orqali yoqing va halovat bilan ibodat qiling.'
     : Platform.OS === 'ios' && index === 5
       ? 'Masjidda chalg‘imasdan ibodat qilish uchun iPhone’da Focus rejimini yoqing. Bu rejim iPhone sozlamalaridan boshqariladi.'
       : item.description;
-  const content = <>
-    <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.art, largeText && styles.largeTextArt]}
-      onLayout={event => setArtHeight(event.nativeEvent.layout.height)}>
-      <OnboardingArt page={index} width={width - 56} height={artHeight} active={active} reducedMotion={reducedMotion} />
-    </View>
-    <Text accessibilityRole="header" style={[styles.title, compact && styles.compactTitle]}>{item.title}</Text>
-    <Text style={styles.description}>{description}</Text>
-  </>;
   return <View style={[styles.slide, { width }]} accessibilityElementsHidden={!active} importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
-    {largeText ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.largeTextContent}>{content}</ScrollView> : content}
+    <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false} contentContainerStyle={styles.slideContent}
+      onMomentumScrollEnd={event => event.stopPropagation()}>
+      <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.art, { height: artHeight }]}>
+        <OnboardingArt page={index} width={width - 56} height={artHeight} active={active} reducedMotion={reducedMotion} />
+      </View>
+      <Text accessibilityRole="header" style={[styles.title, compact && styles.compactTitle]}>{item.title}</Text>
+      <Text style={styles.description}>{description}</Text>
+    </ScrollView>
   </View>;
 }
 
@@ -123,8 +125,9 @@ const styles = StyleSheet.create({
   desktop: { backgroundColor: '#DDDBD6' },
   frame: { flex: 1, backgroundColor: '#FAF9F5', overflow: 'hidden' },
   pages: { flex: 1 },
-  slide: { height: '100%', paddingHorizontal: 28 },
-  art: { flex: 1, minHeight: 0, justifyContent: 'center', alignItems: 'center' },
+  slide: { height: '100%' },
+  slideContent: { flexGrow: 1, paddingHorizontal: 28 },
+  art: { justifyContent: 'center', alignItems: 'center' },
   title: { color: '#064E3B', fontSize: 30, lineHeight: 34.5, fontWeight: '700', letterSpacing: -0.9, marginBottom: 12 },
   compactTitle: { fontSize: 27, lineHeight: 31.05, letterSpacing: -0.81 },
   description: { color: '#3E4540', fontSize: 15, lineHeight: 23.25, maxWidth: 322, marginBottom: 22 },
@@ -134,6 +137,4 @@ const styles = StyleSheet.create({
   bead: { width: 11, height: 11, borderRadius: 11, borderWidth: 1.5, borderColor: '#6ED3AC', backgroundColor: '#FAF9F5' },
   beadDone: { backgroundColor: '#6ED3AC' },
   beadActive: { width: 22, height: 22, backgroundColor: '#064E3B', borderColor: '#064E3B' },
-  largeTextContent: { flexGrow: 1 },
-  largeTextArt: { flex: 0, height: 230, marginVertical: 12 },
 });

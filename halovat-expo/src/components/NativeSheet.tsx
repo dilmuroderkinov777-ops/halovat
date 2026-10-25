@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../ui/AppText';
 import { useThemeColors } from '../ui/useAppTheme';
+import { Typography } from '../ui/theme';
 import { NativeAction } from './NativeAction';
 
 export function NativeSheet({ visible, onClose, title, children, compact = false }: {
@@ -30,7 +31,7 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
 const styles = StyleSheet.create({
   sheet: { alignSelf: 'center', paddingHorizontal: 20, paddingTop: 8 },
   heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
-  title: { flex: 1, fontSize: 19, fontWeight: '700' },
+  title: { ...Typography.sectionTitle, flex: 1 },
   scroll: { flex: 1 },
   content: { gap: 16 },
 });

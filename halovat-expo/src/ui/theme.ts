@@ -14,3 +14,8 @@ export const Colors = {
   red: '#BA1A1A',
   redSoft: '#FFEBE8',
 };
+
+export const Typography = {
+  intro: { fontSize: 22, lineHeight: 28, fontWeight: '600', letterSpacing: 0 },
+  sectionTitle: { fontSize: 17, lineHeight: 23, fontWeight: '600', letterSpacing: 0 },
+} as const;

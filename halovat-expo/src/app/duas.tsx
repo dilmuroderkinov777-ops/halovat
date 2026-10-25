@@ -1,4 +1,5 @@
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
+import { Typography } from '../ui/theme';
 import { router } from 'expo-router';
 import { GraduationCap, Moon, Sunrise } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -68,12 +69,12 @@ export default function DuasScreen() {
 
 const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
-  content: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 30, gap: 0 },
+  content: { gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 17 },
   heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headingLeft: { flexDirection: 'row', alignItems: 'center', gap: 9, flex: 1 },
   headingText: { flex: 1 },
-  title: { color: INK, fontSize: 19, fontWeight: '700' },
+  title: { ...Typography.sectionTitle, color: INK },
   subtitle: { color: MUTED, fontSize: 11, marginTop: 3 },
   card: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 16, gap: 13 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

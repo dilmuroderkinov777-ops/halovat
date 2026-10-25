@@ -3,7 +3,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from '../ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../ui/theme';
+import { Colors, Typography } from '../ui/theme';
 import { useSegments } from 'expo-router';
 
 export function Screen({ children, scroll = true, style, contentStyle }: { children: React.ReactNode; scroll?: boolean; style?: ViewStyle; contentStyle?: ViewStyle }) {
@@ -11,9 +11,9 @@ export function Screen({ children, scroll = true, style, contentStyle }: { child
   const segments = useSegments();
   const inTabs = segments[0] === '(tabs)';
   return (
-    <SafeAreaView edges={inTabs ? ['left', 'right'] : ['left', 'right', 'bottom']} style={[styles.safe, style]}>
+    <SafeAreaView collapsable={false} edges={inTabs ? ['left', 'right'] : ['left', 'right', 'bottom']} style={[styles.safe, style]}>
       {scroll ? (
-        <ScrollView style={styles.scroll} contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, contentStyle]}>
+        <ScrollView style={styles.scroll} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.content, contentStyle]}>
           {children}
         </ScrollView>
       ) : <View style={[styles.content, contentStyle]}>{children}</View>}
@@ -39,9 +39,9 @@ export function Card({ children, style }: { children: React.ReactNode; style?: V
 const baseStyles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.canvas, width: '100%', alignItems: 'center' },
   scroll: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: 440 },
-  content: { alignSelf: 'stretch', maxWidth: 440, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32, gap: 20 },
+  content: { alignSelf: 'stretch', maxWidth: 440, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 20 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, textTransform: 'uppercase' },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: -10 },
-  sectionText: { color: Colors.ink, fontSize: 17, fontWeight: '700', letterSpacing: -0.2 },
+  sectionText: { ...Typography.sectionTitle, color: Colors.ink },
   card: { backgroundColor: Colors.paper, borderRadius: 24, padding: 18, borderWidth: 1, borderColor: '#F0F0EB' },
 });

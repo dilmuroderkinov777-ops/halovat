@@ -97,7 +97,7 @@ export default function QiblaScreen() {
 }
 
 const baseStyles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 18, gap: 15 },
+  content: { gap: 15 },
   locationCard: { minHeight: 59, backgroundColor: '#F4F4F0', borderRadius: 16, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 9 },
   locationIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#DBF4E7', alignItems: 'center', justifyContent: 'center' },
   locationDetails: { flex: 1, gap: 2 },

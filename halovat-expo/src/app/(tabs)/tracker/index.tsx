@@ -1,4 +1,5 @@
 import { useThemedStyles } from '../../../ui/useAppTheme';
+import { Typography } from '../../../ui/theme';
 import { BookOpen, CalendarDays, Check, CheckCircle2, Flame, History, Info, Minus, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -233,7 +234,7 @@ export default function TrackerScreen() {
 
 const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
-  content: { paddingHorizontal: 16, paddingTop: 17, paddingBottom: 30, gap: 0 },
+  content: { gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 20 },
   dateSection: { gap: 9 },
   dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
@@ -263,7 +264,7 @@ const baseStyles = StyleSheet.create({
   legendLabel: { color: '#404944', fontSize: 10 },
   resultsSection: { gap: 10 },
   resultsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { color: INK, fontSize: 18, fontWeight: '700' },
+  sectionTitle: { ...Typography.sectionTitle, color: INK },
   percentSummary: { color: EMERALD, fontSize: 12, fontWeight: '700' },
   summaryRow: { flexDirection: 'row', gap: 12, alignItems: 'stretch' },
   progressCard: { flex: 5, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 10, minHeight: 168, alignItems: 'center', justifyContent: 'center', gap: 8 },

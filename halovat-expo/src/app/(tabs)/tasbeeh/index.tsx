@@ -1,4 +1,5 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
+import { Typography } from '../../../ui/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, usePathname } from 'expo-router';
 import { CircleDot, GraduationCap, Hand, Moon, RotateCw, Sparkles, Sunrise } from 'lucide-react-native';
@@ -133,7 +134,7 @@ export default function TasbeehScreen() {
 
 const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
-  content: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 30, gap: 0 },
+  content: { gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 18 },
   hero: { borderRadius: 28, padding: 16, overflow: 'hidden', alignItems: 'center', gap: 13 },
   heroGlowTop: { position: 'absolute', top: -90, right: -65, width: 190, height: 190, borderRadius: 95, backgroundColor: '#1C80614D' },
@@ -160,7 +161,7 @@ const baseStyles = StyleSheet.create({
   statLabel: { color: MUTED, fontSize: 9, textAlign: 'center' },
   duasSection: { gap: 12 },
   duasHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  duasTitle: { color: INK, fontSize: 18, fontWeight: '700' },
+  duasTitle: { ...Typography.sectionTitle, color: INK },
   duasSubtitle: { color: MUTED, fontSize: 11, marginTop: 3 },
   duaCard: { borderRadius: 20, backgroundColor: '#FFFFFF', padding: 14, gap: 11 },
   duaCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 9 },

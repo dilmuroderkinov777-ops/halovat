@@ -12,7 +12,7 @@ import { useAppLoading } from '../../../context/LaunchAnimationContext';
 import { useHalovat } from '../../../context/AppContext';
 import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../../domain/prayers';
 import { useForegroundClock } from '../../../hooks/useForegroundClock';
-import { Colors } from '../../../ui/theme';
+import { Colors, Typography } from '../../../ui/theme';
 
 function countdown(milliseconds: number) {
   const seconds = Math.max(0, Math.floor(milliseconds / 1000));
@@ -185,7 +185,7 @@ function HomeContent() {
 }
 
 const baseStyles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 30, gap: 18 },
+  content: { gap: 18 },
   dateSection: { gap: 12, paddingTop: 1 },
   infoPills: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   datePill: { minHeight: 29, paddingHorizontal: 10, borderRadius: 16, backgroundColor: '#EFEEEA', flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -195,7 +195,7 @@ const baseStyles = StyleSheet.create({
   nowText: { color: Colors.body, fontSize: 10 },
   nowStrong: { color: Colors.ink, fontWeight: '700' },
   greeting: { gap: 3 },
-  greetingTitle: { color: Colors.ink, fontSize: 26, lineHeight: 32, fontWeight: '700', letterSpacing: -0.7 },
+  greetingTitle: { ...Typography.intro, color: Colors.ink },
   greetingSub: { color: Colors.muted, fontSize: 14, flexDirection: 'row', alignItems: 'center' },
   hero: { minHeight: 236, borderRadius: 26, padding: 24, justifyContent: 'space-between', overflow: 'hidden', elevation: 4, shadowColor: '#003527', shadowOpacity: 0.16, shadowRadius: 13, shadowOffset: { width: 0, height: 6 } },
   heroGlowTop: { position: 'absolute', width: 190, height: 190, borderRadius: 100, top: -117, right: -32, backgroundColor: '#27B27B24' },
@@ -217,7 +217,7 @@ const baseStyles = StyleSheet.create({
   progressTime: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
   prayerSection: { gap: 10 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  sectionTitle: { color: Colors.ink, fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
+  sectionTitle: { ...Typography.sectionTitle, color: Colors.ink },
   sectionHint: { color: Colors.muted, fontSize: 10 },
   prayerRow: { flexDirection: 'row', gap: 6 },
   prayerCard: { flex: 1, minWidth: 0, height: 94, borderRadius: 17, backgroundColor: '#F4F4F0', paddingVertical: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'space-between', borderColor: 'transparent', borderWidth: 1 },

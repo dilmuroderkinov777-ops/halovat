@@ -1,5 +1,6 @@
 import { useLanguage } from '../context/LanguageContext';
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
+import { Typography } from '../ui/theme';
 import * as Location from 'expo-location';
 import { useFocusEffect, useIsFocused } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -246,10 +247,10 @@ export default function MosqueScreen() {
 }
 
 const baseStyles = StyleSheet.create({
-  content: { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 26, gap: 14 },
+  content: { gap: 14 },
   searchRow: { flexDirection: 'row', gap: 8, height: 48 },
   searchBox: { flex: 1, borderRadius: 16, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 12, borderWidth: 1, borderColor: '#ECEFEA' },
-  searchInput: { flex: 1, color: INK, fontSize: 12, paddingVertical: 0, fontFamily: 'PlusJakartaSans_400Regular' },
+  searchInput: { flex: 1, color: INK, fontSize: 12, paddingVertical: 0 },
   map: { height: 250, borderRadius: 19, overflow: 'hidden', position: 'relative', backgroundColor: '#DDEBE2' },
   liveMapPill: { position: 'absolute', top: 12, left: 12, height: 27, borderRadius: 14, paddingHorizontal: 9, backgroundColor: '#FFFFFFED', flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: EMERALD },
@@ -264,7 +265,7 @@ const baseStyles = StyleSheet.create({
   mapSelectionDistance: { color: MUTED, fontSize: 10 },
   resultsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   resultsTitleRow: { flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
-  resultsTitle: { color: INK, fontSize: 17, fontWeight: '700' },
+  resultsTitle: { ...Typography.sectionTitle, color: INK },
   resultCount: { color: MUTED, fontSize: 10 },
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -7 },
   sourceText: { flex: 1, color: MUTED, fontSize: 10, lineHeight: 15 },
