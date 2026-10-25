@@ -33,9 +33,11 @@ function Checkin({ prayer, choose, close }: { prayer: PrayerClock; choose: (stat
   const styles = useThemedStyles(baseStyles);
   return <NativeSheet visible onClose={close} title={`${prayer.name} namozini o‘qidingizmi?`} compact>
     <Text style={styles.modalCopy}>Javobingiz namozlar jadvaliga qo‘shiladi.</Text>
-    <NativeAction label="Ha, o‘qidim" onPress={() => choose('done')} />
-    <NativeAction label="Yo‘q, qazo bo‘ldi" variant="outlined" onPress={() => choose('missed')} />
-    <NativeAction label="Keyinroq belgilayman" variant="text" onPress={close} />
+    <View style={styles.checkinActions}>
+      <NativeAction label="Ha, o‘qidim" large onPress={() => choose('done')} />
+      <NativeAction label="Yo‘q, qazo bo‘ldi" large variant="outlined" onPress={() => choose('missed')} />
+      <NativeAction label="Keyinroq belgilayman" large variant="outlined" onPress={close} />
+    </View>
   </NativeSheet>;
 }
 
@@ -199,4 +201,5 @@ const baseStyles = StyleSheet.create({
   qazoTitle: { color: Colors.ink, fontSize: 13, fontWeight: '700' },
   qazoSubtitle: { color: Colors.body, fontSize: 10 },
   modalCopy: { color: Colors.body, fontSize: 13, marginBottom: 5 },
+  checkinActions: { gap: 8 },
 });
