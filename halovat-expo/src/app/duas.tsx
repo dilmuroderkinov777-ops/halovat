@@ -25,17 +25,13 @@ export default function DuasScreen() {
   return (
     <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.page}>
+        <View style={styles.heading}>
+          <Text style={styles.title}>Tavsiya etilgan duolar</Text>
+          <Text style={styles.subtitle}>Qur&apos;on va sunnatdagi muhim zikrlar</Text>
+        </View>
+
         <NativeSegments value="duas" options={[{ value: 'tasbeeh', label: 'Raqamli Tasbeh' }, { value: 'duas', label: 'Kundalik Duolar' }]}
           onChange={value => { if (value === 'tasbeeh') router.navigate('/(tabs)/tasbeeh'); }} />
-
-        <View style={styles.heading}>
-          <View style={styles.headingLeft}>
-            <View style={styles.headingText}>
-              <Text style={styles.title}>Tavsiya etilgan duolar</Text>
-              <Text style={styles.subtitle}>Qur&apos;on va sunnatdagi muhim zikrlar</Text>
-            </View>
-          </View>
-        </View>
 
         <NativeSelect value={category} options={DUA_CATEGORIES.map(value => ({ value, label: value }))} onChange={setCategory} />
 
@@ -71,11 +67,9 @@ const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
   content: { gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 17 },
-  heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headingLeft: { flexDirection: 'row', alignItems: 'center', gap: 9, flex: 1 },
-  headingText: { flex: 1 },
-  title: { ...Typography.sectionTitle, color: INK },
-  subtitle: { color: MUTED, fontSize: 11, marginTop: 3 },
+  heading: { alignItems: 'center' },
+  title: { ...Typography.sectionTitle, color: INK, textAlign: 'center' },
+  subtitle: { color: MUTED, fontSize: 11, marginTop: 3, textAlign: 'center' },
   card: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 16, gap: 13 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardHeading: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 9 },
