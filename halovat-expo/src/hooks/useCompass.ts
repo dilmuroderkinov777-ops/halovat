@@ -85,7 +85,7 @@ export function useCompass(city: Point) {
           const delta = headingDelta(target, heading);
           if (delta !== 0) {
             target += delta;
-            // One native value drives the needle, Kaaba and cardinal labels.
+            // One native value drives the needle; the Qibla target stays fixed.
             // No JS frame loop or second smoothing filter is needed.
             animation?.stop();
             animation = Animated.timing(animatedHeading, {

@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import { LocateFixed } from 'lucide-react-native';
 import React, { memo, useCallback, useMemo, useState } from 'react';
-import { Animated, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle as SvgCircle, Line } from 'react-native-svg';
 import { useLanguage } from '../context/LanguageContext';
 import { type City, nearestCity } from '../domain/prayers';
-import { qiblaBearing, radians, relativeBearing } from '../domain/qibla';
+import { qiblaBearing, relativeBearing } from '../domain/qibla';
 import { useCompass } from '../hooks/useCompass';
 import { Text } from '../ui/AppText';
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
@@ -36,7 +36,10 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   const aligned = hasHeading && headingAccuracy >= 3 && trueNorth && Math.abs(qiblaAngle) <= 8;
   const dialSize = Math.min(width - 70, 300);
   const kaabaSize = dialSize * 0.16;
-  const marker = useMemo(() => <View accessibilityLabel={t('Ka’ba')}><KaabaIcon size={kaabaSize} /></View>, [kaabaSize, t]);
+  const marker = useMemo(() => <View pointerEvents="none" accessibilityLabel={t('Qibla')} style={[styles.qiblaMarker, {
+    width: kaabaSize, height: kaabaSize,
+    left: (dialSize - kaabaSize) / 2, top: (dialSize - kaabaSize) / 2 - dialSize * 0.32,
+  }]}><KaabaIcon size={kaabaSize} /></View>, [dialSize, kaabaSize, styles, t]);
   const showCalibration = useCallback(() => {
     restart();
     setGuideRevision(value => value + 1);
@@ -49,9 +52,6 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   </Pressable>, [gpsAccuracy, locationName, styles]);
 
   const dial = useMemo(() => {
-    const cardinalRotation = animatedHeading.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '-360deg'] });
-    const cardinalCounterRotation = animatedHeading.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] });
-    const radius = dialSize * 139 / 300;
     return <View style={[styles.compassOuter, { width: dialSize, height: dialSize, borderRadius: dialSize / 2 }]}>
       <Svg width={dialSize} height={dialSize} viewBox="0 0 300 300" style={styles.compassTrack}>
         <SvgCircle cx="150" cy="150" r="139" fill="none" stroke="#DCE6DF" strokeWidth="1.5" strokeDasharray="1 7" />
@@ -60,17 +60,9 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
         <SvgCircle cx="150" cy="150" r="18" fill={colors.paper} stroke="#DDE8E0" strokeWidth="2" />
         <SvgCircle cx="150" cy="150" r="8" fill={EMERALD} />
       </Svg>
-      <QiblaNeedle heading={animatedHeading} bearing={bearing} ready={hasHeading} size={dialSize} color={colors.green} marker={marker} />
-      {hasHeading ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ rotate: cardinalRotation }] }]}>
-        {['N', 'E', 'S', 'W'].map((label, index) => {
-          const angle = radians(index * 90);
-          return <Animated.View key={label} style={[styles.cardinalPosition, {
-            left: dialSize / 2 + Math.sin(angle) * radius - 10,
-            top: dialSize / 2 - Math.cos(angle) * radius - 8,
-            transform: [{ rotate: cardinalCounterRotation }],
-          }]}><Text style={[styles.cardinal, { backgroundColor: colors.paper }]}>{label}</Text></Animated.View>;
-        })}
-      </Animated.View> : null}
+      <QiblaNeedle heading={animatedHeading} bearing={bearing} ready={hasHeading} size={dialSize} color={colors.green} />
+      {/* Top is the alignment target, not geographic north; only the Qibla needle rotates. */}
+      {marker}
     </View>;
   }, [animatedHeading, bearing, hasHeading, dialSize, colors.paper, colors.green, marker, styles]);
 
@@ -104,8 +96,7 @@ const baseStyles = StyleSheet.create({
   compassSection: { alignItems: 'center', paddingTop: 6 },
   compassOuter: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', elevation: 7, shadowColor: GREEN, shadowOpacity: 0.11, shadowRadius: 25, shadowOffset: { width: 0, height: 9 } },
   compassTrack: { position: 'absolute' },
-  cardinalPosition: { position: 'absolute', width: 20, height: 16 },
-  cardinal: { width: 20, textAlign: 'center', color: MUTED, fontSize: 12, lineHeight: 16, fontWeight: '700' },
+  qiblaMarker: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   alignmentBadge: { minHeight: 52, width: '92%', marginTop: 22, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, backgroundColor: '#E9F2EC', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 },
   alignmentBadgeActive: { backgroundColor: EMERALD },
   alignmentDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: EMERALD },
