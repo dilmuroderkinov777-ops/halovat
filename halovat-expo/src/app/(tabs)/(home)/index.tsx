@@ -7,17 +7,13 @@ import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { NativeAction } from '../../../components/NativeAction';
 import { NativeSheet } from '../../../components/NativeSheet';
+import { NativeCountdown } from '../../../components/NativeCountdown';
 import { Screen } from '../../../components/Screen';
 import { useAppLoading } from '../../../context/LaunchAnimationContext';
 import { useHalovat } from '../../../context/AppContext';
 import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../../domain/prayers';
 import { useForegroundClock } from '../../../hooks/useForegroundClock';
 import { Colors, Typography } from '../../../ui/theme';
-
-function countdown(milliseconds: number) {
-  const seconds = Math.max(0, Math.floor(milliseconds / 1000));
-  return `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor(seconds % 3600 / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-}
 
 const HIJRI_MONTHS = ['Muharram', 'Safar', 'Rabi’ul avval', 'Rabi’us soni', 'Jumodul avval', 'Jumodul oxir', 'Rajab', 'Sha’bon', 'Ramazon', 'Shavvol', 'Zulqa’da', 'Zulhijja'];
 function hijriDate(date: Date) {
@@ -32,12 +28,6 @@ function hijriDate(date: Date) {
 }
 
 const prayerIcons = [Sunrise, Sun, Sun, Sunset, Moon];
-
-function Countdown({ until }: { until: number }) {
-  const styles = useThemedStyles(baseStyles);
-  const now = useForegroundClock();
-  return <Text style={styles.countdownText}>{countdown(until - now.getTime())}</Text>;
-}
 
 function Checkin({ prayer, choose, close }: { prayer: PrayerClock; choose: (status: PrayerStatus) => void; close: () => void }) {
   const styles = useThemedStyles(baseStyles);
@@ -62,7 +52,7 @@ function HomeContent() {
   const styles = useThemedStyles(baseStyles);
   const Colors = useThemeColors();
   const { data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
-  const liveNow = useForegroundClock(15_000);
+  const { now: liveNow, refresh: refreshCountdown } = useForegroundClock(15_000);
   const [dismissedPrayers, setDismissedPrayers] = useState<string[]>([]);
   const dayKey = dateKey(liveNow);
   const today = useMemo(() => new Date(`${dayKey}T00:00:00`), [dayKey]);
@@ -106,7 +96,7 @@ function HomeContent() {
         <View style={styles.heroIcon}>{nextPrayer.id === 'isha' ? <Moon size={19} color="#B0F0D6" /> : <Sun size={19} color="#B0F0D6" />}</View>
       </View>
       <View style={styles.countdownBlock}>
-        <Countdown until={nextAt.getTime()} />
+        <NativeCountdown until={nextAt.getTime()} onComplete={refreshCountdown} />
         <View style={styles.countdownLabels}><Text style={styles.countdownLabel}>SOAT</Text><Text style={styles.countdownLabel}>DAQIQA</Text><Text style={styles.countdownLabel}>SONIYA</Text></View>
       </View>
       <View style={styles.progressArea}>
@@ -171,7 +161,6 @@ const baseStyles = StyleSheet.create({
   heroPillStrong: { color: '#FFFFFF', fontWeight: '700' },
   heroIcon: { width: 39, height: 39, borderRadius: 20, backgroundColor: '#FFFFFF18', alignItems: 'center', justifyContent: 'center' },
   countdownBlock: { paddingVertical: 3 },
-  countdownText: { color: '#FFFFFF', fontSize: 49, lineHeight: 57, letterSpacing: -1.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
   countdownLabels: { flexDirection: 'row', gap: 26, paddingLeft: 2 },
   countdownLabel: { color: '#B0F0D6', fontSize: 11, letterSpacing: 0.65, fontWeight: '500' },
   progressArea: { gap: 8 },
