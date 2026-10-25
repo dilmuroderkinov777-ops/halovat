@@ -1,11 +1,14 @@
 import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Redirect, router } from 'expo-router';
-import { ArrowRight, BookOpen, CalendarDays, Check, ChevronRight, CircleDot, Clock3, Compass, Landmark, Moon, Share2, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
+import { Redirect, router, useIsFocused } from 'expo-router';
+import { BookOpen, CalendarDays, Check, ChevronRight, CircleDot, Clock3, Compass, Landmark, Moon, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../ui/AppText';
+import { NativeAction } from '../../components/NativeAction';
+import { NativeSheet } from '../../components/NativeSheet';
 import { Screen } from '../../components/Screen';
+import { useAppLoading } from '../../context/LaunchAnimationContext';
 import { useHalovat } from '../../context/AppContext';
 import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../domain/prayers';
 import { useForegroundClock } from '../../hooks/useForegroundClock';
@@ -49,18 +52,12 @@ function bearingToKaaba(latitude: number, longitude: number) {
 
 function Checkin({ prayer, choose, close }: { prayer: PrayerClock; choose: (status: PrayerStatus) => void; close: () => void }) {
   const styles = useThemedStyles(baseStyles);
-  const Colors = useThemeColors();
-  return <Modal transparent animationType="fade" visible onRequestClose={close}>
-    <View style={styles.modalShade}><View style={styles.modalCard}>
-      <View style={styles.modalBadge}><Sparkles size={22} color={Colors.green} /></View>
-      <Text style={styles.modalEyebrow}>HALOVAT ESLATMASI</Text>
-      <Text style={styles.modalTitle}>{prayer.name} namozini o‘qidingizmi?</Text>
-      <Text style={styles.modalCopy}>Javobingiz namozlar jadvaliga qo‘shiladi.</Text>
-      <Pressable style={styles.modalYes} onPress={() => choose('done')}><Check color="#FFFFFF" size={18} /><Text style={styles.modalYesText}>Ha, o‘qidim</Text></Pressable>
-      <Pressable style={styles.modalNo} onPress={() => choose('missed')}><X color={Colors.red} size={18} /><Text style={styles.modalNoText}>Yo‘q, qazo bo‘ldi</Text></Pressable>
-      <Pressable onPress={close} hitSlop={12}><Text style={styles.modalLater}>Keyinroq belgilayman</Text></Pressable>
-    </View></View>
-  </Modal>;
+  return <NativeSheet visible onClose={close} title={`${prayer.name} namozini o‘qidingizmi?`} compact>
+    <Text style={styles.modalCopy}>Javobingiz namozlar jadvaliga qo‘shiladi.</Text>
+    <NativeAction label="Ha, o‘qidim" onPress={() => choose('done')} />
+    <NativeAction label="Yo‘q, qazo bo‘ldi" variant="outlined" onPress={() => choose('missed')} />
+    <NativeAction label="Keyinroq belgilayman" variant="text" onPress={close} />
+  </NativeSheet>;
 }
 
 export default function HomeScreen() {
@@ -71,6 +68,8 @@ export default function HomeScreen() {
 }
 
 function HomeContent() {
+  const focused = useIsFocused();
+  const appLoading = useAppLoading();
   const styles = useThemedStyles(baseStyles);
   const Colors = useThemeColors();
   const { city, data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
@@ -129,7 +128,7 @@ function HomeContent() {
     </LinearGradient>
 
     <View style={styles.prayerSection}>
-      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text><Pressable onPress={() => router.push('/(tabs)/tracker' as never)} style={styles.linkButton}><Text style={styles.sectionLink}>To‘liq taqvim</Text><ArrowRight size={15} color={Colors.green} /></Pressable></View>
+      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text><NativeAction label="To‘liq taqvim" onPress={() => router.push('/(tabs)/tracker' as never)} compact variant="outlined" /></View>
       <View style={styles.prayerRow}>
         {prayers.map((prayer, index) => {
           const Icon = prayerIcons[index];
@@ -171,7 +170,7 @@ function HomeContent() {
     </View>
 
     <View style={styles.verseCard}>
-      <View style={styles.verseHeader}><View style={styles.verseTitleWrap}><View style={styles.verseMark}><Sparkles size={17} color="#875407" /></View><Text style={styles.verseTitle}>Kun hikmati</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Oyatni ulashish" onPress={() => void Share.share({ message: '“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.” — Ra’d surasi, 28-oyat' })} style={styles.shareButton}><Share2 size={17} color={Colors.body} /></Pressable></View>
+      <View style={styles.verseHeader}><View style={styles.verseTitleWrap}><View style={styles.verseMark}><Sparkles size={17} color="#875407" /></View><Text style={styles.verseTitle}>Kun hikmati</Text></View><NativeAction label="Ulashish" compact variant="text" onPress={() => void Share.share({ message: '“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.” — Ra’d surasi, 28-oyat' })} /></View>
       <Text style={styles.arabicVerse}>أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</Text>
       <View style={styles.translation}><Text style={styles.translationText}>“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.”</Text><Text style={styles.verseSource}>Ra’d surasi, 28-oyat</Text></View>
     </View>
@@ -181,7 +180,7 @@ function HomeContent() {
       <View style={styles.qazoCopy}><Text style={styles.qazoTitle}>Qazo namozlari hisobi</Text><Text style={styles.qazoSubtitle}>{missedCount ? `Sizda ${missedCount} ta qazo namozi qayd etilgan` : 'Qazo qaydlari hozircha yo‘q'}</Text></View>
       <ChevronRight size={19} color={Colors.green} />
     </Pressable>
-    {duePrayer ? <Checkin prayer={duePrayer} choose={answerCheckin} close={() => setDismissedPrayers(current => [...current, prayerKey(today, duePrayer.id)])} /> : null}
+    {duePrayer && focused && !appLoading ? <Checkin prayer={duePrayer} choose={answerCheckin} close={() => setDismissedPrayers(current => [...current, prayerKey(today, duePrayer.id)])} /> : null}
   </Screen>;
 }
 
@@ -193,36 +192,73 @@ const baseStyles = StyleSheet.create({
   dateText: { color: Colors.body, fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
   nowPill: { minHeight: 29, borderRadius: 16, backgroundColor: '#E9E8E4', paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', gap: 6 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.green },
-  nowText: { color: Colors.body, fontSize: 10 }, nowStrong: { color: Colors.ink, fontWeight: '700' },
-  greeting: { gap: 3 }, greetingTitle: { color: Colors.ink, fontSize: 26, lineHeight: 32, fontWeight: '700', letterSpacing: -0.7 },
+  nowText: { color: Colors.body, fontSize: 10 },
+  nowStrong: { color: Colors.ink, fontWeight: '700' },
+  greeting: { gap: 3 },
+  greetingTitle: { color: Colors.ink, fontSize: 26, lineHeight: 32, fontWeight: '700', letterSpacing: -0.7 },
   greetingSub: { color: Colors.muted, fontSize: 14, flexDirection: 'row', alignItems: 'center' },
   hero: { minHeight: 236, borderRadius: 26, padding: 24, justifyContent: 'space-between', overflow: 'hidden', elevation: 4, shadowColor: '#003527', shadowOpacity: 0.16, shadowRadius: 13, shadowOffset: { width: 0, height: 6 } },
   heroGlowTop: { position: 'absolute', width: 190, height: 190, borderRadius: 100, top: -117, right: -32, backgroundColor: '#27B27B24' },
   heroGlowBottom: { position: 'absolute', width: 150, height: 150, borderRadius: 100, bottom: -112, left: 32, backgroundColor: '#B0F0D610' },
   heroHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   heroPill: { minHeight: 30, borderRadius: 18, paddingHorizontal: 11, backgroundColor: '#FFFFFF17', flexDirection: 'row', alignItems: 'center', gap: 7 },
-  pillDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#6FFBBE' },
-  heroPillText: { color: '#B0F0D6', fontSize: 11, fontWeight: '500' }, heroPillStrong: { color: '#FFFFFF', fontWeight: '700' },
+  heroPillText: { color: '#B0F0D6', fontSize: 11, fontWeight: '500' },
+  heroPillStrong: { color: '#FFFFFF', fontWeight: '700' },
   heroIcon: { width: 39, height: 39, borderRadius: 20, backgroundColor: '#FFFFFF18', alignItems: 'center', justifyContent: 'center' },
-  countdownBlock: { paddingVertical: 3 }, countdownText: { color: '#FFFFFF', fontSize: 49, lineHeight: 57, letterSpacing: -1.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  countdownLabels: { flexDirection: 'row', gap: 26, paddingLeft: 2 }, countdownLabel: { color: '#B0F0D6', fontSize: 11, letterSpacing: 0.65, fontWeight: '500' },
-  progressArea: { gap: 8 }, progressTrack: { height: 6, borderRadius: 4, backgroundColor: '#001D1680', overflow: 'hidden' }, progressFill: { height: '100%', borderRadius: 4, backgroundColor: '#6FFBBE' },
-  progressMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, progressLabel: { color: '#B0F0D6', fontSize: 10, flexShrink: 1 }, progressTime: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
-  prayerSection: { gap: 10 }, sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, sectionTitle: { color: Colors.ink, fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
-  linkButton: { flexDirection: 'row', alignItems: 'center', gap: 3 }, sectionLink: { color: Colors.green, fontSize: 11, fontWeight: '600' }, sectionHint: { color: Colors.muted, fontSize: 10 },
+  countdownBlock: { paddingVertical: 3 },
+  countdownText: { color: '#FFFFFF', fontSize: 49, lineHeight: 57, letterSpacing: -1.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  countdownLabels: { flexDirection: 'row', gap: 26, paddingLeft: 2 },
+  countdownLabel: { color: '#B0F0D6', fontSize: 11, letterSpacing: 0.65, fontWeight: '500' },
+  progressArea: { gap: 8 },
+  progressTrack: { height: 6, borderRadius: 4, backgroundColor: '#001D1680', overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 4, backgroundColor: '#6FFBBE' },
+  progressMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  progressLabel: { color: '#B0F0D6', fontSize: 10, flexShrink: 1 },
+  progressTime: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
+  prayerSection: { gap: 10 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  sectionTitle: { color: Colors.ink, fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
+  sectionHint: { color: Colors.muted, fontSize: 10 },
   prayerRow: { flexDirection: 'row', gap: 6 },
   prayerCard: { flex: 1, minWidth: 0, height: 94, borderRadius: 17, backgroundColor: '#F4F4F0', paddingVertical: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'space-between', borderColor: 'transparent', borderWidth: 1 },
-  prayerCardActive: { backgroundColor: '#DDF8EB', borderColor: '#DDF8EB' }, prayerCardDone: { backgroundColor: '#F4F4F0', borderColor: '#F4F4F0' }, prayerCardMissed: { backgroundColor: '#FFF0ED', borderColor: '#F5C5C0' },
-  prayerName: { color: Colors.body, fontSize: 10, fontWeight: '500' }, prayerNameActive: { color: Colors.green, fontWeight: '700' }, prayerTime: { color: Colors.ink, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] }, prayerTimeActive: { color: Colors.green },
-  prayerStatus: { width: 23, height: 23, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, statusDone: { backgroundColor: '#EFF2ED' }, statusMissed: { backgroundColor: Colors.red }, statusActive: { backgroundColor: '#006C49' }, statusDefault: { backgroundColor: '#E9E8E4' },
+  prayerCardActive: { backgroundColor: '#DDF8EB', borderColor: '#DDF8EB' },
+  prayerCardDone: { backgroundColor: '#F4F4F0', borderColor: '#F4F4F0' },
+  prayerCardMissed: { backgroundColor: '#FFF0ED', borderColor: '#F5C5C0' },
+  prayerName: { color: Colors.body, fontSize: 10, fontWeight: '500' },
+  prayerNameActive: { color: Colors.green, fontWeight: '700' },
+  prayerTime: { color: Colors.ink, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  prayerTimeActive: { color: Colors.green },
+  prayerStatus: { width: 23, height: 23, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  statusDone: { backgroundColor: '#EFF2ED' },
+  statusMissed: { backgroundColor: Colors.red },
+  statusActive: { backgroundColor: '#006C49' },
+  statusDefault: { backgroundColor: '#E9E8E4' },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
-  shortcutsSection: { gap: 10 }, shortcuts: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  shortcutsSection: { gap: 10 },
+  shortcuts: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   shortcutCard: { width: '48.4%', minHeight: 112, borderRadius: 20, padding: 14, backgroundColor: '#FFFFFF', justifyContent: 'space-between', borderWidth: 1, borderColor: '#F0F0EB', shadowColor: '#003527', shadowOpacity: 0.035, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
-  shortcutTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, shortcutIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, shortcutIconMint: { backgroundColor: '#D8F5E7' }, shortcutIconGold: { backgroundColor: '#FFF0D7' }, shortcutIconDeep: { backgroundColor: '#DFF0E8' }, shortcutIconNeutral: { backgroundColor: '#EFEEEA' },
+  shortcutTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  shortcutIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  shortcutIconMint: { backgroundColor: '#D8F5E7' },
+  shortcutIconGold: { backgroundColor: '#FFF0D7' },
+  shortcutIconDeep: { backgroundColor: '#DFF0E8' },
+  shortcutIconNeutral: { backgroundColor: '#EFEEEA' },
   shortcutBadge: { borderRadius: 12, paddingHorizontal: 7, paddingVertical: 4, color: Colors.green, backgroundColor: '#EFEEEA', overflow: 'hidden', fontSize: 9, fontWeight: '700' },
-  shortcutTitle: { color: Colors.ink, fontSize: 14, fontWeight: '700' }, shortcutSub: { color: Colors.muted, fontSize: 10, marginTop: 3 },
-  verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' }, verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, verseTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 }, verseMark: { width: 31, height: 31, borderRadius: 16, backgroundColor: '#FFF0D7', alignItems: 'center', justifyContent: 'center' }, verseTitle: { color: Colors.ink, fontSize: 12, fontWeight: '700', letterSpacing: 0.4, textTransform: 'uppercase' }, shareButton: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F4F4F0' },
-  arabicVerse: { color: Colors.ink, fontSize: 21, lineHeight: 37, textAlign: 'right' }, translation: { borderRadius: 16, padding: 13, gap: 7, backgroundColor: '#F4F4F0' }, translationText: { color: Colors.body, fontSize: 13, lineHeight: 20, fontStyle: 'italic' }, verseSource: { color: Colors.muted, fontSize: 10 },
-  qazoCard: { minHeight: 70, borderRadius: 19, paddingHorizontal: 13, paddingVertical: 12, backgroundColor: '#E8F4ED', flexDirection: 'row', alignItems: 'center', gap: 11 }, qazoIcon: { width: 38, height: 38, borderRadius: 14, backgroundColor: Colors.green, alignItems: 'center', justifyContent: 'center' }, qazoCopy: { flex: 1, gap: 3 }, qazoTitle: { color: Colors.ink, fontSize: 13, fontWeight: '700' }, qazoSubtitle: { color: Colors.body, fontSize: 10 },
-  modalShade: { flex: 1, backgroundColor: '#11291ECC', justifyContent: 'center', alignItems: 'center', padding: 24 }, modalCard: { width: '100%', maxWidth: 380, backgroundColor: '#FFFFFF', borderRadius: 27, padding: 24, alignItems: 'center', gap: 11 }, modalBadge: { width: 50, height: 50, borderRadius: 18, backgroundColor: Colors.mint, alignItems: 'center', justifyContent: 'center' }, modalEyebrow: { color: Colors.green, fontSize: 10, letterSpacing: 1, fontWeight: '800' }, modalTitle: { color: Colors.ink, fontSize: 22, fontWeight: '700', textAlign: 'center' }, modalCopy: { color: Colors.body, fontSize: 13, marginBottom: 5 }, modalYes: { height: 48, width: '100%', borderRadius: 15, backgroundColor: Colors.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }, modalYesText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' }, modalNo: { height: 48, width: '100%', borderRadius: 15, backgroundColor: '#FFF0ED', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }, modalNoText: { color: Colors.red, fontSize: 14, fontWeight: '700' }, modalLater: { color: Colors.muted, fontSize: 12, paddingTop: 3 },
+  shortcutTitle: { color: Colors.ink, fontSize: 14, fontWeight: '700' },
+  shortcutSub: { color: Colors.muted, fontSize: 10, marginTop: 3 },
+  verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
+  verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  verseTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  verseMark: { width: 31, height: 31, borderRadius: 16, backgroundColor: '#FFF0D7', alignItems: 'center', justifyContent: 'center' },
+  verseTitle: { color: Colors.ink, fontSize: 12, fontWeight: '700', letterSpacing: 0.4, textTransform: 'uppercase' },
+  arabicVerse: { color: Colors.ink, fontSize: 21, lineHeight: 37, textAlign: 'right' },
+  translation: { borderRadius: 16, padding: 13, gap: 7, backgroundColor: '#F4F4F0' },
+  translationText: { color: Colors.body, fontSize: 13, lineHeight: 20, fontStyle: 'italic' },
+  verseSource: { color: Colors.muted, fontSize: 10 },
+  qazoCard: { minHeight: 70, borderRadius: 19, paddingHorizontal: 13, paddingVertical: 12, backgroundColor: '#E8F4ED', flexDirection: 'row', alignItems: 'center', gap: 11 },
+  qazoIcon: { width: 38, height: 38, borderRadius: 14, backgroundColor: Colors.green, alignItems: 'center', justifyContent: 'center' },
+  qazoCopy: { flex: 1, gap: 3 },
+  qazoTitle: { color: Colors.ink, fontSize: 13, fontWeight: '700' },
+  qazoSubtitle: { color: Colors.body, fontSize: 10 },
+  modalCopy: { color: Colors.body, fontSize: 13, marginBottom: 5 },
 });

@@ -1,10 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
-import { BellOff, Pause, Play, VolumeX } from 'lucide-react-native';
+import { BellOff, VolumeX } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, PermissionsAndroid, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, AppState, PermissionsAndroid, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeAction } from '../components/NativeAction';
 import { PRAYERS } from '../domain/prayers';
 import { focusControl } from '../services/focusControl';
 
@@ -140,7 +142,8 @@ export default function PrayerModeScreen() {
 
   return <LinearGradient colors={['#00784B', '#00553B', '#003C2F']} style={styles.safe}>
     <StatusBar style="light" />
-    <View style={styles.center}>
+    <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={styles.center}>
       <Text style={styles.title}>Halovat vaqti</Text>
       <Text style={styles.prayer}>{prayer.name} namozi</Text>
       <View style={styles.ringWrap}>
@@ -155,16 +158,16 @@ export default function PrayerModeScreen() {
         <View style={styles.toggleTile}><View style={styles.toggleIcon}><BellOff size={17} color="#E3F3EA" /></View><View style={{ flex: 1 }}><Text style={styles.toggleText}>Bildirishnomalar jim</Text><Text style={styles.toggleSub}>butun telefon</Text></View><Switch value={notifications} onValueChange={enableNotificationQuiet} trackColor={{ true: '#6DE2A1', false: '#87958D' }} thumbColor="#FFFFFF" /></View>
       </View>
       <Text style={styles.permissionHint}>{Platform.OS === 'android' ? 'Kontaktlar ruxsati barcha kiruvchi qo‘ng‘iroqlar uchun kerak. Tarix shu qurilmada saqlanadi.' : 'iPhone’da jim rejimni iOS Focus orqali qo‘lda boshqaring.'}</Text>
-      <Pressable onPress={toggleRunning} style={styles.mainButton}>{running ? <Pause size={18} color="#07583B" fill="#07583B" /> : <Play size={18} color="#07583B" fill="#07583B" />}<Text style={styles.mainButtonText}>{running ? 'Pauza' : 'Davom ettirish'}</Text></Pressable>
+      <View style={styles.action}><NativeAction label={running ? 'Pauza' : 'Davom ettirish'} onPress={toggleRunning} variant="outlined" colorScheme="dark" /></View>
       <Text style={styles.footer}>Har bir namoz — qalbga yaqinlik</Text>
-    </View>
-    <View style={styles.dots}>{[0, 1, 2, 3, 4].map((item, index) => <View key={item} style={[styles.dot, index === 2 && styles.dotActive]} />)}</View>
+    </ScrollView>
+    </SafeAreaView>
   </LinearGradient>;
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, paddingTop: 12, paddingBottom: 18 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22 },
+  center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 20 },
   title: { color: '#FFFFFF', fontSize: 23, fontWeight: '500' },
   prayer: { color: '#D4E9DD', fontSize: 16, marginTop: 4 },
   ringWrap: { width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center', marginTop: 28, marginBottom: 22, shadowColor: '#72F4A0', shadowOpacity: 0.2, shadowRadius: 24 },
@@ -177,9 +180,6 @@ const styles = StyleSheet.create({
   toggleText: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
   toggleSub: { color: '#C5DDD1', fontSize: 8, marginTop: 2 },
   permissionHint: { color: '#C5DDD1', fontSize: 9, lineHeight: 13, textAlign: 'center', paddingHorizontal: 12, marginTop: 8 },
-  mainButton: { marginTop: 14, height: 50, borderRadius: 27, backgroundColor: '#FFFFFF', width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
-  mainButtonText: { color: '#07583B', fontSize: 14, fontWeight: '700' },
   footer: { color: '#C5DDD1', fontSize: 11, marginTop: 15 },
-  dots: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingBottom: 5 },
-  dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#FFFFFF54' }, dotActive: { width: 7, height: 7, backgroundColor: '#FFFFFF' },
+  action: { width: '100%', marginTop: 14 },
 });

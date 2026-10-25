@@ -1,5 +1,5 @@
 import { useThemedStyles } from '../../ui/useAppTheme';
-import { BookOpen, CalendarDays, Check, CheckCircle2, Flame, History, Info, Minus, Share2, X } from 'lucide-react-native';
+import { BookOpen, CalendarDays, Check, CheckCircle2, Flame, History, Info, Minus, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../ui/AppText';
@@ -225,7 +225,7 @@ export default function TrackerScreen() {
         <View style={styles.ayahCard}>
           <View style={styles.ayahRow}><Text style={styles.ayahEyebrow}>KUNNING OYATI KARIMASI</Text><BookOpen size={20} color="#95D3BA" /></View>
           <Text style={styles.ayahText}>«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir».</Text>
-          <View style={styles.ayahRow}><Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text><Pressable accessibilityRole="button" accessibilityLabel="Oyati karimani ulashish" onPress={() => void Share.share({ message: '«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir». «Ankavut» surasi, 45-oyat' })} style={styles.ayahShare}><Share2 size={16} color="#FFFFFF" /></Pressable></View>
+          <View style={styles.ayahRow}><Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text><NativeAction label="Ulashish" compact variant="text" colorScheme="dark" onPress={() => void Share.share({ message: '«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir». «Ankavut» surasi, 45-oyat' })} /></View>
         </View>
         <NativeSheet visible={qazoOpen} onClose={() => setQazoOpen(false)} title="Qazo namozlar daftarchasi">
           {missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}>
@@ -314,5 +314,4 @@ const baseStyles = StyleSheet.create({
   ayahText: { color: '#FFFFFF', fontSize: 14, lineHeight: 23, fontWeight: '500', fontStyle: 'italic' },
   ayahSource: { color: '#B8DEC9', fontSize: 10 },
   ayahRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  ayahShare: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#FFFFFF18', alignItems: 'center', justifyContent: 'center' },
 });

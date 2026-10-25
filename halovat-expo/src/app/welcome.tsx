@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeAction } from '../components/NativeAction';
 import { OnboardingArt } from '../components/OnboardingArt';
 import { LanguageSelection } from '../components/LanguageSelection';
 import { useLanguage } from '../context/LanguageContext';
@@ -89,10 +90,7 @@ export default function WelcomeScreen() {
             hitSlop={{ top: 12, bottom: 12, left: 3, right: 3 }} disabled={busy} onPress={() => changePage(index)}
             style={[styles.bead, index < page && styles.beadDone, index === page && styles.beadActive]} />)}
         </View>
-        <Pressable accessibilityRole="button" disabled={busy} accessibilityState={{ disabled: busy, busy }} onPress={() => page === WELCOME_PAGES.length - 1 ? void finish() : changePage(page + 1)}
-          style={({ pressed }) => [styles.next, pressed && styles.pressed, busy && styles.disabled]}>
-          <Text style={styles.nextText}>{page === WELCOME_PAGES.length - 1 ? 'Boshlash' : 'Keyingisi'}</Text>
-        </Pressable>
+        <NativeAction label={page === WELCOME_PAGES.length - 1 ? 'Boshlash' : 'Keyingisi'} onPress={() => page === WELCOME_PAGES.length - 1 ? void finish() : changePage(page + 1)} compact variant="filled" colorScheme="light" disabled={busy} />
       </View>
       </>}
     </View>
@@ -121,18 +119,23 @@ function WelcomePage({ index, width, active, compact, largeText, reducedMotion }
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FAF9F5', alignItems: 'center' }, desktop: { backgroundColor: '#DDDBD6' },
+  safe: { flex: 1, backgroundColor: '#FAF9F5', alignItems: 'center' },
+  desktop: { backgroundColor: '#DDDBD6' },
   frame: { flex: 1, backgroundColor: '#FAF9F5', overflow: 'hidden' },
-  header: { paddingTop: 22, paddingHorizontal: 28 }, logo: { color: '#064E3B', fontSize: 22, lineHeight: 28, fontWeight: '800' },
-  pages: { flex: 1 }, slide: { height: '100%', paddingHorizontal: 28 }, art: { flex: 1, minHeight: 0, justifyContent: 'center', alignItems: 'center' },
+  header: { paddingTop: 22, paddingHorizontal: 28 },
+  logo: { color: '#064E3B', fontSize: 22, lineHeight: 28, fontWeight: '800' },
+  pages: { flex: 1 },
+  slide: { height: '100%', paddingHorizontal: 28 },
+  art: { flex: 1, minHeight: 0, justifyContent: 'center', alignItems: 'center' },
   title: { color: '#064E3B', fontSize: 30, lineHeight: 34.5, fontWeight: '700', letterSpacing: -0.9, marginBottom: 12 },
   compactTitle: { fontSize: 27, lineHeight: 31.05, letterSpacing: -0.81 },
   description: { color: '#3E4540', fontSize: 15, lineHeight: 23.25, maxWidth: 322, marginBottom: 22 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 28, paddingBottom: 26 },
-  beads: { flexDirection: 'row', alignItems: 'center', gap: 7 }, thread: { position: 'absolute', height: 1, backgroundColor: '#C7EFDF', left: 4, right: 4 },
+  beads: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  thread: { position: 'absolute', height: 1, backgroundColor: '#C7EFDF', left: 4, right: 4 },
   bead: { width: 11, height: 11, borderRadius: 11, borderWidth: 1.5, borderColor: '#6ED3AC', backgroundColor: '#FAF9F5' },
-  beadDone: { backgroundColor: '#6ED3AC' }, beadActive: { width: 22, height: 22, backgroundColor: '#064E3B', borderColor: '#064E3B' },
-  next: { minHeight: 56, justifyContent: 'center', paddingHorizontal: 24, borderRadius: 28, backgroundColor: '#064E3B' }, nextText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
-  pressed: { backgroundColor: '#0B6650', transform: [{ scale: 0.97 }] }, disabled: { opacity: 0.6 },
-  largeTextContent: { flexGrow: 1 }, largeTextArt: { flex: 0, height: 230, marginVertical: 12 },
+  beadDone: { backgroundColor: '#6ED3AC' },
+  beadActive: { width: 22, height: 22, backgroundColor: '#064E3B', borderColor: '#064E3B' },
+  largeTextContent: { flexGrow: 1 },
+  largeTextArt: { flex: 0, height: 230, marginVertical: 12 },
 });
