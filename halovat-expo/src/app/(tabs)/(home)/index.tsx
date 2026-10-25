@@ -6,12 +6,12 @@ import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { NativeAction } from '../../../components/NativeAction';
-import { NativeSheet } from '../../../components/NativeSheet';
+import { PrayerCheckinSheet } from '../../../components/PrayerCheckinSheet';
 import { NativeCountdown } from '../../../components/NativeCountdown';
 import { Screen } from '../../../components/Screen';
 import { useAppLoading } from '../../../context/LaunchAnimationContext';
 import { useHalovat } from '../../../context/AppContext';
-import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../../domain/prayers';
+import { dateKey, formatTime, formatUzDate, prayerKey, PrayerStatus } from '../../../domain/prayers';
 import { useForegroundClock } from '../../../hooks/useForegroundClock';
 import { Colors, Typography } from '../../../ui/theme';
 
@@ -28,18 +28,6 @@ function hijriDate(date: Date) {
 }
 
 const prayerIcons = [Sunrise, Sun, Sun, Sunset, Moon];
-
-function Checkin({ prayer, choose, close }: { prayer: PrayerClock; choose: (status: PrayerStatus) => void; close: () => void }) {
-  const styles = useThemedStyles(baseStyles);
-  return <NativeSheet visible onClose={close} title={`${prayer.name} namozini o‘qidingizmi?`} compact>
-    <Text style={styles.modalCopy}>Javobingiz namozlar jadvaliga qo‘shiladi.</Text>
-    <View style={styles.checkinActions}>
-      <NativeAction label="Ha, o‘qidim" large onPress={() => choose('done')} />
-      <NativeAction label="Yo‘q, qazo bo‘ldi" large variant="outlined" onPress={() => choose('missed')} />
-      <NativeAction label="Keyinroq belgilayman" large variant="outlined" onPress={close} />
-    </View>
-  </NativeSheet>;
-}
 
 export default function HomeScreen() {
   const { hydrated, onboardingComplete } = useHalovat();
@@ -136,7 +124,7 @@ function HomeContent() {
       <View style={styles.qazoCopy}><Text style={styles.qazoTitle}>Qazo namozlari hisobi</Text><Text style={styles.qazoSubtitle}>{missedCount ? `Sizda ${missedCount} ta qazo namozi qayd etilgan` : 'Qazo qaydlari hozircha yo‘q'}</Text></View>
       <ChevronRight size={19} color={Colors.green} />
     </Pressable>
-    {duePrayer && focused && !appLoading ? <Checkin prayer={duePrayer} choose={answerCheckin} close={() => setDismissedPrayers(current => [...current, prayerKey(today, duePrayer.id)])} /> : null}
+    {duePrayer && focused && !appLoading ? <PrayerCheckinSheet prayerName={duePrayer.name} onChoose={answerCheckin} onClose={() => setDismissedPrayers(current => [...current, prayerKey(today, duePrayer.id)])} /> : null}
   </Screen>;
 }
 
@@ -200,6 +188,4 @@ const baseStyles = StyleSheet.create({
   qazoCopy: { flex: 1, gap: 3 },
   qazoTitle: { color: Colors.ink, fontSize: 13, fontWeight: '700' },
   qazoSubtitle: { color: Colors.body, fontSize: 10 },
-  modalCopy: { color: Colors.body, fontSize: 13, marginBottom: 5 },
-  checkinActions: { gap: 8 },
 });

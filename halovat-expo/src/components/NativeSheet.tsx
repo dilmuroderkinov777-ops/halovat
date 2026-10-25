@@ -8,8 +8,8 @@ import { Typography } from '../ui/theme';
 import { NativeAction } from './NativeAction';
 import { sheetAppearance } from './nativeControlModifiers';
 
-export function NativeSheet({ visible, onClose, title, children, compact = false }: {
-  visible: boolean; onClose: () => void; title: string; children: React.ReactNode; compact?: boolean;
+export function NativeSheet({ visible, onClose, title, children, compact = false, centeredTitle = false }: {
+  visible: boolean; onClose: () => void; title: string; children: React.ReactNode; compact?: boolean; centeredTitle?: boolean;
 }) {
   const colors = useThemeColors();
   const { dark } = useAppTheme();
@@ -21,10 +21,10 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
     contentPadding={0} snapPoints={fitContents ? undefined : ['full']}>
     <RNHostView matchContents={{ vertical: true }}>
       <View style={[styles.sheet, fitContents ? undefined : { height: Math.min(720, height - insets.top - 72) }]}>
-        <View style={styles.heading}>
+        {centeredTitle ? <Text accessibilityRole="header" style={[styles.centeredTitle, { color: colors.ink }]}>{title}</Text> : <View style={styles.heading}>
           <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>{title}</Text>
           <NativeAction label="Yopish" variant="text" compact onPress={onClose} />
-        </View>
+        </View>}
         {fitContents ? <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</View>
           : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
             contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</ScrollView>}
@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
   sheet: { alignSelf: 'center', width: '100%', maxWidth: 440, paddingHorizontal: 20, paddingTop: 8 },
   heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
   title: { ...Typography.sectionTitle, flex: 1 },
+  centeredTitle: { fontSize: 22, fontWeight: '600', textAlign: 'center', marginTop: 16, marginBottom: 8 },
   scroll: { flex: 1 },
   content: { gap: 16 },
 });
