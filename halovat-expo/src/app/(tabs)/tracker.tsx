@@ -1,9 +1,13 @@
-import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
-import { ArrowRight, BookOpen, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronLeft, ChevronRight, Flame, History, Info, Minus, Share2, X } from 'lucide-react-native';
+import { useThemedStyles } from '../../ui/useAppTheme';
+import { BookOpen, CalendarDays, Check, CheckCircle2, Flame, History, Info, Minus, Share2, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../ui/AppText';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
+import { NativeCalendar } from '../../components/NativeCalendar';
+import { NativeAction } from '../../components/NativeAction';
+import { NativeSegments } from '../../components/NativeSegments';
+import { NativeSheet } from '../../components/NativeSheet';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { dateKey, formatUzDate, formatUzShortMonth, PRAYERS, prayerKey, startOfWeek } from '../../domain/prayers';
@@ -29,21 +33,19 @@ function asDate(key: string) {
 
 export default function TrackerScreen() {
   const styles = useThemedStyles(baseStyles);
-  const colors = useThemeColors();
   const { width } = useWindowDimensions();
   const RING_SIZE = Math.min(112, (Math.min(width, 440) - 44) * 5 / 12 - 20);
   const RING_RADIUS = RING_SIZE / 2 - 8;
   const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
   const { data, now, togglePrayerStatus, setPrayerStatus } = useHalovat();
   const [period, setPeriod] = useState<Period>('week');
-  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(() => new Date(now));
   const [qazoOpen, setQazoOpen] = useState(false);
-  const thisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + weekOffset * 7);
-  const monday = startOfWeek(thisWeek);
+  const monday = startOfWeek(selectedDate);
   const days = Array.from({ length: 7 }, (_, index) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index));
   const todayKey = dateKey(now);
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  const currentYear = selectedDate.getFullYear();
+  const currentMonth = selectedDate.getMonth();
 
   const groups = useMemo(() => {
     if (period === 'week') {
@@ -115,50 +117,16 @@ export default function TrackerScreen() {
             <Text style={styles.eyebrow}>IBODAT HISOBI</Text>
             <Text style={styles.title}>Namozlar daftari</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Oylik ko‘rinish" onPress={() => setPeriod('month')} style={styles.calendarButton}>
-            <CalendarDays size={21} color={colors.green} strokeWidth={1.9} />
-          </Pressable>
         </View>
 
-        <View style={styles.segment}>
-          {PERIODS.map(item => (
-            <Pressable key={item.id} accessibilityRole="button" accessibilityState={{ selected: period === item.id }} onPress={() => setPeriod(item.id)} style={[styles.segmentItem, period === item.id && styles.segmentSelected]}>
-              <Text style={[styles.segmentLabel, period === item.id && styles.segmentLabelSelected]}>{item.title}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <NativeSegments value={period} options={PERIODS.map(item => ({ value: item.id, label: item.title }))} onChange={setPeriod} />
 
         <View style={styles.dateSection}>
-          <View style={styles.dateHeader}>
-            <View style={styles.dateRange}>
-              <CalendarDays size={16} color={EMERALD} />
-              <Text style={styles.dateRangeText}>{range}</Text>
-            </View>
-            <View style={styles.dateNav}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Oldingi hafta" onPress={() => setWeekOffset(value => value - 1)} style={styles.navButton}>
-                <ChevronLeft size={18} color={colors.ink} />
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Keyingi hafta" accessibilityState={{ disabled: weekOffset === 0 }} disabled={weekOffset === 0} onPress={() => setWeekOffset(value => Math.min(0, value + 1))} style={[styles.navButton, weekOffset === 0 && styles.navDisabled]}>
-                <ChevronRight size={18} color={colors.ink} />
-              </Pressable>
-            </View>
+          <View style={styles.dateRange}>
+            <CalendarDays size={16} color={EMERALD} />
+            <Text style={styles.dateRangeText}>{range}</Text>
           </View>
-          <View style={styles.dayStrip}>
-            {days.map((day, index) => {
-              const active = dateKey(day) === todayKey;
-              const friday = index === 4;
-              const statuses = PRAYERS.map(prayer => data.prayerStatus[prayerKey(day, prayer.id)]);
-              const hasMissed = statuses.includes('missed');
-              const hasDone = statuses.includes('done');
-              return (
-                <View key={dateKey(day)} style={[styles.dayItem, friday && styles.fridayDay, active && styles.todayDay]}>
-                  <Text style={[styles.dayName, friday && styles.fridayText, active && styles.todayText]}>{active ? 'Bugun' : DAY_NAMES[index]}</Text>
-                  <Text style={[styles.dayNumber, friday && styles.fridayText, active && styles.todayText]}>{day.getDate()}</Text>
-                  <View style={[styles.dayDot, hasDone && styles.dayDotDone, hasMissed && styles.dayDotMissed, active && !hasMissed && styles.dayDotToday]} />
-                </View>
-              );
-            })}
-          </View>
+          <NativeCalendar value={selectedDate} onChange={setSelectedDate} maximumDate={now} />
         </View>
 
         <View style={styles.matrixCard}>
@@ -171,7 +139,7 @@ export default function TrackerScreen() {
           </View>
           <View style={styles.matrixHeader}>
             <Text style={styles.prayerColumnHeader}>Namoz</Text>
-            {DAY_NAMES.map((name, index) => <Text key={name} style={[styles.weekdayHeader, index === 4 && styles.fridayText]}>{name}</Text>)}
+            {DAY_NAMES.map((name, index) => <Text key={name} style={[styles.weekdayHeader, index === 4 && styles.fridayText]}>{name}{'\n'}{days[index].getDate()}</Text>)}
           </View>
           {PRAYERS.map(prayer => (
             <View key={prayer.id} style={styles.matrixRow}>
@@ -249,24 +217,22 @@ export default function TrackerScreen() {
                 <Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text>
                 <Text style={styles.qazoDate}>{dateKey(entry.date) === todayKey ? 'Bugun · ' : ''}{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text>
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel={entry.prayer.name + ' qazosini o‘qildi deb belgilash'} onPress={() => markDone(entry.key)} style={styles.markDone}>
-                <CheckCheck size={15} color="#FFFFFF" /><Text style={styles.markDoneText}>O‘qidim</Text>
-              </Pressable>
+              <NativeAction label="O‘qidim" compact onPress={() => markDone(entry.key)} />
             </View>
           )) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}
-          <View style={styles.qazoFooter}><View style={styles.qazoFooterLabel}><Info size={14} color={EMERALD} /><Text style={styles.qazoFooterText}>Qazo namozlar daftarchasi</Text></View><Pressable accessibilityRole="button" onPress={() => setQazoOpen(true)} style={styles.qazoDetail}><Text style={styles.qazoDetailText}>Batafsil hisob</Text><ArrowRight size={14} color={EMERALD} /></Pressable></View>
+          <View style={styles.qazoFooter}><View style={styles.qazoFooterLabel}><Info size={14} color={EMERALD} /><Text style={styles.qazoFooterText}>Qazo namozlar daftarchasi</Text></View><NativeAction label="Batafsil hisob" compact variant="text" onPress={() => setQazoOpen(true)} /></View>
         </View>
         <View style={styles.ayahCard}>
           <View style={styles.ayahRow}><Text style={styles.ayahEyebrow}>KUNNING OYATI KARIMASI</Text><BookOpen size={20} color="#95D3BA" /></View>
           <Text style={styles.ayahText}>«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir».</Text>
           <View style={styles.ayahRow}><Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text><Pressable accessibilityRole="button" accessibilityLabel="Oyati karimani ulashish" onPress={() => void Share.share({ message: '«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir». «Ankavut» surasi, 45-oyat' })} style={styles.ayahShare}><Share2 size={16} color="#FFFFFF" /></Pressable></View>
         </View>
-        <Modal visible={qazoOpen} transparent animationType="slide" onRequestClose={() => setQazoOpen(false)}>
-          <View style={styles.modalShade}><Pressable accessibilityLabel="Yopish" style={StyleSheet.absoluteFill} onPress={() => setQazoOpen(false)} /><View style={styles.qazoSheet}>
-            <View style={styles.qazoHeader}><Text style={styles.sectionTitle}>Qazo namozlar daftarchasi</Text><Pressable accessibilityRole="button" accessibilityLabel="Yopish" onPress={() => setQazoOpen(false)}><X size={22} color={MUTED} /></Pressable></View>
-            <ScrollView contentContainerStyle={styles.qazoList}>{missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}><View style={styles.qazoEntryText}><Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text><Text style={styles.qazoDate}>{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text></View><Pressable accessibilityRole="button" onPress={() => markDone(entry.key)} style={styles.markDone}><CheckCheck size={15} color="#FFFFFF" /><Text style={styles.markDoneText}>O‘qidim</Text></Pressable></View>) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}</ScrollView>
-          </View></View>
-        </Modal>
+        <NativeSheet visible={qazoOpen} onClose={() => setQazoOpen(false)} title="Qazo namozlar daftarchasi">
+          {missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}>
+            <View style={styles.qazoEntryText}><Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text><Text style={styles.qazoDate}>{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text></View>
+            <NativeAction label="O‘qidim" compact onPress={() => markDone(entry.key)} />
+          </View>) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}
+        </NativeSheet>
       </View>
     </Screen>
   );
@@ -279,31 +245,10 @@ const baseStyles = StyleSheet.create({
   headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   eyebrow: { color: EMERALD, fontSize: 11, fontWeight: '700', letterSpacing: 1.1, marginBottom: 4 },
   title: { color: INK, fontSize: 24, lineHeight: 30, fontWeight: '700', letterSpacing: -0.4 },
-  calendarButton: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#EFEEEA', alignItems: 'center', justifyContent: 'center' },
-  segment: { flexDirection: 'row', padding: 4, borderRadius: 24, backgroundColor: '#E9E8E4', marginTop: -2 },
-  segmentItem: { flex: 1, minHeight: 36, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  segmentSelected: { backgroundColor: FOREST },
-  segmentLabel: { color: '#404944', fontSize: 13, fontWeight: '600' },
-  segmentLabelSelected: { color: '#FFFFFF' },
   dateSection: { gap: 9 },
-  dateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 3 },
   dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   dateRangeText: { color: '#404944', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
-  dateNav: { flexDirection: 'row', gap: 7 },
-  navButton: { width: 29, height: 29, borderRadius: 15, backgroundColor: '#EFEEEA', alignItems: 'center', justifyContent: 'center' },
-  navDisabled: { opacity: 0.42 },
-  dayStrip: { flexDirection: 'row', padding: 7, gap: 3, borderRadius: 20, backgroundColor: '#FFFFFF' },
-  dayItem: { flex: 1, minHeight: 66, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  fridayDay: { backgroundColor: '#E8F7EF' },
-  todayDay: { backgroundColor: FOREST },
-  dayName: { color: '#707974', fontSize: 10, fontWeight: '600' },
-  dayNumber: { color: INK, fontSize: 16, fontWeight: '700' },
   fridayText: { color: EMERALD },
-  todayText: { color: '#FFFFFF' },
-  dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#E3E2DF' },
-  dayDotDone: { backgroundColor: EMERALD },
-  dayDotMissed: { backgroundColor: '#BA1A1A' },
-  dayDotToday: { backgroundColor: '#6FFBBE' },
   matrixCard: { padding: 15, borderRadius: 24, backgroundColor: '#FFFFFF', gap: 10 },
   matrixHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 5 },
   matrixHeadingLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -336,9 +281,7 @@ const baseStyles = StyleSheet.create({
   ringCenter: { position: 'absolute', alignItems: 'center' },
   ringCount: { color: INK, fontSize: 25, lineHeight: 29, fontWeight: '700', fontVariant: ['tabular-nums'] },
   ringTotal: { color: MUTED, fontSize: 10 },
-  progressText: { flex: 1, gap: 6 },
   progressLabel: { color: INK, fontSize: 12, fontWeight: '500' },
-  progressRange: { color: MUTED, fontSize: 12, textTransform: 'capitalize' },
   trendCard: { flex: 7, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 12, justifyContent: 'space-between', gap: 10 },
   trendHeader: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, alignItems: 'center', justifyContent: 'space-between' },
   trendTitle: { color: '#404944', fontSize: 11, fontWeight: '500' },
@@ -362,22 +305,14 @@ const baseStyles = StyleSheet.create({
   qazoEntryText: { flex: 1 },
   qazoPrayer: { color: INK, fontSize: 13, fontWeight: '700' },
   qazoDate: { color: MUTED, fontSize: 10, marginTop: 2, textTransform: 'capitalize' },
-  markDone: { backgroundColor: EMERALD, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  markDoneText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   qazoEmpty: { color: MUTED, fontSize: 12, backgroundColor: '#F4F4F0', padding: 13, borderRadius: 14 },
-  qazoMore: { color: EMERALD, fontSize: 11, fontWeight: '600', textAlign: 'right' },
   qazoFooter: { paddingTop: 4, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },
   qazoFooterLabel: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
   qazoFooterText: { color: '#404944', fontSize: 9, fontWeight: '500' },
-  qazoDetail: { flexDirection: 'row', gap: 3, alignItems: 'center', paddingVertical: 4 },
-  qazoDetailText: { color: EMERALD, fontSize: 10, fontWeight: '700' },
   ayahCard: { borderRadius: 22, padding: 20, backgroundColor: FOREST, gap: 12 },
   ayahEyebrow: { color: '#89E5BA', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   ayahText: { color: '#FFFFFF', fontSize: 14, lineHeight: 23, fontWeight: '500', fontStyle: 'italic' },
   ayahSource: { color: '#B8DEC9', fontSize: 10 },
   ayahRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   ayahShare: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#FFFFFF18', alignItems: 'center', justifyContent: 'center' },
-  modalShade: { flex: 1, backgroundColor: '#00000066', justifyContent: 'flex-end', alignItems: 'center' },
-  qazoSheet: { width: '100%', maxWidth: 440, maxHeight: '80%', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36, gap: 18, backgroundColor: '#FAF9F5' },
-  qazoList: { gap: 10 },
 });

@@ -1,0 +1,35 @@
+import { BottomSheet } from '@expo/ui';
+import React from 'react';
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text } from '../ui/AppText';
+import { useThemeColors } from '../ui/useAppTheme';
+import { NativeAction } from './NativeAction';
+
+export function NativeSheet({ visible, onClose, title, children, compact = false }: {
+  visible: boolean; onClose: () => void; title: string; children: React.ReactNode; compact?: boolean;
+}) {
+  const colors = useThemeColors();
+  const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  return <BottomSheet isPresented={visible} onDismiss={onClose} containerColor={colors.paper}
+    contentPadding={0} snapPoints={compact ? undefined : ['full']}>
+    <View style={[styles.sheet, { width, ...(compact ? {} : { height: height - insets.top - 72 }) }]}>
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>{title}</Text>
+        <NativeAction label="Yopish" variant="text" compact onPress={onClose} />
+      </View>
+      {compact ? <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</View>
+        : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
+          contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</ScrollView>}
+    </View>
+  </BottomSheet>;
+}
+
+const styles = StyleSheet.create({
+  sheet: { alignSelf: 'center', maxWidth: 640, paddingHorizontal: 20, paddingTop: 8 },
+  heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
+  title: { flex: 1, fontSize: 19, fontWeight: '700' },
+  scroll: { flex: 1 },
+  content: { gap: 16 },
+});

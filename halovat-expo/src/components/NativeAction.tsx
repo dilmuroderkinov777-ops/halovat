@@ -1,18 +1,21 @@
+import { Button, Host } from '@expo/ui';
 import React from 'react';
-import { Text } from '../ui/AppText';
-import { Pressable, StyleSheet } from 'react-native';
-import { Colors } from '../ui/theme';
+import { useLanguage } from '../context/LanguageContext';
+import { useAppTheme, useThemeColors } from '../ui/useAppTheme';
 
-export function NativeAction({ label, onPress, disabled = false, variant = 'filled' }: {
+export function NativeAction({ label, onPress, disabled = false, variant = 'filled', compact = false, translate = true, colorScheme }: {
   label: string; onPress: () => void; disabled?: boolean; variant?: 'filled' | 'outlined' | 'text';
+  compact?: boolean; translate?: boolean; colorScheme?: 'light' | 'dark';
 }) {
-  return <Pressable accessibilityRole="button" onPress={onPress} disabled={disabled} style={[styles.button, variant === 'outlined' && styles.outlined, disabled && styles.disabled]}><Text style={[styles.label, variant === 'outlined' && styles.outlinedLabel]}>{label}</Text></Pressable>;
+  const { t } = useLanguage();
+  const { dark } = useAppTheme();
+  const colors = useThemeColors();
+  return (
+    <Host matchContents={compact ? true : { vertical: true }} ignoreSafeArea="all"
+      colorScheme={colorScheme ?? (dark ? 'dark' : 'light')} seedColor={colors.green}
+      style={compact ? { flexShrink: 1 } : { width: '100%' }}>
+      <Button label={translate ? t(label) : label} onPress={onPress} disabled={disabled} variant={variant}
+        style={{ ...(compact ? {} : { width: '100%' }), height: 44 }} />
+    </Host>
+  );
 }
-
-const styles = StyleSheet.create({
-  button: { width: '100%', height: 48, borderRadius: 15, backgroundColor: Colors.green, alignItems: 'center', justifyContent: 'center' },
-  outlined: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D9D5DE' },
-  label: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
-  outlinedLabel: { color: Colors.green },
-  disabled: { opacity: 0.55 },
-});
