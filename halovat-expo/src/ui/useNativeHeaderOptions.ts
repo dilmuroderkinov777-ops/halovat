@@ -9,10 +9,10 @@ export function useNativeHeaderOptions() {
   return {
     headerStyle: { backgroundColor: isIOS ? 'transparent' : colors.paper },
     headerTransparent: isIOS,
-    headerShadowVisible: isIOS ? false : undefined,
-    // UIKit's soft edge varies the blur toward the content; a uniform bar blur would cover that fade.
+    headerShadowVisible: isIOS ? true : undefined,
+    // UIKit's hard edge keeps the dividing line and manages the blur behind the header.
     headerBlurEffect: isIOS && !usesNativeEdgeBlur ? 'systemUltraThinMaterial' as const : undefined,
-    scrollEdgeEffects: usesNativeEdgeBlur ? { top: 'soft' as const } : undefined,
+    scrollEdgeEffects: usesNativeEdgeBlur ? { top: 'hard' as const } : undefined,
     headerTintColor: colors.ink,
     headerTitleAlign: 'center' as const,
     headerLargeTitleEnabled: false,
