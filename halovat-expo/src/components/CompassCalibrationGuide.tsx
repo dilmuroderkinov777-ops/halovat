@@ -1,8 +1,10 @@
 import { useFocusEffect } from 'expo-router';
 import { Compass } from 'lucide-react-native';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, AppState, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, AppState, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { NativeAction } from './NativeAction';
+import { NativeSheet } from './NativeSheet';
 import { Text } from '../ui/AppText';
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
 import { useAppLoading } from '../context/LaunchAnimationContext';
@@ -80,10 +82,8 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
     if (appLoading) playback.current.stop(); else playback.current.play();
   }, [appLoading]);
 
-  return <Modal transparent visible={visible && !appLoading} animationType="fade" onRequestClose={() => dismiss.current()}>
-    <View style={styles.backdrop}>
-      <View style={styles.card} accessibilityViewIsModal>
-        <View style={styles.badge}><Compass size={17} color={colors.green} /><Text style={styles.badgeText}>Kompasni tayyorlash</Text></View>
+  return <NativeSheet visible={visible && !appLoading} onClose={() => dismiss.current()} title="Kompasni tayyorlash" compact>
+    <View style={styles.guide}>
         <Text accessibilityRole="header" style={styles.title}>Telefonni 8 shaklida aylantiring</Text>
         <View style={styles.illustration} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           <Svg width={280} height={180} viewBox="0 0 280 180">
@@ -103,25 +103,17 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
           </Animated.View>
         </View>
         <Text style={styles.instructions}>Telefonni havoda sakkiz shaklida 2–3 marta ohista aylantiring. Keyin tekis ushlab, Qibla tomoniga buring.</Text>
-        <Pressable accessibilityRole="button" onPress={() => dismiss.current()} style={styles.button}>
-          <Text style={styles.buttonText}>Kompasga o‘tish</Text>
-        </Pressable>
-      </View>
+        <NativeAction label="Kompasga o‘tish" onPress={() => dismiss.current()} variant="outlined" />
     </View>
-  </Modal>;
+  </NativeSheet>;
 });
 
 const baseStyles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: '#001F19A8', justifyContent: 'center', alignItems: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 360, borderRadius: 28, backgroundColor: '#FFFFFF', paddingHorizontal: 22, paddingVertical: 26, alignItems: 'center', gap: 17 },
-  badge: { backgroundColor: '#E9F2EC', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 7 },
-  badgeText: { color: '#006C49', fontSize: 11, fontWeight: '700' },
+  guide: { alignItems: 'center', gap: 17 },
   title: { color: '#003527', fontSize: 22, lineHeight: 30, fontWeight: '700', textAlign: 'center' },
   illustration: { width: 280, height: 180, alignItems: 'center', justifyContent: 'center' },
   phone: { position: 'absolute', left: 121, top: 57, width: 38, height: 66, borderWidth: 2.5, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   speaker: { position: 'absolute', top: 5, width: 12, height: 2, borderRadius: 2, opacity: 0.7 },
   homeIndicator: { position: 'absolute', bottom: 5, width: 12, height: 2, borderRadius: 2, opacity: 0.4 },
   instructions: { color: '#545F58', fontSize: 13, lineHeight: 21, textAlign: 'center' },
-  button: { minHeight: 48, alignSelf: 'stretch', borderRadius: 24, backgroundColor: '#006C49', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12 },
-  buttonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
 });

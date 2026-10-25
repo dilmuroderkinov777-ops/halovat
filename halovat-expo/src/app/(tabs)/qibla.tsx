@@ -1,13 +1,15 @@
 import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../ui/AppText';
-import { ChevronRight, Compass, Landmark, LocateFixed } from 'lucide-react-native';
+import { ChevronRight, Landmark, LocateFixed } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import Svg, { Circle as SvgCircle, Line } from 'react-native-svg';
 import { KaabaIcon } from '../../components/KaabaIcon';
 import { CompassCalibrationGuide } from '../../components/CompassCalibrationGuide';
 import { QiblaNeedle } from '../../components/QiblaNeedle';
+import { NativeAction } from '../../components/NativeAction';
+import { NativeSegments } from '../../components/NativeSegments';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { nearestCity } from '../../domain/prayers';
@@ -22,6 +24,7 @@ const INK = '#1B1C1A';
 const MUTED = '#707974';
 
 export default function QiblaScreen() {
+  const pathname = usePathname();
   const styles = useThemedStyles(baseStyles);
   const colors = useThemeColors();
   const { city, data } = useHalovat();
@@ -44,10 +47,8 @@ export default function QiblaScreen() {
   };
 
   return <Screen contentStyle={styles.content}>
-    <View style={styles.segment}>
-      <View style={[styles.segmentItem, styles.segmentActive]}><Compass size={18} color={colors.green} /><Text style={styles.segmentActiveText}>Qibla kompas</Text></View>
-      <Pressable onPress={openMosques} style={styles.segmentItem}><Landmark size={18} color={colors.muted} /><Text style={styles.segmentText}>Yaqin masjidlar</Text></Pressable>
-    </View>
+    <NativeSegments value={pathname === '/mosque' ? 'mosque' : 'qibla'} options={[{ value: 'qibla', label: 'Qibla yo‘nalishi' }, { value: 'mosque', label: 'Yaqin masjidlar' }]}
+      onChange={value => { if (value === 'mosque') openMosques(); }} />
 
     <Pressable onPress={() => router.push('/(tabs)/settings' as never)} style={styles.locationCard}>
       <View style={styles.locationIcon}><LocateFixed size={18} color={EMERALD} /></View>
@@ -83,12 +84,12 @@ export default function QiblaScreen() {
     </View>
 
     <View style={styles.calibrationGroup}>
-      <Pressable onPress={showCalibration} style={styles.calibrationButton}><Compass size={19} color={EMERALD} /><Text style={styles.calibrationText}>Kompasni qayta sozlash</Text></Pressable>
+      <NativeAction label="Kompasni qayta sozlash" onPress={showCalibration} variant="outlined" />
       <Text style={styles.calibrationHint}>Telefoningizni sakkiz (8) shaklida ohista aylantiring</Text>
     </View>
 
     <View style={styles.mosqueCard}>
-      <View style={styles.mosqueHead}><View style={styles.mosqueHeadLeft}><LocateFixed size={19} color={EMERALD} /><Text style={styles.mosqueTitle}>Yaqin atrofdagi masjidlar</Text></View><Pressable onPress={openMosques}><Text style={styles.allText}>Barchasi</Text></Pressable></View>
+      <View style={styles.mosqueHead}><View style={styles.mosqueHeadLeft}><LocateFixed size={19} color={EMERALD} /><Text style={styles.mosqueTitle}>Yaqin atrofdagi masjidlar</Text></View><NativeAction label="Barchasi" compact variant="text" onPress={openMosques} /></View>
       <Pressable onPress={openMosques} style={styles.mosqueRow}><View style={styles.mosqueIcon}><Landmark size={20} color={MINT} /></View><View style={styles.mosqueInfo}><Text numberOfLines={1} style={styles.mosqueName}>{data.mosqueName || 'Masjidlarni xaritada ko‘ring'}</Text><Text style={styles.mosqueSubtitle}>Joylashuvingiz atrofidagi masjidlar</Text></View><ChevronRight size={20} color={EMERALD} /></Pressable>
     </View>
     <CompassCalibrationGuide key={guideRevision} />
@@ -97,22 +98,34 @@ export default function QiblaScreen() {
 
 const baseStyles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 18, gap: 15 },
-  segment: { flexDirection: 'row', padding: 4, borderRadius: 24, backgroundColor: '#EFEEEA', gap: 3 },
-  segmentItem: { flex: 1, minHeight: 39, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  segmentActive: { backgroundColor: '#FFFFFF', elevation: 2, shadowColor: GREEN, shadowOpacity: 0.06, shadowRadius: 5 },
-  segmentActiveText: { color: GREEN, fontSize: 13, fontWeight: '700' }, segmentText: { color: MUTED, fontSize: 13, fontWeight: '600' },
   locationCard: { minHeight: 59, backgroundColor: '#F4F4F0', borderRadius: 16, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 9 },
   locationIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#DBF4E7', alignItems: 'center', justifyContent: 'center' },
-  locationDetails: { flex: 1, gap: 2 }, locationTitle: { color: INK, fontSize: 13, fontWeight: '700' }, locationStatus: { color: EMERALD, fontSize: 10, fontWeight: '600' }, changeText: { color: MUTED, fontSize: 10, fontWeight: '600' },
+  locationDetails: { flex: 1, gap: 2 },
+  locationTitle: { color: INK, fontSize: 13, fontWeight: '700' },
+  locationStatus: { color: EMERALD, fontSize: 10, fontWeight: '600' },
+  changeText: { color: MUTED, fontSize: 10, fontWeight: '600' },
   compassSection: { alignItems: 'center', paddingTop: 6 },
   compassOuter: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', elevation: 7, shadowColor: GREEN, shadowOpacity: 0.11, shadowRadius: 25, shadowOffset: { width: 0, height: 9 } },
-  compassTrack: { position: 'absolute' }, cardinal: { position: 'absolute', width: 20, textAlign: 'center', color: MUTED, fontSize: 12, lineHeight: 16, fontWeight: '700' },
+  compassTrack: { position: 'absolute' },
+  cardinal: { position: 'absolute', width: 20, textAlign: 'center', color: MUTED, fontSize: 12, lineHeight: 16, fontWeight: '700' },
   kaabaBadge: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  alignmentBadge: { minHeight: 52, width: '92%', marginTop: 22, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, backgroundColor: '#E9F2EC', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 }, alignmentBadgeActive: { backgroundColor: EMERALD },
-  alignmentDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: EMERALD }, alignmentDotActive: { backgroundColor: MINT }, alignmentText: { flexShrink: 1, color: GREEN, fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'center' }, alignmentTextActive: { color: '#FFFFFF' },
+  alignmentBadge: { minHeight: 52, width: '92%', marginTop: 22, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, backgroundColor: '#E9F2EC', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 },
+  alignmentBadgeActive: { backgroundColor: EMERALD },
+  alignmentDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: EMERALD },
+  alignmentDotActive: { backgroundColor: MINT },
+  alignmentText: { flexShrink: 1, color: GREEN, fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'center' },
+  alignmentTextActive: { color: '#FFFFFF' },
   reading: { alignItems: 'center' },
   readingTitle: { color: INK, fontSize: 15, fontWeight: '600', textAlign: 'center' },
-  calibrationGroup: { gap: 6, alignItems: 'center' }, calibrationButton: { height: 49, width: '100%', borderRadius: 25, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#E6EBE7' }, calibrationText: { color: GREEN, fontSize: 14, fontWeight: '700' }, calibrationHint: { color: MUTED, fontSize: 10, textAlign: 'center' },
-  mosqueCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 13, gap: 9, borderWidth: 1, borderColor: '#EDF0EC' }, mosqueHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, mosqueHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 7 }, mosqueTitle: { color: INK, fontSize: 14, fontWeight: '700' }, allText: { color: EMERALD, fontSize: 11, fontWeight: '700' },
-  mosqueRow: { minHeight: 54, borderRadius: 14, backgroundColor: '#F4F4F0', flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10 }, mosqueIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: GREEN, alignItems: 'center', justifyContent: 'center' }, mosqueInfo: { flex: 1, gap: 2 }, mosqueName: { color: INK, fontSize: 13, fontWeight: '700' }, mosqueSubtitle: { color: MUTED, fontSize: 10 },
+  calibrationGroup: { gap: 6, alignItems: 'center' },
+  calibrationHint: { color: MUTED, fontSize: 10, textAlign: 'center' },
+  mosqueCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 13, gap: 9, borderWidth: 1, borderColor: '#EDF0EC' },
+  mosqueHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  mosqueHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  mosqueTitle: { color: INK, fontSize: 14, fontWeight: '700' },
+  mosqueRow: { minHeight: 54, borderRadius: 14, backgroundColor: '#F4F4F0', flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10 },
+  mosqueIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: GREEN, alignItems: 'center', justifyContent: 'center' },
+  mosqueInfo: { flex: 1, gap: 2 },
+  mosqueName: { color: INK, fontSize: 13, fontWeight: '700' },
+  mosqueSubtitle: { color: MUTED, fontSize: 10 },
 });
