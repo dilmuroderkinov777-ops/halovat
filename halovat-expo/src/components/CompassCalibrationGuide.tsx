@@ -8,6 +8,7 @@ import { NativeSheet } from './NativeSheet';
 import { Text } from '../ui/AppText';
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
 import { useAppLoading } from '../context/LaunchAnimationContext';
+import { useHalovat } from '../context/AppContext';
 
 const DURATION = 5200;
 const STEPS = 128;
@@ -18,19 +19,27 @@ const rotation = range.map(value => `${Math.sin(value * Math.PI * 4) * 18}deg`);
 const trail = range.slice(0, STEPS / 2 + 1).map((_, index) =>
   `${index === 0 ? 'M' : 'L'}${140 + horizontal[index]},${90 + vertical[index]}`).join(' ');
 
-/** A short guide on every focus; the compass hook keeps warming up underneath. */
-export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
+/** Show once automatically; later calibration requests explicitly reopen the guide. */
+export const CompassCalibrationGuide = memo(function CompassCalibrationGuide({ requestRevision = 0 }: { requestRevision?: number }) {
+  const { data, hydrated, dismissCompassGuide } = useHalovat();
+  const acknowledged = useRef(data.compassGuideDismissed);
+  acknowledged.current = data.compassGuideDismissed;
+  const handledRevision = useRef(requestRevision);
   const styles = useThemedStyles(baseStyles);
   const colors = useThemeColors();
   const progress = useRef(new Animated.Value(0)).current;
   const dismiss = useRef<() => void>(() => undefined);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const appLoading = useAppLoading();
   const loading = useRef(appLoading);
   loading.current = appLoading;
   const playback = useRef({ play: () => {}, stop: () => {} });
 
   useFocusEffect(useCallback(() => {
+    if (!hydrated) return;
+    const requested = requestRevision !== handledRevision.current;
+    handledRevision.current = requestRevision;
+    if (acknowledged.current && !requested) return;
     let focused = true;
     let dismissed = false;
     let reducedMotion = false;
@@ -38,8 +47,10 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const stop = () => { clearTimeout(timer); animation?.stop(); };
     const finish = () => {
+      if (!focused || dismissed || loading.current) return;
       dismissed = true;
       stop();
+      dismissCompassGuide();
       if (focused) setVisible(false);
     };
     const play = () => {
@@ -76,7 +87,7 @@ export const CompassCalibrationGuide = memo(function CompassCalibrationGuide() {
       appState.remove();
       setVisible(false);
     };
-  }, [progress]));
+  }, [dismissCompassGuide, hydrated, progress, requestRevision]));
 
   useEffect(() => {
     if (appLoading) playback.current.stop(); else playback.current.play();

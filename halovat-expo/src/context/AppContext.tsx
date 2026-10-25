@@ -28,6 +28,7 @@ type AppData = {
   cityId: string;
   locationAttempted: boolean;
   cityManuallySelected: boolean;
+  compassGuideDismissed: boolean;
   reminderEnabled: boolean;
   prayerTimeReminderEnabled: boolean;
   prayerAutoQuiet: boolean;
@@ -57,6 +58,7 @@ const DEFAULT_DATA: AppData = {
   cityId: 'toshkent',
   locationAttempted: false,
   cityManuallySelected: false,
+  compassGuideDismissed: false,
   reminderEnabled: false,
   prayerTimeReminderEnabled: false,
   prayerAutoQuiet: false,
@@ -91,6 +93,7 @@ type ContextShape = {
   now: Date;
   setCity: (id: string) => Promise<void>;
   detectCity: () => Promise<void>;
+  dismissCompassGuide: () => void;
   setReminderEnabled: (value: boolean) => Promise<void>;
   setPrayerTimeReminderEnabled: (value: boolean) => Promise<void>;
   setDuaReminderEnabled: (value: boolean) => Promise<void>;
@@ -256,6 +259,10 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     if (!CITIES.some(item => item.id === id)) return;
     setData(current => ({ ...current, cityId: id, locationAttempted: true, cityManuallySelected: true }));
     try { await Haptics.selectionAsync(); } catch { /* haptics are optional on web */ }
+  }, []);
+
+  const dismissCompassGuide = useCallback(() => {
+    setData(current => current.compassGuideDismissed ? current : { ...current, compassGuideDismissed: true });
   }, []);
 
   const setOnboardingComplete = useCallback(async (value: boolean) => {
@@ -520,7 +527,7 @@ export function AppProvider({ children }: React.PropsWithChildren) {
 
   const value: ContextShape = {
     data, reminderPlan, refreshReminders, sendReminderPreview, hydrated, onboardingComplete, setOnboardingComplete, city, months, calendarBusy, calendarError,
-    calendarAttribution, now, setCity, detectCity, setReminderEnabled, setPrayerTimeReminderEnabled, setDuaReminderEnabled,
+    calendarAttribution, now, setCity, detectCity, dismissCompassGuide, setReminderEnabled, setPrayerTimeReminderEnabled, setDuaReminderEnabled,
     setReminderMinutes: value => setData(current => ({ ...current, reminderMinutes: value })),
     setPrayerStatus, togglePrayerStatus, setTasbeehId, countTasbeeh, resetTasbeeh, undoTasbeeh,
     setTasbeehTapHaptics: value => setData(current => ({ ...current, tasbeehTapHaptics: value })),

@@ -92,7 +92,7 @@ export default function QiblaScreen() {
       <View style={styles.mosqueHead}><View style={styles.mosqueHeadLeft}><LocateFixed size={19} color={EMERALD} /><Text style={styles.mosqueTitle}>Yaqin atrofdagi masjidlar</Text></View><NativeAction label="Barchasi" compact variant="text" onPress={openMosques} /></View>
       <Pressable onPress={openMosques} style={styles.mosqueRow}><View style={styles.mosqueIcon}><Landmark size={20} color={MINT} /></View><View style={styles.mosqueInfo}><Text numberOfLines={1} style={styles.mosqueName}>{data.mosqueName || 'Masjidlarni xaritada ko‘ring'}</Text><Text style={styles.mosqueSubtitle}>Joylashuvingiz atrofidagi masjidlar</Text></View><ChevronRight size={20} color={EMERALD} /></Pressable>
     </View>
-    <CompassCalibrationGuide key={guideRevision} />
+    <CompassCalibrationGuide requestRevision={guideRevision} />
   </Screen>;
 }
 
