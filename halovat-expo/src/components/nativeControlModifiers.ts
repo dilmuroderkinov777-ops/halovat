@@ -1,14 +1,14 @@
 import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
 
 // Other platforms use the universal controls' own sizing and appearance.
-export function sheetAppearance(_scheme: 'light' | 'dark'): ModifierConfig[] {
+export function sheetAppearance(_scheme: 'light' | 'dark', _backgroundColor: string): ModifierConfig[] {
   return [];
 }
 
-export function largeActionModifiers(): ModifierConfig[] {
+export function largeActionModifiers(_variant: 'filled' | 'outlined' | 'text'): ModifierConfig[] {
   return [];
 }
 
-export function largeActionLabelModifiers(_fontScale: number): ModifierConfig[] {
+export function largeActionLabelModifiers(): ModifierConfig[] {
   return [];
 }

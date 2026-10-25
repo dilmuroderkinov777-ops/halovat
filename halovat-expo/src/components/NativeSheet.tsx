@@ -17,11 +17,10 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
   const insets = useSafeAreaInsets();
   const fitContents = compact && height >= 700 && fontScale <= 1.2;
   return <BottomSheet isPresented={visible} onDismiss={onClose} containerColor={colors.paper}
-    contentColor={colors.ink} modifiers={sheetAppearance(dark ? 'dark' : 'light')}
+    contentColor={colors.ink} modifiers={sheetAppearance(dark ? 'dark' : 'light', colors.paper)}
     contentPadding={0} snapPoints={fitContents ? undefined : ['full']}>
     <RNHostView matchContents={{ vertical: true }}>
-      <View style={[styles.sheet, { backgroundColor: colors.paper,
-        ...(fitContents ? {} : { height: Math.min(720, height - insets.top - 72) }) }]}>
+      <View style={[styles.sheet, fitContents ? undefined : { height: Math.min(720, height - insets.top - 72) }]}>
         <View style={styles.heading}>
           <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>{title}</Text>
           <NativeAction label="Yopish" variant="text" compact onPress={onClose} />

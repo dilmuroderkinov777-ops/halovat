@@ -24,12 +24,12 @@ export function NativeAction({ label, onPress, disabled = false, variant = 'fill
       style={compact ? { flexShrink: 1 } : { width: '100%' }}
       onLayout={compact ? undefined : event => setWidth(event.nativeEvent.layout.width)}>
       <Button label={largeAction ? undefined : text} onPress={onPress} disabled={disabled} variant={variant}
-        modifiers={largeAction ? largeActionModifiers() : undefined}
+        modifiers={largeAction ? largeActionModifiers(variant) : undefined}
         style={largeAction && Platform.OS === 'ios' ? undefined
           : { ...(!compact && width ? { width } : {}), height: largeAction ? Math.max(52, 28 * fontScale + 24) : 44,
             ...(largeAction ? { borderRadius: 999 } : {}) }}>
-        {largeAction ? <Text modifiers={largeActionLabelModifiers(fontScale)}
-          textStyle={{ fontSize: 17, fontWeight: '600', textAlign: 'center',
+        {largeAction ? <Text modifiers={largeActionLabelModifiers()}
+          textStyle={Platform.OS === 'ios' ? undefined : { fontSize: 17, fontWeight: '600', textAlign: 'center',
             ...(Platform.OS === 'web' ? { color: variant === 'filled' ? '#FFFFFF' : colors.green } : {}) }}>{text}</Text> : undefined}
       </Button>
     </Host>
