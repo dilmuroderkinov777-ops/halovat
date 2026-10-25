@@ -6,7 +6,6 @@ import { useFocusEffect } from 'expo-router';
 import { Battery, BellRing, CalendarDays, Check, CheckCheck, ChevronRight, Copy, Globe, Landmark, HandHeart, ListChecks, LocateFixed, MapPin, Moon, Pencil, PhoneIncoming, RefreshCw, ShieldCheck, Sunrise, Trash2, VolumeX, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, AppState, Linking, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
-import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -149,7 +148,7 @@ export default function ProfileScreen() {
   };
   const switchControl = (value: boolean, onChange: (value: boolean) => void) => <Switch value={value} onValueChange={onChange} trackColor={{ false: '#BFC9C3', true: '#006C49' }} thumbColor="#FFFFFF" style={styles.switchHost} />;
 
-  return <Screen header={<AppTopBar subtitle="Profil" />} style={styles.screen} contentStyle={styles.content}>
+  return <Screen style={styles.screen} contentStyle={styles.content}>
     <View style={[styles.card, styles.identityCard]}>
       <View pointerEvents="none" style={styles.identityGlow} />
       <View style={styles.identityRow}>

@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../ui/AppText';
 import Svg, { Circle } from 'react-native-svg';
-import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { DUA_CATEGORIES, DUAS } from '../../data/duas';
@@ -57,14 +56,14 @@ export default function TasbeehScreen() {
 
   return (
     <>
-      <Screen style={styles.screen} contentStyle={styles.content} header={<AppTopBar subtitle="Zikr Va Tasbeh" />}>
+      <Screen style={styles.screen} contentStyle={styles.content}>
         <View style={styles.page}>
           <View style={styles.modeSwitch}>
             <View style={[styles.modeItem, styles.modeActive]}>
               <CircleDot size={16} color="#FFFFFF" />
               <Text style={[styles.modeText, styles.modeTextActive]}>Raqamli Tasbeh</Text>
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel="Kundalik duolarga o‘tish" onPress={() => router.push('/(tabs)/duas' as never)} style={styles.modeItem}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Kundalik duolarga o‘tish" onPress={() => router.push('/duas' as never)} style={styles.modeItem}>
               <BookOpen size={16} color="#404944" />
               <Text style={styles.modeText}>Kundalik Duolar</Text>
             </Pressable>
@@ -134,7 +133,7 @@ export default function TasbeehScreen() {
           <View style={styles.duasSection}>
             <View style={styles.duasHeading}>
               <View><Text style={styles.duasTitle}>Tavsiya etilgan duolar</Text><Text style={styles.duasSubtitle}>Qur’on va sunnatdagi muhim zikrlar</Text></View>
-              <Pressable accessibilityRole="button" accessibilityLabel="Barcha duolarni ko‘rish" onPress={() => router.push('/(tabs)/duas' as never)} style={styles.allDuas}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Barcha duolarni ko‘rish" onPress={() => router.push('/duas' as never)} style={styles.allDuas}>
                 <Text style={styles.allDuasText}>Barchasi</Text><ArrowRight size={15} color={EMERALD} />
               </Pressable>
             </View>

@@ -1,20 +1,19 @@
-import { useLanguage } from '../../context/LanguageContext';
-import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
+import { useLanguage } from '../context/LanguageContext';
+import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
 import * as Location from 'expo-location';
 import { useFocusEffect, useIsFocused } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Bookmark, Check, ChevronRight, Landmark, LocateFixed, MapPin, Navigation, RefreshCw, Search, Share2, SlidersHorizontal, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Keyboard, Linking, Modal, Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
-import { Text } from '../../ui/AppText';
+import { Text } from '../ui/AppText';
 import { LinearGradient } from 'expo-linear-gradient';
-import { AppTopBar } from '../../components/AppTopBar';
-import { Screen } from '../../components/Screen';
-import { MosqueMap } from '../../components/MosqueMap';
-import { useHalovat } from '../../context/AppContext';
-import { cachedMosques, lookupNearbyMosques, type MosqueLookup, type MosqueResult, type Point } from '../../services/mosques';
-import { foregroundLocation } from '../../services/foregroundLocation';
-import { mosquePhoto, mosquePhotoCredit } from '../../services/mosquePhotos';
+import { Screen } from '../components/Screen';
+import { MosqueMap } from '../components/MosqueMap';
+import { useHalovat } from '../context/AppContext';
+import { cachedMosques, lookupNearbyMosques, type MosqueLookup, type MosqueResult, type Point } from '../services/mosques';
+import { foregroundLocation } from '../services/foregroundLocation';
+import { mosquePhoto, mosquePhotoCredit } from '../services/mosquePhotos';
 
 const MAP_MARKER_LIMIT = 35;
 const BOOKMARKS_KEY = 'halovat:mosque-bookmarks';
@@ -166,7 +165,7 @@ export default function MosqueScreen() {
     void Share.share({ message: `${place.name}\n${url}` });
   };
 
-  return <Screen header={<AppTopBar subtitle="Masjidlar" />} contentStyle={styles.content}>
+  return <Screen contentStyle={styles.content}>
     <View style={styles.searchRow}>
       <View style={styles.searchBox}>
         <Search size={19} color={EMERALD} />

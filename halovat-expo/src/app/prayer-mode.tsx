@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useLocalSearchParams } from 'expo-router';
-import { BellOff, Pause, Play, Settings, VolumeX, X } from 'lucide-react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { BellOff, Pause, Play, VolumeX } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, PermissionsAndroid, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -140,10 +140,6 @@ export default function PrayerModeScreen() {
 
   return <LinearGradient colors={['#00784B', '#00553B', '#003C2F']} style={styles.safe}>
     <StatusBar style="light" />
-    <View style={styles.header}>
-      <Pressable onPress={() => router.back()} style={styles.headerAction}><X size={21} color="#E6F2EC" /></Pressable>
-      <Pressable onPress={() => router.push('/(tabs)/settings' as never)} style={styles.headerAction}><Settings size={20} color="#E6F2EC" /></Pressable>
-    </View>
     <View style={styles.center}>
       <Text style={styles.title}>Halovat vaqti</Text>
       <Text style={styles.prayer}>{prayer.name} namozi</Text>
@@ -168,8 +164,6 @@ export default function PrayerModeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, paddingTop: 12, paddingBottom: 18 },
-  header: { paddingHorizontal: 20, height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerAction: { height: 38, width: 38, alignItems: 'center', justifyContent: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22 },
   title: { color: '#FFFFFF', fontSize: 23, fontWeight: '500' },
   prayer: { color: '#D4E9DD', fontSize: 16, marginTop: 4 },

@@ -4,7 +4,6 @@ import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../ui/AppText';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
-import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { dateKey, formatUzDate, formatUzShortMonth, PRAYERS, prayerKey, startOfWeek } from '../../domain/prayers';
@@ -109,7 +108,7 @@ export default function TrackerScreen() {
   const chartTitle = period === 'week' ? 'Haftalik natija' : period === 'month' ? 'Oylik natija' : 'Yillik natija';
 
   return (
-    <Screen style={styles.screen} contentStyle={styles.content} header={<AppTopBar subtitle="Namozlar" />}>
+    <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.page}>
         <View style={styles.headingRow}>
           <View>

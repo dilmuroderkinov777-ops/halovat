@@ -1,9 +1,10 @@
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { LanguageProvider } from '../context/LanguageContext';
+import { LanguageProvider, useLanguage } from '../context/LanguageContext';
+import { useThemeColors } from '../ui/useAppTheme';
 import { Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold, Onest_800ExtraBold } from '@expo-google-fonts/onest';
 import { AppProvider, useHalovat } from '../context/AppContext';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -15,6 +16,8 @@ if (Platform.OS !== 'web') {
   void SplashScreen.preventAutoHideAsync().catch(() => undefined);
   SplashScreen.setOptions({ duration: 0, fade: false });
 }
+
+export const unstable_settings = { initialRouteName: '(tabs)' };
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold, Onest_800ExtraBold });
@@ -36,16 +39,39 @@ export default function RootLayout() {
 }
 
 function RootNavigator({ onReady, loading }: { onReady: () => void; loading: boolean }) {
-  const { hydrated, data } = useHalovat();
+  const { hydrated, data, city } = useHalovat();
+  const colors = useThemeColors();
+  const { t } = useLanguage();
+  const pathname = usePathname();
+  const titles: Record<string, string> = {
+    '/': 'Bosh sahifa', '/tracker': 'Namozlar', '/tasbeeh': 'Zikr Va Tasbeh',
+    '/qibla': 'Qibla', '/settings': 'Profil',
+  };
+  const baseTheme = data.darkMode ? DarkTheme : DefaultTheme;
+  const theme = { ...baseTheme, colors: { ...baseTheme.colors, primary: colors.green, background: colors.canvas, card: colors.paper, text: colors.ink, border: colors.line } };
 
   if (!hydrated) return null;
 
-  return <View style={{ flex: 1 }} onLayout={onReady}>
+  return <ThemeProvider value={theme}><View style={{ flex: 1 }} onLayout={onReady}>
     <StatusBar style={loading || data.darkMode ? 'light' : 'dark'} />
-    <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: data.darkMode ? '#0E1914' : '#FAF9F5' } }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
-      <Stack.Screen name="prayer-mode" options={{ animation: 'fade' }} />
+    <Stack screenOptions={{ headerStyle: { backgroundColor: colors.paper }, headerTintColor: colors.ink, contentStyle: { backgroundColor: colors.canvas }, headerBackButtonDisplayMode: 'minimal' }}>
+      <Stack.Screen name="(tabs)" options={{ title: t(titles[pathname] ?? 'Halovat') }}>
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button onPress={() => router.navigate('/(tabs)/settings')} accessibilityLabel={t('Shaharni o‘zgartirish')}>
+            {t(city.name)}
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      </Stack.Screen>
+      <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="mosque" options={{ title: t('Masjidlar') }} />
+      <Stack.Screen name="duas" options={{ title: t('Kundalik duolar') }} />
+      <Stack.Screen name="prayer-mode" options={{ title: t('Halovat vaqti'), headerStyle: { backgroundColor: '#00784B' }, headerTintColor: '#FFFFFF' }}>
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button onPress={() => router.navigate('/(tabs)/settings')} accessibilityLabel={t('Sozlamalar')}>
+            {t('Profil')}
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      </Stack.Screen>
     </Stack>
-  </View>;
+  </View></ThemeProvider>;
 }

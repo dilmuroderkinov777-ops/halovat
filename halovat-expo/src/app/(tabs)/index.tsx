@@ -5,7 +5,6 @@ import { ArrowRight, BookOpen, CalendarDays, Check, ChevronRight, CircleDot, Clo
 import React, { useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../ui/AppText';
-import { AppTopBar } from '../../components/AppTopBar';
 import { Screen } from '../../components/Screen';
 import { useHalovat } from '../../context/AppContext';
 import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../domain/prayers';
@@ -104,7 +103,7 @@ function HomeContent() {
   const missedCount = Object.values(data.prayerStatus).filter(status => status === 'missed').length;
   const qiblaBearing = bearingToKaaba(city.latitude, city.longitude);
 
-  return <Screen header={<AppTopBar subtitle="Bosh sahifa" />} contentStyle={styles.content}>
+  return <Screen contentStyle={styles.content}>
     <View style={styles.dateSection}>
       <View style={styles.infoPills}>
         <View style={styles.datePill}><CalendarDays size={14} color={Colors.green} /><Text style={styles.dateText}>{hijriDate(today)}</Text></View>
@@ -156,11 +155,11 @@ function HomeContent() {
           <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconMint]}><CircleDot size={21} color={Colors.green} /></View><Text style={styles.shortcutBadge}>{Math.min(data.tasbeehCounts[data.tasbeehId] ?? 0, 33)}/33</Text></View>
           <View><Text style={styles.shortcutTitle}>Tasbeh</Text><Text style={styles.shortcutSub}>{zikrNames[data.tasbeehId] ?? 'Zikrni davom ettiring'}</Text></View>
         </Pressable>
-        <Pressable onPress={() => router.push('/(tabs)/duas' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
+        <Pressable onPress={() => router.push('/duas' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
           <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconGold]}><BookOpen size={21} color="#875407" /></View><ChevronRight size={17} color={Colors.muted} /></View>
           <View><Text style={styles.shortcutTitle}>Duolar</Text><Text style={styles.shortcutSub}>Tonggi va kechki zikrlar</Text></View>
         </Pressable>
-        <Pressable onPress={() => router.push('/(tabs)/mosque' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
+        <Pressable onPress={() => router.push('/mosque' as never)} style={({ pressed }) => [styles.shortcutCard, pressed && styles.pressed]}>
           <View style={styles.shortcutTop}><View style={[styles.shortcutIcon, styles.shortcutIconDeep]}><Landmark size={21} color={Colors.greenDeep} /></View><ChevronRight size={17} color={Colors.muted} /></View>
           <View><Text style={styles.shortcutTitle}>Masjidlar</Text><Text numberOfLines={1} style={styles.shortcutSub}>{data.mosqueName || 'Yaqin masjidlarni qidiring'}</Text></View>
         </Pressable>

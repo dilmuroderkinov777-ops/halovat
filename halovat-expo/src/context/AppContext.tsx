@@ -432,7 +432,7 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     if (enabled) {
       if (data.mosqueLatitude === undefined || data.mosqueLongitude === undefined) {
         Alert.alert('Masjidni tanlang', 'Masjidlar xaritasidan kerakli masjidni tanlang. Ovozsiz rejim shu masjidning 150 metr hududida ishlaydi.', [
-          { text: 'Hozir emas', style: 'cancel' }, { text: 'Masjidlarni ochish', onPress: () => router.push('/(tabs)/mosque') },
+          { text: 'Hozir emas', style: 'cancel' }, { text: 'Masjidlarni ochish', onPress: () => router.push('/mosque') },
         ]);
         return;
       }
@@ -478,7 +478,7 @@ export function AppProvider({ children }: React.PropsWithChildren) {
       if (!active) return;
       const payload = response.notification.request.content.data as { date?: string; prayer?: PrayerId; halovatDuaReminder?: boolean; halovatTimeReminder?: boolean };
       void Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
-      if (payload.halovatDuaReminder) { router.push('/(tabs)/duas'); return; }
+      if (payload.halovatDuaReminder) { router.push('/duas'); return; }
       if (payload.halovatTimeReminder) { router.push('/(tabs)'); return; }
       if (!payload.date || !payload.prayer) return;
       if (!['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].includes(payload.prayer)) return;

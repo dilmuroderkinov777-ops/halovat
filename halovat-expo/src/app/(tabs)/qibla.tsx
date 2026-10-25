@@ -5,7 +5,6 @@ import { Text } from '../../ui/AppText';
 import { ChevronRight, Compass, Landmark, LocateFixed } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import Svg, { Circle as SvgCircle, Line } from 'react-native-svg';
-import { AppTopBar } from '../../components/AppTopBar';
 import { KaabaIcon } from '../../components/KaabaIcon';
 import { CompassCalibrationGuide } from '../../components/CompassCalibrationGuide';
 import { QiblaNeedle } from '../../components/QiblaNeedle';
@@ -38,13 +37,13 @@ export default function QiblaScreen() {
   const aligned = heading !== null && headingAccuracy > 0 && Math.abs(phoneAngle) <= 8;
   const dialSize = Math.min(width - 70, 300);
   const kaabaSize = dialSize * 0.16;
-  const openMosques = () => router.push('/(tabs)/mosque' as never);
+  const openMosques = () => router.push('/mosque' as never);
   const showCalibration = () => {
     restart();
     setGuideRevision(value => value + 1);
   };
 
-  return <Screen header={<AppTopBar subtitle="Qibla" />} contentStyle={styles.content}>
+  return <Screen contentStyle={styles.content}>
     <View style={styles.segment}>
       <View style={[styles.segmentItem, styles.segmentActive]}><Compass size={18} color={colors.green} /><Text style={styles.segmentActiveText}>Qibla kompas</Text></View>
       <Pressable onPress={openMosques} style={styles.segmentItem}><Landmark size={18} color={colors.muted} /><Text style={styles.segmentText}>Yaqin masjidlar</Text></Pressable>

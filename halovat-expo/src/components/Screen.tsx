@@ -4,14 +4,16 @@ import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from '../ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../ui/theme';
+import { useSegments } from 'expo-router';
 
-export function Screen({ children, header, scroll = true, style, contentStyle }: { children: React.ReactNode; header?: React.ReactNode; scroll?: boolean; style?: ViewStyle; contentStyle?: ViewStyle }) {
+export function Screen({ children, scroll = true, style, contentStyle }: { children: React.ReactNode; scroll?: boolean; style?: ViewStyle; contentStyle?: ViewStyle }) {
   const styles = useThemedStyles(baseStyles);
+  const segments = useSegments();
+  const inTabs = segments[0] === '(tabs)';
   return (
-    <SafeAreaView edges={['top']} style={[styles.safe, style]}>
-      {header}
+    <SafeAreaView edges={inTabs ? ['left', 'right'] : ['left', 'right', 'bottom']} style={[styles.safe, style]}>
       {scroll ? (
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, contentStyle]}>
+        <ScrollView style={styles.scroll} contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, contentStyle]}>
           {children}
         </ScrollView>
       ) : <View style={[styles.content, contentStyle]}>{children}</View>}

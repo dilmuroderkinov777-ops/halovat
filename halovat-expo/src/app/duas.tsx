@@ -1,13 +1,12 @@
-import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
+import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
 import { router } from 'expo-router';
 import { BookOpen, CircleDot, GraduationCap, Heart, Moon, Sunrise } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Text } from '../../ui/AppText';
-import { AppTopBar } from '../../components/AppTopBar';
-import { Screen } from '../../components/Screen';
-import { DUA_CATEGORIES, DUAS } from '../../data/duas';
-import { useHalovat } from '../../context/AppContext';
+import { Text } from '../ui/AppText';
+import { Screen } from '../components/Screen';
+import { DUA_CATEGORIES, DUAS } from '../data/duas';
+import { useHalovat } from '../context/AppContext';
 const EMERALD = '#006C49';
 const FOREST = '#003527';
 const INK = '#1B1C1A';
@@ -21,7 +20,7 @@ export default function DuasScreen() {
   const visible = DUAS.map((dua, index) => ({ ...dua, index })).filter(dua => category === 'Barchasi' || dua.category === category);
 
   return (
-    <Screen style={styles.screen} contentStyle={styles.content} header={<AppTopBar subtitle="Zikr Va Tasbeh" />}>
+    <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.page}>
         <View style={styles.modeSwitch}>
           <Pressable accessibilityRole="button" accessibilityLabel="Raqamli tasbehga o‘tish" onPress={() => router.navigate('/(tabs)/tasbeeh' as never)} style={styles.modeItem}>
