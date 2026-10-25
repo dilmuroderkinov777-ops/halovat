@@ -2,6 +2,23 @@ import { AppLanguage } from '../data/languages';
 
 // Uzbek source copy remains unchanged. Other languages are UI translations.
 const entries: readonly (readonly [string, string, string])[] = [
+  ['Sana', 'Дата', 'Date'],
+  ['Ulashish', 'Поделиться', 'Share'],
+  ['Saqlangan', 'Сохранено', 'Saved'],
+  ['Filtr', 'Фильтр', 'Filter'],
+  ['Aniqlanmoqda', 'Определение', 'Locating'],
+  ['Yuklanmoqda', 'Загрузка', 'Loading'],
+  ['Yangilash', 'Обновить', 'Refresh'],
+  ['Tanlangan', 'Выбрано', 'Selected'],
+  ['Tanlash', 'Выбрать', 'Select'],
+  ['Yo‘nalish', 'Маршрут', 'Directions'],
+  ['Shaharni o‘zgartirish', 'Изменить город', 'Change city'],
+  ['Masjid qidirish', 'Поиск мечети', 'Search mosques'],
+  ['Namozdan keyin so‘rash vaqtini sozlash', 'Настроить время вопроса после намаза', 'Set prayer check-in delay'],
+  ['Ovozsiz rejimni tekshirish · 15 soniya', 'Проверить тихий режим · 15 секунд', 'Test silent mode · 15 seconds'],
+  ['Ekran qulflanganda ovozsiz rejim sinovi', 'Проверить тихий режим при заблокированном экране', 'Test silent mode with the screen locked'],
+  ['Fon sinovini to‘xtatish', 'Остановить фоновый тест', 'Stop background test'],
+  ['Diagnostikani nusxalash', 'Скопировать диагностику', 'Copy diagnostics'],
   ['Kompasni tayyorlash', 'Подготовка компаса', 'Prepare the compass'],
   ['Telefonni 8 shaklida aylantiring', 'Двигайте телефон восьмёркой', 'Move your phone in a figure eight'],
   ['Telefonni havoda sakkiz shaklida 2–3 marta ohista aylantiring. Keyin tekis ushlab, Qibla tomoniga buring.', 'Плавно проведите телефоном в воздухе восьмёрку 2–3 раза. Затем держите его горизонтально и повернитесь к кибле.', 'Gently move your phone in a figure eight 2–3 times. Then hold it flat and turn toward the Qibla.'],

@@ -15,7 +15,7 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
   const fitContents = compact && height >= 700 && fontScale <= 1.2;
   return <BottomSheet isPresented={visible} onDismiss={onClose} containerColor={colors.paper}
     contentPadding={0} snapPoints={fitContents ? undefined : ['full']}>
-    <View style={[styles.sheet, { width, ...(fitContents ? {} : { height: height - insets.top - 72 }) }]}>
+    <View style={[styles.sheet, { width: Math.min(width, 440), ...(fitContents ? {} : { height: Math.min(720, height - insets.top - 72) }) }]}>
       <View style={styles.heading}>
         <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>{title}</Text>
         <NativeAction label="Yopish" variant="text" compact onPress={onClose} />
@@ -28,7 +28,7 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
 }
 
 const styles = StyleSheet.create({
-  sheet: { alignSelf: 'center', maxWidth: 640, paddingHorizontal: 20, paddingTop: 8 },
+  sheet: { alignSelf: 'center', paddingHorizontal: 20, paddingTop: 8 },
   heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
   title: { flex: 1, fontSize: 19, fontWeight: '700' },
   scroll: { flex: 1 },
