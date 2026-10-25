@@ -97,7 +97,6 @@ function HomeContent() {
       </View>
       <View style={styles.countdownBlock}>
         <NativeCountdown until={nextAt.getTime()} onComplete={refreshCountdown} />
-        <View style={styles.countdownLabels}><Text style={styles.countdownLabel}>SOAT</Text><Text style={styles.countdownLabel}>DAQIQA</Text><Text style={styles.countdownLabel}>SONIYA</Text></View>
       </View>
       <View style={styles.progressArea}>
         <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} /></View>
@@ -161,8 +160,6 @@ const baseStyles = StyleSheet.create({
   heroPillStrong: { color: '#FFFFFF', fontWeight: '700' },
   heroIcon: { width: 39, height: 39, borderRadius: 20, backgroundColor: '#FFFFFF18', alignItems: 'center', justifyContent: 'center' },
   countdownBlock: { paddingVertical: 3 },
-  countdownLabels: { flexDirection: 'row', gap: 26, paddingLeft: 2 },
-  countdownLabel: { color: '#B0F0D6', fontSize: 11, letterSpacing: 0.65, fontWeight: '500' },
   progressArea: { gap: 8 },
   progressTrack: { height: 6, borderRadius: 4, backgroundColor: '#001D1680', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 4, backgroundColor: '#6FFBBE' },
