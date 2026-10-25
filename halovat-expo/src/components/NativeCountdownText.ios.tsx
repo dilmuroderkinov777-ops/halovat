@@ -3,14 +3,14 @@ import { animation, Animation, contentTransition, font, foregroundColor, frame, 
 import React from 'react';
 import type { NativeCountdownTextProps } from './NativeCountdownText';
 
-export function NativeCountdownText({ text, seconds, animate, scale, width }: NativeCountdownTextProps) {
-  return <Host style={{ width, height: 57 * scale }} layoutDirection="leftToRight" ignoreSafeArea="all">
+export function NativeCountdownText({ text, seconds, animate, scale, width, color = '#FFFFFF', fontSize = 49, lineHeight = 57, countsDown = true }: NativeCountdownTextProps) {
+  return <Host style={{ width, height: lineHeight * scale }} layoutDirection="leftToRight" ignoreSafeArea="all">
     <Text modifiers={[
-      font({ size: 49 * scale, weight: 'bold' }), foregroundColor('#FFFFFF'),
-      monospacedDigit(), kerning(-1.5 * scale), minimumScaleFactor(0.5),
-      contentTransition('numericText', { countsDown: true }),
+      font({ size: fontSize * scale, weight: 'bold' }), foregroundColor(color),
+      monospacedDigit(), kerning(-1.5 * fontSize / 49 * scale), minimumScaleFactor(0.5),
+      contentTransition('numericText', { countsDown }),
       animation(Animation.easeInOut({ duration: animate ? 0.32 : 0 }), seconds),
-      frame({ width, height: 57 * scale, alignment: 'center' }),
+      frame({ width, height: lineHeight * scale, alignment: 'center' }),
     ]}>{text}</Text>
   </Host>;
 }

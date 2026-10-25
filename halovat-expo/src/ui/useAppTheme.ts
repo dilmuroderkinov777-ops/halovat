@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import { useHalovat } from '../context/AppContext';
+import { useHalovatDarkMode } from '../context/AppContext';
 import { Colors } from './theme';
 
 const surfaces: Record<string, string> = {
@@ -22,8 +22,8 @@ const foregrounds: Record<string, string> = {
 };
 
 export function useAppTheme() {
-  const { data } = useHalovat();
-  return { dark: data.darkMode, background: data.darkMode ? '#0E1914' : Colors.canvas, surface: data.darkMode ? '#192820' : Colors.paper };
+  const dark = useHalovatDarkMode();
+  return { dark, background: dark ? '#0E1914' : Colors.canvas, surface: dark ? '#192820' : Colors.paper };
 }
 
 /** Adapt shared surface and text tokens; keep devotional green cards and white labels. */

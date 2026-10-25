@@ -117,6 +117,7 @@ type ContextShape = {
 };
 
 const AppContext = createContext<ContextShape | null>(null);
+const DarkModeContext = createContext<boolean | null>(null);
 
 Notifications.setNotificationHandler({
   handleNotification: async notification => {
@@ -390,6 +391,7 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   }, []);
 
   const setTasbeehId = useCallback((id: string) => setData(current => ({ ...current, tasbeehId: id, tasbeehUndo: undefined })), []);
+  const setTasbeehTapHaptics = useCallback((value: boolean) => setData(current => ({ ...current, tasbeehTapHaptics: value })), []);
   const countTasbeeh = useCallback(() => {
     const today = dateKey(new Date());
     const yesterday = dateKey(new Date(Date.now() - 86_400_000));
@@ -428,6 +430,7 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     return count > 0 ? { ...current, tasbeehTotal: Math.max(0, current.tasbeehTotal - 1), tasbeehCounts: { ...current.tasbeehCounts, [current.tasbeehId]: count - 1 } } : current;
   }), []);
   const resetTasbeeh = useCallback(() => setData(current => ({ ...current, tasbeehUndo: undefined, tasbeehCounts: { ...current.tasbeehCounts, [current.tasbeehId]: 0 } })), []);
+  const toggleSavedDua = useCallback((title: string) => setData(current => ({ ...current, savedDuas: current.savedDuas.includes(title) ? current.savedDuas.filter(item => item !== title) : [...current.savedDuas, title] })), []);
   const setMosque = useCallback((name: string, latitude: number, longitude: number) => setData(current => ({ ...current, mosqueName: name, mosqueLatitude: latitude, mosqueLongitude: longitude })), []);
   const setPrayerAutoQuiet = useCallback(async (enabled: boolean) => {
     if (enabled && !await ensureAutomaticQuietAccess(true)) return;
@@ -530,18 +533,25 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     calendarAttribution, now, setCity, detectCity, dismissCompassGuide, setReminderEnabled, setPrayerTimeReminderEnabled, setDuaReminderEnabled,
     setReminderMinutes: value => setData(current => ({ ...current, reminderMinutes: value })),
     setPrayerStatus, togglePrayerStatus, setTasbeehId, countTasbeeh, resetTasbeeh, undoTasbeeh,
-    setTasbeehTapHaptics: value => setData(current => ({ ...current, tasbeehTapHaptics: value })),
-    toggleSavedDua: title => setData(current => ({ ...current, savedDuas: current.savedDuas.includes(title) ? current.savedDuas.filter(item => item !== title) : [...current.savedDuas, title] })),
+    setTasbeehTapHaptics, toggleSavedDua,
     setDisplayName: name => setData(current => ({ ...current, displayName: name.trim().slice(0, 40) || 'Halovat' })),
     setDarkMode: enabled => setData(current => ({ ...current, darkMode: enabled })),
     setArabicFontSize: size => setData(current => ({ ...current, arabicFontSize: Math.max(20, Math.min(30, size)) })),
     setMosque, setMosqueAutoQuiet, setPrayerAutoQuiet, refreshCalendar, timesFor,
   };
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return <DarkModeContext.Provider value={data.darkMode}>
+    <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  </DarkModeContext.Provider>;
 }
 
 export function useHalovat() {
   const context = useContext(AppContext);
   if (!context) throw new Error('useHalovat must be used within AppProvider');
   return context;
+}
+
+export function useHalovatDarkMode() {
+  const darkMode = useContext(DarkModeContext);
+  if (darkMode === null) throw new Error('useHalovatDarkMode must be used within AppProvider');
+  return darkMode;
 }
