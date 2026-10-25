@@ -1,12 +1,13 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { CalendarDays, Check, ChevronRight, Clock3, Moon, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
+import { CalendarDays, ChevronRight, Clock3, Moon, Sparkles, Sun } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { NativeAction } from '../../../components/NativeAction';
 import { PrayerCheckinSheet } from '../../../components/PrayerCheckinSheet';
+import { PrayerTimeCard } from '../../../components/PrayerTimeCard';
 import { NativeCountdown } from '../../../components/NativeCountdown';
 import { Screen } from '../../../components/Screen';
 import { useAppLoading } from '../../../context/LaunchAnimationContext';
@@ -26,8 +27,6 @@ function hijriDate(date: Date) {
   } catch { /* Fall back when an older device lacks the Islamic calendar. */ }
   return formatUzDate(date, true);
 }
-
-const prayerIcons = [Sunrise, Sun, Sun, Sunset, Moon];
 
 export default function HomeScreen() {
   const { hydrated, onboardingComplete } = useHalovat();
@@ -76,7 +75,7 @@ function HomeContent() {
         <View style={styles.datePill}><CalendarDays size={14} color={Colors.green} /><Text style={styles.dateText}>{hijriDate(today)}</Text></View>
         <View style={styles.nowPill}><View style={styles.liveDot} /><Text style={styles.nowText}>Hozir: <Text style={styles.nowStrong}>{currentPrayer?.name ?? 'Bomdod'}</Text></Text></View>
       </View>
-      <View style={styles.greeting}><Text style={styles.greetingTitle}>Assalomu alaykum</Text><Text style={styles.greetingSub}>Halovat bilan har kun ibodatda <Sparkles size={14} color="#A06408" /></Text></View>
+      <View style={styles.greeting}><Text style={styles.greetingTitle}>Assalomu alaykum</Text><Text style={styles.greetingSub}>Halovat bilan har kun ibodatda</Text></View>
     </View>
 
     <LinearGradient colors={['#064E3B', '#003D2D', '#002C22']} start={{ x: 0.1, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
@@ -97,19 +96,9 @@ function HomeContent() {
     <View style={styles.prayerSection}>
       <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text><NativeAction label="To‘liq taqvim" onPress={() => router.push('/(tabs)/tracker' as never)} compact variant="outlined" /></View>
       <View style={styles.prayerRow}>
-        {prayers.map((prayer, index) => {
-          const Icon = prayerIcons[index];
-          const status = data.prayerStatus[prayerKey(today, prayer.id)];
-          const active = prayer.id === currentPrayer?.id;
-          const cardState = status === 'done' ? styles.prayerCardDone : status === 'missed' ? styles.prayerCardMissed : active ? styles.prayerCardActive : null;
-          return <Pressable accessibilityLabel={`${prayer.name} ${formatTime(prayer.at)}${status === 'done' ? ', o‘qilgan' : status === 'missed' ? ', qazo' : active ? ', hozirgi namoz' : ''}`} key={prayer.id} onPress={() => togglePrayerStatus(today, prayer.id)} style={[styles.prayerCard, cardState]}>
-            <Text numberOfLines={1} style={[styles.prayerName, active && !status && styles.prayerNameActive]}>{prayer.name}</Text>
-            <Text style={[styles.prayerTime, active && styles.prayerTimeActive]}>{formatTime(prayer.at)}</Text>
-            <View style={[styles.prayerStatus, status === 'done' ? styles.statusDone : status === 'missed' ? styles.statusMissed : active ? styles.statusActive : styles.statusDefault]}>
-              {status === 'done' ? <Check size={13} color={Colors.green} strokeWidth={3} /> : status === 'missed' ? <X size={13} color="#FFFFFF" strokeWidth={3} /> : <Icon size={15} color={active ? '#FFFFFF' : prayer.color} strokeWidth={2} />}
-            </View>
-          </Pressable>;
-        })}
+        {prayers.map(prayer => <PrayerTimeCard key={prayer.id} prayer={prayer} day={today}
+          status={data.prayerStatus[prayerKey(today, prayer.id)]} active={prayer.id === currentPrayer?.id}
+          onToggle={togglePrayerStatus} />)}
       </View>
     </View>
 
@@ -160,19 +149,6 @@ const baseStyles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sectionTitle: { ...Typography.sectionTitle, color: Colors.ink },
   prayerRow: { flexDirection: 'row', gap: 6 },
-  prayerCard: { flex: 1, minWidth: 0, height: 94, borderRadius: 17, backgroundColor: '#F4F4F0', paddingVertical: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'space-between', borderColor: 'transparent', borderWidth: 1 },
-  prayerCardActive: { backgroundColor: '#DDF8EB', borderColor: '#DDF8EB' },
-  prayerCardDone: { backgroundColor: '#F4F4F0', borderColor: '#F4F4F0' },
-  prayerCardMissed: { backgroundColor: '#FFF0ED', borderColor: '#F5C5C0' },
-  prayerName: { color: Colors.body, fontSize: 10, fontWeight: '500' },
-  prayerNameActive: { color: Colors.green, fontWeight: '700' },
-  prayerTime: { color: Colors.ink, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  prayerTimeActive: { color: Colors.green },
-  prayerStatus: { width: 23, height: 23, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  statusDone: { backgroundColor: '#EFF2ED' },
-  statusMissed: { backgroundColor: Colors.red },
-  statusActive: { backgroundColor: '#006C49' },
-  statusDefault: { backgroundColor: '#E9E8E4' },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
