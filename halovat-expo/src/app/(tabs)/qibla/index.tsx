@@ -13,7 +13,7 @@ import { NativeSegments } from '../../../components/NativeSegments';
 import { Screen } from '../../../components/Screen';
 import { useHalovat } from '../../../context/AppContext';
 import { nearestCity } from '../../../domain/prayers';
-import { phoneAngleFromQibla, qiblaBearing, radians } from '../../../domain/qibla';
+import { qiblaBearing, radians, relativeBearing } from '../../../domain/qibla';
 import { useCompass } from '../../../hooks/useCompass';
 import { useLanguage } from '../../../context/LanguageContext';
 
@@ -35,9 +35,9 @@ export default function QiblaScreen() {
 
   const locationName = gpsAccuracy === null ? city.name : (nearestCity(coordinates.latitude, coordinates.longitude)?.name ?? city.name);
   const bearing = useMemo(() => qiblaBearing(coordinates.latitude, coordinates.longitude), [coordinates]);
-  // Restore the Qibla reference dial: Kaaba stays above, the phone arrow moves.
-  const phoneAngle = heading === null ? 0 : phoneAngleFromQibla(heading, bearing);
-  const aligned = heading !== null && headingAccuracy > 0 && Math.abs(phoneAngle) <= 8;
+  const hasHeading = status === 'ready' && heading !== null && Number.isFinite(heading) && headingAccuracy > 0;
+  const qiblaAngle = hasHeading ? relativeBearing(bearing, heading) : 0;
+  const aligned = hasHeading && headingAccuracy >= 3 && trueNorth && Math.abs(qiblaAngle) <= 8;
   const dialSize = Math.min(width - 70, 300);
   const kaabaSize = dialSize * 0.16;
   const openMosques = () => router.push('/mosque' as never);
@@ -65,22 +65,20 @@ export default function QiblaScreen() {
           <SvgCircle cx="150" cy="150" r="18" fill={colors.paper} stroke="#DDE8E0" strokeWidth="2" />
           <SvgCircle cx="150" cy="150" r="8" fill={EMERALD} />
         </Svg>
-        <QiblaNeedle angle={phoneAngle} ready={heading !== null} size={dialSize} color={colors.green} />
-        {['N', 'E', 'S', 'W'].map((label, index) => {
-          const angle = radians(index * 90 - bearing);
+        <QiblaNeedle angle={qiblaAngle} ready={hasHeading} size={dialSize} color={colors.green}
+          marker={<View accessibilityLabel={t('Ka’ba')}><KaabaIcon size={kaabaSize} /></View>} />
+        {hasHeading ? ['N', 'E', 'S', 'W'].map((label, index) => {
+          const angle = radians(relativeBearing(index * 90, heading));
           const radius = dialSize * 139 / 300;
           return <Text key={label} style={[styles.cardinal, { backgroundColor: colors.paper, left: dialSize / 2 + Math.sin(angle) * radius - 10, top: dialSize / 2 - Math.cos(angle) * radius - 8 }]}>{label}</Text>;
-        })}
-        <View accessibilityLabel={t('Ka’ba')} style={[styles.kaabaBadge, { width: kaabaSize, height: kaabaSize, left: (dialSize - kaabaSize) / 2, top: (dialSize - kaabaSize) / 2 - dialSize * 0.32 }]}>
-          <KaabaIcon size={kaabaSize} />
-        </View>
+        }) : null}
       </View>
-      <View style={[styles.alignmentBadge, aligned && styles.alignmentBadgeActive]}><View style={[styles.alignmentDot, aligned && styles.alignmentDotActive]} /><Text style={[styles.alignmentText, aligned && styles.alignmentTextActive]}>{aligned ? 'Qibla tomoni to‘g‘rilandi' : status === 'permission' ? 'Kompas uchun joylashuv ruxsati kerak' : status === 'unavailable' ? 'Kompas ma’lumoti olinmadi' : heading === null ? 'Kompas ulanmoqda' : headingAccuracy < 1 ? 'Kompas aniqligi past' : !trueNorth ? 'Magnit shimol bo‘yicha taxminiy yo‘nalish' : 'Telefonni Qibla tomoniga buring'}</Text></View>
+      <View style={[styles.alignmentBadge, aligned && styles.alignmentBadgeActive]}><View style={[styles.alignmentDot, aligned && styles.alignmentDotActive]} /><Text style={[styles.alignmentText, aligned && styles.alignmentTextActive]}>{aligned ? 'Qibla tomoni to‘g‘rilandi' : status === 'permission' ? 'Kompas uchun joylashuv ruxsati kerak' : status === 'unavailable' ? 'Kompas ma’lumoti olinmadi' : status === 'no_sensor' ? 'Kompas sensori topilmadi' : heading === null || status !== 'ready' ? 'Kompas ulanmoqda' : headingAccuracy < 3 ? 'Kompas aniqligi past' : !trueNorth ? 'Magnit shimol bo‘yicha taxminiy yo‘nalish' : 'Telefonni Qibla tomoniga buring'}</Text></View>
     </View>
 
     <View style={styles.reading}>
       <Text style={styles.readingTitle}>Makkai Mukarrama yo‘nalishi</Text>
-      <Text translate={false} style={styles.calibrationHint}>{`Qibla: ${Math.round(bearing)}°${heading === null ? '' : ` · Telefon: ${Math.round(heading)}°`}`}</Text>
+      <Text translate={false} style={styles.calibrationHint}>{`Qibla: ${Math.round(bearing)}°${hasHeading ? ` · Telefon: ${Math.round(heading)}°` : ''}`}</Text>
     </View>
 
     <View style={styles.calibrationGroup}>
@@ -108,7 +106,6 @@ const baseStyles = StyleSheet.create({
   compassOuter: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', elevation: 7, shadowColor: GREEN, shadowOpacity: 0.11, shadowRadius: 25, shadowOffset: { width: 0, height: 9 } },
   compassTrack: { position: 'absolute' },
   cardinal: { position: 'absolute', width: 20, textAlign: 'center', color: MUTED, fontSize: 12, lineHeight: 16, fontWeight: '700' },
-  kaabaBadge: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   alignmentBadge: { minHeight: 52, width: '92%', marginTop: 22, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, backgroundColor: '#E9F2EC', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 9 },
   alignmentBadgeActive: { backgroundColor: EMERALD },
   alignmentDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: EMERALD },

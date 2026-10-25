@@ -11,8 +11,8 @@ export function qiblaBearing(latitude: number, longitude: number) {
   return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
-// The Kaaba stays at the top of this dial. The arrow represents the phone's
-// heading in that Qibla reference frame: left is negative, right is positive.
-export function phoneAngleFromQibla(heading: number, bearing: number) {
-  return ((heading - bearing + 540) % 360) - 180;
+// Place a geographic bearing relative to the top of the phone's screen.
+// Clockwise is positive; crossing north must keep the shortest turn.
+export function relativeBearing(bearing: number, heading: number) {
+  return ((bearing - heading + 540) % 360 + 360) % 360 - 180;
 }
