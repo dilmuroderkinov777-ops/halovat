@@ -9,7 +9,7 @@ export default function TabLayout() {
 
   return (
     <NativeTabs tintColor={colors.green} backgroundColor={colors.paper}>
-      <NativeTabs.Trigger name="index">
+      <NativeTabs.Trigger name="(home)">
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
         <NativeTabs.Trigger.Label>{t('Bosh sahifa')}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>

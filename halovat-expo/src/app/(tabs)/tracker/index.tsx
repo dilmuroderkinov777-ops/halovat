@@ -1,16 +1,16 @@
-import { useThemedStyles } from '../../ui/useAppTheme';
+import { useThemedStyles } from '../../../ui/useAppTheme';
 import { BookOpen, CalendarDays, Check, CheckCircle2, Flame, History, Info, Minus, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { Text } from '../../ui/AppText';
+import { Text } from '../../../ui/AppText';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
-import { NativeCalendar } from '../../components/NativeCalendar';
-import { NativeAction } from '../../components/NativeAction';
-import { NativeSegments } from '../../components/NativeSegments';
-import { NativeSheet } from '../../components/NativeSheet';
-import { Screen } from '../../components/Screen';
-import { useHalovat } from '../../context/AppContext';
-import { dateKey, formatUzDate, formatUzShortMonth, PRAYERS, prayerKey, startOfWeek } from '../../domain/prayers';
+import { NativeCalendar } from '../../../components/NativeCalendar';
+import { NativeAction } from '../../../components/NativeAction';
+import { NativeSegments } from '../../../components/NativeSegments';
+import { NativeSheet } from '../../../components/NativeSheet';
+import { Screen } from '../../../components/Screen';
+import { useHalovat } from '../../../context/AppContext';
+import { dateKey, formatUzDate, formatUzShortMonth, PRAYERS, prayerKey, startOfWeek } from '../../../domain/prayers';
 
 type Period = 'week' | 'month' | 'year';
 

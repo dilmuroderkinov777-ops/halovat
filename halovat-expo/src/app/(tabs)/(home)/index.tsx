@@ -1,18 +1,18 @@
-import { useThemedStyles, useThemeColors } from '../../ui/useAppTheme';
+import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
 import { BookOpen, CalendarDays, Check, ChevronRight, CircleDot, Clock3, Compass, Landmark, Moon, Sparkles, Sun, Sunrise, Sunset, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
-import { Text } from '../../ui/AppText';
-import { NativeAction } from '../../components/NativeAction';
-import { NativeSheet } from '../../components/NativeSheet';
-import { Screen } from '../../components/Screen';
-import { useAppLoading } from '../../context/LaunchAnimationContext';
-import { useHalovat } from '../../context/AppContext';
-import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../domain/prayers';
-import { useForegroundClock } from '../../hooks/useForegroundClock';
-import { Colors } from '../../ui/theme';
+import { Text } from '../../../ui/AppText';
+import { NativeAction } from '../../../components/NativeAction';
+import { NativeSheet } from '../../../components/NativeSheet';
+import { Screen } from '../../../components/Screen';
+import { useAppLoading } from '../../../context/LaunchAnimationContext';
+import { useHalovat } from '../../../context/AppContext';
+import { dateKey, formatTime, formatUzDate, PrayerClock, prayerKey, PrayerStatus } from '../../../domain/prayers';
+import { useForegroundClock } from '../../../hooks/useForegroundClock';
+import { Colors } from '../../../ui/theme';
 
 function countdown(milliseconds: number) {
   const seconds = Math.max(0, Math.floor(milliseconds / 1000));
