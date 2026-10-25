@@ -1,7 +1,7 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { CalendarDays, ChevronRight, Clock3, Moon, Sparkles, Sun } from 'lucide-react-native';
+import { CalendarDays, ChevronRight, Clock3, Moon, Sun } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -103,7 +103,7 @@ function HomeContent() {
     </View>
 
     <View style={styles.verseCard}>
-      <View style={styles.verseHeader}><View style={styles.verseTitleWrap}><View style={styles.verseMark}><Sparkles size={17} color="#875407" /></View><Text style={styles.verseTitle}>Kun hikmati</Text></View><NativeAction label="Ulashish" compact variant="text" onPress={() => void Share.share({ message: '“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.” — Ra’d surasi, 28-oyat' })} /></View>
+      <View style={styles.verseHeader}><Text style={styles.verseTitle}>Kun hikmati</Text><NativeAction label="Ulashish" compact variant="text" onPress={() => void Share.share({ message: '“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.” — Ra’d surasi, 28-oyat' })} /></View>
       <Text style={styles.arabicVerse}>أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</Text>
       <View style={styles.translation}><Text style={styles.translationText}>“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.”</Text><Text style={styles.verseSource}>Ra’d surasi, 28-oyat</Text></View>
     </View>
@@ -152,8 +152,6 @@ const baseStyles = StyleSheet.create({
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  verseTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  verseMark: { width: 31, height: 31, borderRadius: 16, backgroundColor: '#FFF0D7', alignItems: 'center', justifyContent: 'center' },
   verseTitle: { color: Colors.ink, fontSize: 12, fontWeight: '700', letterSpacing: 0.4, textTransform: 'uppercase' },
   arabicVerse: { color: Colors.ink, fontSize: 21, lineHeight: 37, textAlign: 'right' },
   translation: { borderRadius: 16, padding: 13, gap: 7, backgroundColor: '#F4F4F0' },
