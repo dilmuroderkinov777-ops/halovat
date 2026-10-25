@@ -9,7 +9,7 @@ export function useNativeHeaderOptions() {
     headerStyle: { backgroundColor: isIOS ? 'transparent' : colors.paper },
     headerTransparent: isIOS,
     headerShadowVisible: isIOS ? true : undefined,
-    headerBlurEffect: isIOS ? 'systemThinMaterial' as const : undefined,
+    headerBlurEffect: isIOS ? 'systemUltraThinMaterial' as const : undefined,
     // The navigation bar owns the blur; a second scroll-edge effect would overlap it.
     scrollEdgeEffects: isIOS ? { top: 'hidden' as const } : undefined,
     headerTintColor: colors.ink,
