@@ -8,6 +8,7 @@ import {
   multilineTextAlignment,
   onGeometryChange,
   padding,
+  presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
 import React, { useCallback, useState } from 'react';
@@ -26,8 +27,10 @@ export function PrayerCheckinSheet({ prayerName, onChoose, onClose }: PrayerChec
   const insets = useSafeAreaInsets();
   const [contentHeight, setContentHeight] = useState(0);
   const availableHeight = Math.max(1, height - insets.top - insets.bottom - 48);
+  const contentDetent = contentHeight > 0 ? { height: Math.min(Math.ceil(contentHeight), availableHeight) } : undefined;
   const measureContent = useCallback(({ height: measuredHeight }: { height: number }) => {
-    setContentHeight(current => Math.abs(current - measuredHeight) > 1 ? measuredHeight : current);
+    if (!Number.isFinite(measuredHeight) || measuredHeight <= 0) return;
+    setContentHeight(current => current === 0 || Math.abs(current - measuredHeight) > 1 ? measuredHeight : current);
   }, []);
 
   // SwiftUI measures the intrinsic stack directly; no React Native sizing bridge is involved.
@@ -69,10 +72,12 @@ export function PrayerCheckinSheet({ prayerName, onChoose, onClose }: PrayerChec
 
   return <Host style={{ position: 'absolute' }} pointerEvents="none"
     colorScheme={dark ? 'dark' : 'light'} seedColor={colors.green}>
-    <BottomSheet isPresented fitToContents onIsPresentedChange={presented => { if (!presented) onClose(); }}>
+    <BottomSheet isPresented fitToContents={!contentDetent} onIsPresentedChange={presented => { if (!presented) onClose(); }}>
       <Group modifiers={[
         ...sheetAppearance(dark ? 'dark' : 'light', colors.paper),
         presentationDragIndicator('visible'),
+        // Use the intrinsic stack's height, not BottomSheet's separate root measurement.
+        ...(contentDetent ? [presentationDetents([contentDetent], { selection: contentDetent })] : []),
       ]}>
         {contentHeight > availableHeight
           ? <ScrollView modifiers={[frame({ height: availableHeight })]}>{content}</ScrollView>
