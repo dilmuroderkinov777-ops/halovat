@@ -1,33 +1,31 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { Typography } from '../../../ui/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, usePathname } from 'expo-router';
+import { router } from 'expo-router';
 import { CalendarDays, CircleDot, GraduationCap, Moon, RotateCw, Sunrise } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Switch, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { NativeAction } from '../../../components/NativeAction';
-import { NativeSegments } from '../../../components/NativeSegments';
 import { NativeSelect } from '../../../components/NativeSelect';
 import { Screen } from '../../../components/Screen';
 import { TasbeehCounter } from '../../../components/TasbeehCounter';
 import { useHalovat } from '../../../context/AppContext';
-import { DUA_CATEGORIES, DUAS } from '../../../data/duas';
+import { DUAS } from '../../../data/duas';
 import { ROUND_TARGET, ZIKR } from '../../../data/zikr';
 const EMERALD = '#006C49';
 const FOREST = '#003527';
 const MINT = '#6FFBBE';
 const INK = '#1B1C1A';
 const MUTED = '#707974';
+const RECOMMENDED_DUAS = DUAS.slice(0, 3);
 
 export default function TasbeehScreen() {
   const styles = useThemedStyles(baseStyles);
-  const pathname = usePathname();
   const colors = useThemeColors();
   const { width } = useWindowDimensions();
   const { data, setTasbeehId, countTasbeeh, resetTasbeeh, undoTasbeeh, setTasbeehTapHaptics, toggleSavedDua } = useHalovat();
   const [roundNotice, setRoundNotice] = useState('');
-  const [duaCategory, setDuaCategory] = useState<typeof DUA_CATEGORIES[number]>('Barchasi');
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const noticedRounds = useRef(data.tasbeehRounds);
   const selectedIndex = Math.max(0, ZIKR.findIndex(item => item.id === data.tasbeehId));
@@ -55,15 +53,12 @@ export default function TasbeehScreen() {
 
   // Keep the native controls and dua cards out of the counter's render path.
   const recommendedDuas = useMemo(() => {
-    const visibleDuas = DUAS.filter(dua => duaCategory === 'Barchasi' || dua.category === duaCategory);
     return (
       <View style={styles.duasSection}>
         <View style={styles.duasHeading}>
           <View><Text style={styles.duasTitle}>Tavsiya etilgan duolar</Text><Text style={styles.duasSubtitle}>Qur’on va sunnatdagi muhim zikrlar</Text></View>
-          <NativeAction label="Barchasi" onPress={() => router.push('/duas' as never)} compact variant="outlined" />
         </View>
-        <NativeSelect value={duaCategory} options={DUA_CATEGORIES.map(value => ({ value, label: value }))} onChange={setDuaCategory} />
-        {visibleDuas.map(dua => <View key={dua.title} style={styles.duaCard}>
+        {RECOMMENDED_DUAS.map(dua => <View key={dua.title} style={styles.duaCard}>
           <View style={styles.duaCardHeader}>
             <View style={[styles.duaIcon, dua.icon === 'moon' && styles.duaIconMoon, dua.icon === 'book' && styles.duaIconBook]}>
               {dua.icon === 'sunrise' ? <Sunrise size={18} color={colors.green} /> : dua.icon === 'moon' ? <Moon size={18} color="#653E00" /> : <GraduationCap size={18} color="#FFFFFF" />}
@@ -75,15 +70,15 @@ export default function TasbeehScreen() {
           <View style={styles.duaLatinBox}><Text style={styles.duaLatin}>{dua.latin}</Text></View>
           <Text style={styles.duaMeaning}>{dua.meaning}</Text>
         </View>)}
+        <NativeAction label="Barcha duolarni ko‘rish" onPress={() => router.navigate('/duas')} large variant="outlined" />
       </View>
     );
-  }, [styles, duaCategory, colors.green, data.savedDuas, data.arabicFontSize, toggleSavedDua]);
+  }, [styles, colors.green, data.savedDuas, data.arabicFontSize, toggleSavedDua]);
 
   return (
       <Screen style={styles.screen} contentStyle={styles.content}>
         <View style={styles.page}>
-          <NativeSegments value={pathname === '/duas' ? 'duas' : 'tasbeeh'} options={[{ value: 'tasbeeh', label: 'Raqamli Tasbeh' }, { value: 'duas', label: 'Kundalik Duolar' }]}
-            onChange={value => { if (value === 'duas') router.push('/duas'); }} />
+          <NativeAction label="Kundalik Duolar" onPress={() => router.navigate('/duas')} large variant="outlined" />
 
           <LinearGradient colors={['#064E3B', '#003527']} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={styles.hero}>
             <View pointerEvents="none" style={styles.heroGlowTop} />
