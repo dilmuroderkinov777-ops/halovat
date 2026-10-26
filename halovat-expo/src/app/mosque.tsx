@@ -6,7 +6,7 @@ import { useFocusEffect, useIsFocused } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Check, Landmark, LocateFixed, MapPin, Navigation, Search } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Keyboard, Linking, Pressable, Share, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Keyboard, Linking, Pressable, Share, StyleSheet, Switch, TextInput, View, type ListRenderItemInfo } from 'react-native';
 import { Text } from '../ui/AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeAction } from '../components/NativeAction';
@@ -169,66 +169,84 @@ export default function MosqueScreen() {
     void Share.share({ message: `${place.name}\n${url}` });
   };
 
-  return <Screen contentStyle={styles.content}>
-    <View style={styles.searchRow}>
-      <View style={styles.searchBox}>
-        <Search size={19} color={EMERALD} />
-        <TextInput accessibilityLabel={t('Masjid qidirish')} clearButtonMode="while-editing" value={query} onChangeText={value => { setQuery(value); setVisibleLimit(8); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder={t('Masjid nomi yoki manzil bo‘yicha...')} placeholderTextColor="#8B9690" style={styles.searchInput} returnKeyType="search" />
+  const renderPlace = ({ item: place }: ListRenderItemInfo<MosqueResult>) => {
+    const selected = place.id === selectedPlace?.id || (!selectedId && place.name === data.mosqueName);
+    const bookmarked = savedIds.includes(place.id);
+    const photo = failedPhotos.has(place.id) ? undefined : mosquePhoto(place);
+    const credit = photo ? mosquePhotoCredit(place) : undefined;
+    return <View key={place.id} style={[styles.placeCard, selected && styles.placeCardSelected]}>
+      <View style={[styles.placeHero, !photo && styles.placeHeroCompact]}>
+        {photo ? <><Image source={photo} resizeMode="cover" onError={event => { console.warn('Halovat mosque photo', place.id, event.nativeEvent.error); setFailedPhotos(current => new Set(current).add(place.id)); }} style={StyleSheet.absoluteFill} /><LinearGradient pointerEvents="none" colors={['#00352712', '#00352788']} style={StyleSheet.absoluteFill} /></> : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Landmark size={20} color={EMERALD} /><Text style={styles.photoMissing}>{failedPhotos.has(place.id) ? 'Surat yuklanmadi' : 'Surat mavjud emas'}</Text></View>}
+        <View style={styles.distancePill}><LocateFixed size={13} color={colors.green} /><Text style={styles.distancePillText}>{formatDistance(place.distanceMeters)}</Text></View>
+        <View style={styles.bookmarkButton}><NativeAction label={bookmarked ? 'Saqlangan' : 'Saqlash'} compact variant="outlined" onPress={() => toggleBookmark(place.id)} /></View>
       </View>
-      <NativeAction label="Filtr" compact variant="outlined" onPress={() => { Keyboard.dismiss(); setFilterOpen(true); }} />
-    </View>
-
-    <View style={styles.map}>
-      {focused && <MosqueMap center={center} isUserLocation={isUserLocation} selectedId={selectedPlace?.id} places={mapPlaces} onSelect={id => { const place = places.find(item => item.id === id); if (place) selectPlace(place); }} />}
-      <View pointerEvents="none" style={styles.liveMapPill}><View style={styles.liveDot} /><Text style={styles.liveMapText}>{isUserLocation ? 'Joylashuvingiz atrofida' : 'Shahar markazi bo‘yicha'}</Text></View>
-      <View style={styles.mapLocate}><NativeAction label={locating ? 'Aniqlanmoqda' : 'GPS'} disabled={locating} compact variant="outlined" onPress={() => void locate()} /></View>
-      {busy ? <View pointerEvents="none" style={styles.loading}><ActivityIndicator size="small" color={EMERALD} /><Text style={styles.loadingText}>Masjidlar qidirilmoqda</Text></View> : null}
-      {selectedPlace ? <View style={styles.mapSelection}>
-        <View style={styles.mapSelectionIcon}><Navigation size={20} color={colors.green} /></View>
-        <View style={styles.mapSelectionCopy}><Text numberOfLines={1} style={styles.mapSelectionName}>{selectedPlace.name}</Text><Text style={styles.mapSelectionDistance}>{formatDistance(selectedPlace.distanceMeters)} uzoqlikda</Text></View>
-        <NativeAction label="Yo‘l" onPress={() => openDirections(selectedPlace)} compact variant="outlined" />
-      </View> : null}
-    </View>
-
-    <View style={styles.resultsHead}>
-      <View style={styles.resultsTitleRow}><Text style={styles.resultsTitle}>Yaqin atrofdagi masjidlar</Text><Text style={styles.resultCount}>{busy ? 'Yuklanmoqda' : filteredPlaces.length + ' ta topildi'}</Text></View>
-      <NativeAction label={sortByName ? 'Nom bo‘yicha' : 'Masofa bo‘yicha'} compact variant="text" onPress={() => setSortByName(value => !value)} />
-    </View>
-
-    <View style={styles.sourceRow}>
-      <Text style={styles.sourceText}>{sourceInfo ? `${t(sourceInfo.source === 'live' ? 'Yangilangan ro‘yxat' : 'Saqlangan ro‘yxat')} · ${updatedDate}` : busy ? 'Masjidlar qidirilmoqda' : ''}</Text>
-      <NativeAction label={busy ? 'Yuklanmoqda' : 'Yangilash'} onPress={() => void loadPlaces(center, true)} compact variant="outlined" disabled={busy} />
-    </View>
-
-    {error ? <View style={styles.messageCard}><Text style={styles.messageText}>{error}</Text>{!busy ? <NativeAction label={error.includes('joylashuv ruxsati') ? 'Ruxsat berish' : 'Qayta urinish'} variant="outlined" onPress={() => void (error.includes('joylashuv ruxsati') ? locate() : loadPlaces(center, true))} /> : null}</View> : null}
-    {!busy && !error && filteredPlaces.length === 0 ? <View style={styles.messageCard}><Text style={styles.messageText}>Bu mezonlarga mos masjid topilmadi.</Text></View> : null}
-
-    {filteredPlaces.slice(0, visibleLimit).map(place => {
-      const selected = place.id === selectedPlace?.id || (!selectedId && place.name === data.mosqueName);
-      const bookmarked = savedIds.includes(place.id);
-      const photo = failedPhotos.has(place.id) ? undefined : mosquePhoto(place);
-      const credit = photo ? mosquePhotoCredit(place) : undefined;
-      return <View key={place.id} style={[styles.placeCard, selected && styles.placeCardSelected]}>
-        <View style={[styles.placeHero, !photo && styles.placeHeroCompact]}>
-          {photo ? <><Image source={photo} resizeMode="cover" onError={event => { console.warn('Halovat mosque photo', place.id, event.nativeEvent.error); setFailedPhotos(current => new Set(current).add(place.id)); }} style={StyleSheet.absoluteFill} /><LinearGradient pointerEvents="none" colors={['#00352712', '#00352788']} style={StyleSheet.absoluteFill} /></> : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Landmark size={20} color={EMERALD} /><Text style={styles.photoMissing}>{failedPhotos.has(place.id) ? 'Surat yuklanmadi' : 'Surat mavjud emas'}</Text></View>}
-          <View style={styles.distancePill}><LocateFixed size={13} color={colors.green} /><Text style={styles.distancePillText}>{formatDistance(place.distanceMeters)}</Text></View>
-          <View style={styles.bookmarkButton}><NativeAction label={bookmarked ? 'Saqlangan' : 'Saqlash'} compact variant="outlined" onPress={() => toggleBookmark(place.id)} /></View>
+      <View style={styles.cardBody}>
+        {credit ? <Pressable accessibilityRole="link" onPress={() => { void Linking.openURL(credit.source); }}><Text translate={false} numberOfLines={2} style={styles.sourceText}>{`${credit.artist} · ${credit.license} · Wikimedia Commons · kesilgan`}</Text></Pressable> : null}
+        <View style={styles.nameRow}><Text numberOfLines={2} style={styles.placeName}>{place.name}</Text>{selected ? <View style={styles.selectedPill}><Check size={11} color={colors.green} /><Text style={styles.selectedPillText}>Tanlangan</Text></View> : null}</View>
+        {place.address ? <View style={styles.addressRow}><MapPin size={14} color={colors.muted} /><Text numberOfLines={2} style={styles.addressText}>{place.address}</Text></View> : null}
+        {place.amenities.length ? <View style={styles.amenities}>{place.amenities.map(item => <Text key={item} style={styles.amenity}>{item}</Text>)}</View> : null}
+        <View style={styles.cardActions}>
+          <NativeAction label={selected ? 'Tanlangan' : 'Tanlash'} compact variant="outlined" onPress={() => selectPlace(place)} />
+          <NativeAction label="Yo‘nalish" compact onPress={() => openDirections(place)} />
+          <NativeAction label="Ulashish" compact variant="text" onPress={() => sharePlace(place)} />
         </View>
-        <View style={styles.cardBody}>
-          {credit ? <Pressable accessibilityRole="link" onPress={() => { void Linking.openURL(credit.source); }}><Text translate={false} numberOfLines={2} style={styles.sourceText}>{`${credit.artist} · ${credit.license} · Wikimedia Commons · kesilgan`}</Text></Pressable> : null}
-          <View style={styles.nameRow}><Text numberOfLines={2} style={styles.placeName}>{place.name}</Text>{selected ? <View style={styles.selectedPill}><Check size={11} color={colors.green} /><Text style={styles.selectedPillText}>Tanlangan</Text></View> : null}</View>
-          {place.address ? <View style={styles.addressRow}><MapPin size={14} color={colors.muted} /><Text numberOfLines={2} style={styles.addressText}>{place.address}</Text></View> : null}
-          {place.amenities.length ? <View style={styles.amenities}>{place.amenities.map(item => <Text key={item} style={styles.amenity}>{item}</Text>)}</View> : null}
-          <View style={styles.cardActions}>
-            <NativeAction label={selected ? 'Tanlangan' : 'Tanlash'} compact variant="outlined" onPress={() => selectPlace(place)} />
-            <NativeAction label="Yo‘nalish" compact onPress={() => openDirections(place)} />
-            <NativeAction label="Ulashish" compact variant="text" onPress={() => sharePlace(place)} />
+      </View>
+    </View>;
+  };
+
+  return <Screen scroll={false} contentStyle={styles.content}>
+    <FlatList
+      style={styles.list}
+      contentContainerStyle={styles.listContent}
+      contentInsetAdjustmentBehavior="automatic"
+      keyboardShouldPersistTaps="handled"
+      data={filteredPlaces.slice(0, visibleLimit)}
+      keyExtractor={place => place.id}
+      renderItem={renderPlace}
+      initialNumToRender={2}
+      maxToRenderPerBatch={2}
+      windowSize={5}
+      removeClippedSubviews={false}
+      ListHeaderComponent={<View style={styles.listHeader}>
+        <View style={styles.searchRow}>
+          <View style={styles.searchBox}>
+            <Search size={19} color={EMERALD} />
+            <TextInput accessibilityLabel={t('Masjid qidirish')} clearButtonMode="while-editing" value={query} onChangeText={value => { setQuery(value); setVisibleLimit(8); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder={t('Masjid nomi yoki manzil bo‘yicha...')} placeholderTextColor="#8B9690" style={styles.searchInput} returnKeyType="search" />
           </View>
+          <NativeAction label="Filtr" compact variant="outlined" onPress={() => { Keyboard.dismiss(); setFilterOpen(true); }} />
         </View>
-      </View>;
-    })}
-    {visibleLimit < filteredPlaces.length ? <NativeAction label="Yana ko‘rsatish" onPress={() => setVisibleLimit(limit => limit + 8)} variant="outlined" /> : null}
-    <Text style={styles.attributionNote}>Xarita va masjidlar OpenStreetMap’dan. Ma’lumotlar hududga qarab farq qilishi mumkin.</Text>
+
+        <View style={styles.map}>
+          {focused && <MosqueMap center={center} isUserLocation={isUserLocation} selectedId={selectedPlace?.id} places={mapPlaces} onSelect={id => { const place = places.find(item => item.id === id); if (place) selectPlace(place); }} />}
+          <View pointerEvents="none" style={styles.liveMapPill}><View style={styles.liveDot} /><Text style={styles.liveMapText}>{isUserLocation ? 'Joylashuvingiz atrofida' : 'Shahar markazi bo‘yicha'}</Text></View>
+          <View style={styles.mapLocate}><NativeAction label={locating ? 'Aniqlanmoqda' : 'GPS'} disabled={locating} compact variant="outlined" onPress={() => void locate()} /></View>
+          {busy ? <View pointerEvents="none" style={styles.loading}><ActivityIndicator size="small" color={EMERALD} /><Text style={styles.loadingText}>Masjidlar qidirilmoqda</Text></View> : null}
+          {selectedPlace ? <View style={styles.mapSelection}>
+            <View style={styles.mapSelectionIcon}><Navigation size={20} color={colors.green} /></View>
+            <View style={styles.mapSelectionCopy}><Text numberOfLines={1} style={styles.mapSelectionName}>{selectedPlace.name}</Text><Text style={styles.mapSelectionDistance}>{formatDistance(selectedPlace.distanceMeters)} uzoqlikda</Text></View>
+            <NativeAction label="Yo‘l" onPress={() => openDirections(selectedPlace)} compact variant="outlined" />
+          </View> : null}
+        </View>
+
+        <View style={styles.resultsHead}>
+          <View style={styles.resultsTitleRow}><Text style={styles.resultsTitle}>Yaqin atrofdagi masjidlar</Text><Text style={styles.resultCount}>{busy ? 'Yuklanmoqda' : filteredPlaces.length + ' ta topildi'}</Text></View>
+          <NativeAction label={sortByName ? 'Nom bo‘yicha' : 'Masofa bo‘yicha'} compact variant="text" onPress={() => setSortByName(value => !value)} />
+        </View>
+
+        <View style={styles.sourceRow}>
+          <Text style={styles.sourceText}>{sourceInfo ? `${t(sourceInfo.source === 'live' ? 'Yangilangan ro‘yxat' : 'Saqlangan ro‘yxat')} · ${updatedDate}` : busy ? 'Masjidlar qidirilmoqda' : ''}</Text>
+          <NativeAction label={busy ? 'Yuklanmoqda' : 'Yangilash'} onPress={() => void loadPlaces(center, true)} compact variant="outlined" disabled={busy} />
+        </View>
+
+        {error ? <View style={styles.messageCard}><Text style={styles.messageText}>{error}</Text>{!busy ? <NativeAction label={error.includes('joylashuv ruxsati') ? 'Ruxsat berish' : 'Qayta urinish'} variant="outlined" onPress={() => void (error.includes('joylashuv ruxsati') ? locate() : loadPlaces(center, true))} /> : null}</View> : null}
+        {!busy && !error && filteredPlaces.length === 0 ? <View style={styles.messageCard}><Text style={styles.messageText}>Bu mezonlarga mos masjid topilmadi.</Text></View> : null}
+      </View>}
+      ItemSeparatorComponent={MosqueSeparator}
+      ListFooterComponent={<View style={styles.listFooter}>
+        {visibleLimit < filteredPlaces.length ? <NativeAction label="Yana ko‘rsatish" onPress={() => setVisibleLimit(limit => limit + 8)} variant="outlined" /> : null}
+        <Text style={styles.attributionNote}>Xarita va masjidlar OpenStreetMap’dan. Ma’lumotlar hududga qarab farq qilishi mumkin.</Text>
+      </View>}
+    />
 
     <NativeSheet visible={filterOpen} onClose={() => setFilterOpen(false)} title="Masjidlarni filtrlash" compact>
       <Text style={styles.filterLabel}>Masofa</Text>
@@ -246,8 +264,17 @@ export default function MosqueScreen() {
   </Screen>;
 }
 
+function MosqueSeparator() {
+  return <View style={baseStyles.separator} />;
+}
+
 const baseStyles = StyleSheet.create({
-  content: { gap: 14 },
+  content: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0, gap: 0 },
+  list: { flex: 1, width: '100%' },
+  listContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 },
+  listHeader: { gap: 14, paddingBottom: 14 },
+  listFooter: { gap: 14, paddingTop: 14 },
+  separator: { height: 14 },
   searchRow: { flexDirection: 'row', gap: 8, height: 48 },
   searchBox: { flex: 1, borderRadius: 16, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 12, borderWidth: 1, borderColor: '#ECEFEA' },
   searchInput: { flex: 1, color: INK, fontSize: 12, paddingVertical: 0 },

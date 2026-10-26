@@ -1,11 +1,10 @@
 import { useThemedStyles } from '../../../ui/useAppTheme';
-import { router, usePathname } from 'expo-router';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { ChevronRight, Landmark, LocateFixed } from 'lucide-react-native';
 import React from 'react';
 import { NativeAction } from '../../../components/NativeAction';
-import { NativeSegments } from '../../../components/NativeSegments';
 import { QiblaCompass } from '../../../components/QiblaCompass';
 import { Screen } from '../../../components/Screen';
 import { useHalovat } from '../../../context/AppContext';
@@ -17,14 +16,12 @@ const INK = '#1B1C1A';
 const MUTED = '#707974';
 
 export default function QiblaScreen() {
-  const pathname = usePathname();
   const styles = useThemedStyles(baseStyles);
   const { city, data } = useHalovat();
-  const openMosques = () => router.push('/mosque' as never);
+  const openMosques = () => router.navigate('/mosque');
 
   return <Screen contentStyle={styles.content}>
-    <NativeSegments value={pathname === '/mosque' ? 'mosque' : 'qibla'} options={[{ value: 'qibla', label: 'Qibla yo‘nalishi' }, { value: 'mosque', label: 'Yaqin masjidlar' }]}
-      onChange={value => { if (value === 'mosque') openMosques(); }} />
+    <NativeAction label="Yaqin masjidlar" onPress={openMosques} large variant="outlined" />
 
     <QiblaCompass city={city} />
 
