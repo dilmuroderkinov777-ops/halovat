@@ -64,7 +64,7 @@ export default function TasbeehScreen() {
               {dua.icon === 'sunrise' ? <Sunrise size={18} color={colors.green} /> : dua.icon === 'moon' ? <Moon size={18} color="#653E00" /> : <GraduationCap size={18} color="#FFFFFF" />}
             </View>
             <View style={styles.duaCardTitleGroup}><Text style={styles.duaCardTitle}>{dua.title}</Text><Text style={styles.duaCardCategory}>{dua.source}</Text></View>
-            <NativeAction label={data.savedDuas.includes(dua.title) ? 'Saqlangan' : 'Saqlash'} compact variant="text" onPress={() => toggleSavedDua(dua.title)} />
+            <NativeAction label={data.savedDuas.includes(dua.title) ? 'Saqlangan' : 'Saqlash'} compact variant={data.savedDuas.includes(dua.title) ? 'filled' : 'text'} onPress={() => toggleSavedDua(dua.title)} />
           </View>
           <Text style={[styles.duaArabic, { fontSize: data.arabicFontSize, lineHeight: data.arabicFontSize * 1.8 }]}>{dua.arabic}</Text>
           <View style={styles.duaLatinBox}><Text style={styles.duaLatin}>{dua.latin}</Text></View>

@@ -1,9 +1,10 @@
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
-import { GraduationCap, Moon, Sunrise } from 'lucide-react-native';
+import { Bookmark, GraduationCap, Moon, Sunrise } from 'lucide-react-native';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View, type ListRenderItemInfo } from 'react-native';
 import { Text } from '../ui/AppText';
 import { NativeAction } from '../components/NativeAction';
+import { NativeSegments } from '../components/NativeSegments';
 import { NativeSelect } from '../components/NativeSelect';
 import { Screen } from '../components/Screen';
 import { DUA_CATEGORIES, DUAS, type Dua } from '../data/duas';
@@ -12,22 +13,39 @@ const EMERALD = '#006C49';
 const INK = '#1B1C1A';
 const MUTED = '#707974';
 type DuaCategory = typeof DUA_CATEGORIES[number];
+type DuaCollection = 'all' | 'saved';
+const collectionOptions = [{ value: 'all', label: 'Barcha duolar' }, { value: 'saved', label: 'Saqlanganlar' }] as const;
 const categoryOptions = DUA_CATEGORIES.map(value => ({ value, label: value }));
 const duaKey = (dua: Dua) => dua.title;
 
 export default function DuasScreen() {
   const styles = useThemedStyles(baseStyles);
+  const colors = useThemeColors();
   const { data, toggleSavedDua } = useHalovat();
+  const [collection, setCollection] = useState<DuaCollection>('all');
   const [category, setCategory] = useState<DuaCategory>('Barchasi');
   const listRef = useRef<FlatList<Dua>>(null);
-  const visible = useMemo(() => DUAS.filter(dua => category === 'Barchasi' || dua.category === category), [category]);
+  const savedTitles = useMemo(() => new Set(data.savedDuas), [data.savedDuas]);
+  const visible = useMemo(() => DUAS.filter(dua =>
+    (category === 'Barchasi' || dua.category === category) && (collection === 'all' || savedTitles.has(dua.title))
+  ), [category, collection, savedTitles]);
+  const noSavedDuas = collection === 'saved' && !DUAS.some(dua => savedTitles.has(dua.title));
+  const changeCollection = useCallback((value: DuaCollection) => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    setCollection(value);
+  }, []);
   const changeCategory = useCallback((value: DuaCategory) => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
     setCategory(value);
   }, []);
+  const showAllDuas = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    setCollection('all');
+    setCategory('Barchasi');
+  }, []);
   const renderDua = useCallback(({ item }: ListRenderItemInfo<Dua>) => (
-    <DuaCard dua={item} isSaved={data.savedDuas.includes(item.title)} arabicFontSize={data.arabicFontSize} onToggleSaved={toggleSavedDua} />
-  ), [data.savedDuas, data.arabicFontSize, toggleSavedDua]);
+    <DuaCard dua={item} isSaved={savedTitles.has(item.title)} arabicFontSize={data.arabicFontSize} onToggleSaved={toggleSavedDua} />
+  ), [savedTitles, data.arabicFontSize, toggleSavedDua]);
 
   return (
     <Screen scroll={false} style={styles.screen} contentStyle={styles.content}>
@@ -44,10 +62,21 @@ export default function DuasScreen() {
         windowSize={5}
         removeClippedSubviews={false}
         ListHeaderComponent={<View style={styles.listHeader}>
+          <NativeSegments value={collection} options={collectionOptions} onChange={changeCollection} />
           <NativeSelect value={category} options={categoryOptions} onChange={changeCategory} />
+          {collection === 'saved' && visible.length > 0 && <Text style={styles.savedHint}>Duoni ro‘yxatdan chiqarish uchun «Saqlangan» tugmasini qayta bosing.</Text>}
         </View>}
         ItemSeparatorComponent={DuaSeparator}
-        ListFooterComponent={<Text style={styles.note}>Duolar va ma’nolari ma’lumot sifatida berilgan.</Text>}
+        ListEmptyComponent={<View style={styles.emptyCard}>
+          <Bookmark size={30} color={colors.green} />
+          <Text style={styles.emptyTitle}>{noSavedDuas ? 'Hali saqlangan duolar yo‘q' : 'Bu kategoriyada duo topilmadi'}</Text>
+          <Text style={styles.emptyDescription}>{noSavedDuas
+            ? 'Kerakli duodagi «Saqlash» tugmasini bosing. U shu ro‘yxatda ko‘rinadi.'
+            : 'Boshqa kategoriya tanlang yoki barcha kategoriyalarni ko‘ring.'}</Text>
+          <NativeAction label={noSavedDuas ? 'Barcha duolarni ko‘rish' : 'Barcha kategoriyalar'}
+            onPress={noSavedDuas ? showAllDuas : () => changeCategory('Barchasi')} variant="outlined" />
+        </View>}
+        ListFooterComponent={visible.length > 0 ? <Text style={styles.note}>Duolar va ma’nolari ma’lumot sifatida berilgan.</Text> : null}
       />
     </Screen>
   );
@@ -70,7 +99,7 @@ const DuaCard = memo(function DuaCard({ dua, isSaved, arabicFontSize, onToggleSa
             <Text style={styles.cardCategory}>{dua.source}</Text>
           </View>
         </View>
-        <NativeAction label={isSaved ? 'Saqlangan' : 'Saqlash'} compact variant="text" onPress={() => onToggleSaved(dua.title)} />
+        <NativeAction label={isSaved ? 'Saqlangan' : 'Saqlash'} compact variant={isSaved ? 'filled' : 'text'} onPress={() => onToggleSaved(dua.title)} />
       </View>
       <Text style={[styles.arabic, { fontSize: arabicFontSize, lineHeight: arabicFontSize * 1.8 }]}>{dua.arabic}</Text>
       <View style={styles.transliteration}><Text style={styles.latin}>{dua.latin}</Text></View>
@@ -88,7 +117,11 @@ const baseStyles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0, gap: 0 },
   list: { flex: 1, width: '100%' },
   listContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 },
-  listHeader: { paddingBottom: 17 },
+  listHeader: { paddingBottom: 17, gap: 12 },
+  savedHint: { color: MUTED, fontSize: 12, lineHeight: 18 },
+  emptyCard: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 22, padding: 20, gap: 12 },
+  emptyTitle: { color: INK, fontSize: 17, lineHeight: 24, fontWeight: '600', textAlign: 'center' },
+  emptyDescription: { color: MUTED, fontSize: 13, lineHeight: 20, textAlign: 'center' },
   separator: { height: 17 },
   card: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 16, gap: 13 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
