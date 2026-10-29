@@ -94,7 +94,7 @@ function HomeContent() {
     </LinearGradient>
 
     <View style={styles.prayerSection}>
-      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text><NativeAction label="To‘liq taqvim" suffix=" →" onPress={() => router.navigate('/(tabs)/tracker')} compact variant="text" /></View>
+      <Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text>
       <View style={styles.prayerRow}>
         {prayers.map(prayer => <PrayerTimeCard key={prayer.id} prayer={prayer} day={today}
           status={data.prayerStatus[prayerKey(today, prayer.id)]} active={prayer.id === currentPrayer?.id}
@@ -146,7 +146,6 @@ const baseStyles = StyleSheet.create({
   progressLabel: { color: '#B0F0D6', fontSize: 10, flexShrink: 1 },
   progressTime: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
   prayerSection: { gap: 10 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sectionTitle: { ...Typography.sectionTitle, color: Colors.ink },
   prayerRow: { flexDirection: 'row', gap: 6 },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
