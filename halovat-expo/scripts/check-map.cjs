@@ -22,6 +22,36 @@ for (const [, script] of mosqueMapDocument.matchAll(/<script>([\s\S]*?)<\/script
 assert.ok(mosqueMapDocument.includes('tile.openstreetmap.org'));
 assert.ok(mosqueMapDocument.includes('preferCanvas:true'));
 
+// Run the map bridge against Leaflet adapters, without opening a browser.
+const fits = [], layers = [];
+const map = { setView() { return this; }, invalidateSize() {}, fitBounds(points, options) { fits.push({ points, options }); } };
+const L = {
+  map: () => map, control: { zoom: () => ({ addTo() {} }) }, tileLayer: () => ({ addTo() {} }),
+  circleMarker: () => {
+    const layer = { removed: false, addTo() { layers.push(this); return this; }, on() {},
+      bindPopup() { return this; }, setLatLng() {}, setStyle() {}, remove() { this.removed = true; } };
+    return layer;
+  },
+};
+const window = { L, parent: { postMessage() {} }, addEventListener() {} };
+const bridge = [...mosqueMapDocument.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
+vm.runInNewContext(bridge, { L, window, document: { createElement: () => ({}) } });
+const center = { latitude: 41, longitude: 69 };
+const visible = catalogue.places.slice(0, 3);
+window.updateHalovatMap({ center, places: visible });
+assert.equal(fits.length, 1);
+assert.equal(fits[0].points.length, 4, 'Compact map must fit the center and all three visible mosques');
+assert.equal(fits[0].options.maxZoom, 15);
+assert.equal(layers.filter(layer => !layer.removed).length, 3);
+window.updateHalovatMap({ center, places: visible, selectedId: visible[1].id });
+assert.equal(fits.length, 1, 'Selecting a marker must preserve map panning/zoom');
+window.updateHalovatMap({ center, places: catalogue.places.slice(0, 6) });
+assert.equal(fits.at(-1).points.length, 7, 'Show more must fit the newly visible results');
+window.updateHalovatMap({ center, places: visible });
+assert.equal(layers.filter(layer => !layer.removed).length, 3, 'Refresh must remove hidden markers');
+window.updateHalovatMap({ center, places: [] });
+assert.equal(layers.filter(layer => !layer.removed).length, 0);
+
 const distanceBetween = (a, b) => Math.hypot(a.latitude - b.latitude, (a.longitude - b.longitude) * 0.75) * 111_000;
 const remotePhotos = require('../src/data/mosque-photo-catalogue.json');
 const { mosquePhoto } = load('src/services/mosquePhotos.ts', { './mosques': { distanceBetween }, '../data/mosque-photo-catalogue.json': remotePhotos });
