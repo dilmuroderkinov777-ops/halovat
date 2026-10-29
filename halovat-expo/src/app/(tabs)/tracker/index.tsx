@@ -265,7 +265,7 @@ const baseStyles = StyleSheet.create({
   resultsSection: { gap: 10 },
   resultsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionTitle: { ...Typography.sectionTitle, color: INK },
-  percentSummary: { color: EMERALD, fontSize: 12, fontWeight: '700' },
+  percentSummary: { color: EMERALD, fontSize: 12, fontWeight: '700', marginRight: 12 },
   summaryRow: { flexDirection: 'row', gap: 12, alignItems: 'stretch' },
   progressCard: { flex: 5, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 10, minHeight: 168, alignItems: 'center', justifyContent: 'center', gap: 8 },
   pressed: { opacity: 0.75 },
