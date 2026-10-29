@@ -9,7 +9,7 @@ const SEPARATOR_WIDTH = 12;
 const COUNTDOWN_WIDTH = UNIT_WIDTH * 3 + SEPARATOR_WIDTH * 2;
 const LABELS = ['SOAT', 'DAQIQA', 'SONIYA'];
 
-export function NativeCountdown({ until, onComplete }: { until: number; onComplete: () => void }) {
+export function NativeCountdown({ until, onComplete, labelColor = '#B0F0D6' }: { until: number; onComplete: () => void; labelColor?: string }) {
   const { now } = useForegroundClock();
   const { fontScale } = useWindowDimensions();
   const [availableWidth, setAvailableWidth] = useState(COUNTDOWN_WIDTH);
@@ -50,7 +50,7 @@ export function NativeCountdown({ until, onComplete }: { until: number; onComple
         <View style={[styles.unit, { width: UNIT_WIDTH * scale }]}>
           <NativeCountdownText text={part} seconds={seconds} animate={animate} reduceMotion={reduceMotion}
             scale={scale} width={UNIT_WIDTH * scale} />
-          <Text allowFontScaling={false} style={[styles.label, { fontSize: 11 * scale, letterSpacing: 0.65 * scale }]}>{LABELS[index]}</Text>
+          <Text allowFontScaling={false} style={[styles.label, { color: labelColor, fontSize: 11 * scale, letterSpacing: 0.65 * scale }]}>{LABELS[index]}</Text>
         </View>
       </React.Fragment>)}
     </View>

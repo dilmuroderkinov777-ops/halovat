@@ -1,7 +1,7 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { ArrowUpRight, CalendarDays, Clock3, Moon, Sun } from 'lucide-react-native';
+import { ArrowUpRight, CalendarDays, Clock3 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Image, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -13,6 +13,7 @@ import { Screen } from '../../../components/Screen';
 import { useAppLoading } from '../../../context/LaunchAnimationContext';
 import { useHalovat } from '../../../context/AppContext';
 import { useLanguage } from '../../../context/LanguageContext';
+import { PRAYER_HERO } from '../../../data/prayerHero';
 import { dateKey, formatTime, formatUzDate, prayerKey, PrayerStatus } from '../../../domain/prayers';
 import { useForegroundClock } from '../../../hooks/useForegroundClock';
 import { Colors, Typography } from '../../../ui/theme';
@@ -59,6 +60,7 @@ function HomeContent() {
   })());
   const progress = Math.max(0, Math.min(1, (liveNow.getTime() - previousAt.getTime()) / Math.max(1, nextAt.getTime() - previousAt.getTime())));
   const currentPrayer = previousPrayer ?? timesFor(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)).find(prayer => prayer.id === 'isha');
+  const hero = PRAYER_HERO[currentPrayer?.id ?? 'isha'];
 
   const latestDue = [...prayers].reverse().find(prayer => liveNow.getTime() >= prayer.at.getTime() + Math.max(data.reminderMinutes, data.prayerAutoQuiet ? 26 : 0) * 60_000);
   const dueKey = latestDue ? prayerKey(today, latestDue.id) : undefined;
@@ -78,18 +80,20 @@ function HomeContent() {
       <View style={styles.greeting}><Text style={styles.greetingTitle}>Assalomu alaykum</Text><Text style={styles.greetingSub}>Halovat bilan har kun ibodatda</Text></View>
     </View>
 
-    <LinearGradient colors={['#064E3B', '#003D2D', '#002C22']} start={{ x: 0.1, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-      <View pointerEvents="none" style={styles.heroGlowTop} /><View pointerEvents="none" style={styles.heroGlowBottom} />
+    <LinearGradient colors={hero.colors} start={{ x: 0.1, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+      <View pointerEvents="none" style={[styles.heroGlowTop, { backgroundColor: hero.accent + '18' }]} /><View pointerEvents="none" style={[styles.heroGlowBottom, { backgroundColor: hero.accent + '12' }]} />
       <View style={styles.heroHead}>
-        <View style={styles.heroPill}><Clock3 size={13} color="#B0F0D6" /><Text style={styles.heroPillText}>Keyingi namoz: <Text style={styles.heroPillStrong}>{nextPrayer.name}</Text></Text></View>
-        <View style={styles.heroIcon}>{nextPrayer.id === 'isha' ? <Moon size={19} color="#B0F0D6" /> : <Sun size={19} color="#B0F0D6" />}</View>
+        <View style={styles.heroPill}><Clock3 size={13} color={hero.accent} /><Text style={[styles.heroPillText, { color: hero.accent }]}>Keyingi namoz: <Text style={styles.heroPillStrong}>{nextPrayer.name}</Text></Text></View>
       </View>
-      <View style={styles.countdownBlock}>
-        <NativeCountdown until={nextAt.getTime()} onComplete={refreshCountdown} />
+      <View style={styles.heroBody}>
+        <View style={styles.countdownBlock}>
+          <NativeCountdown until={nextAt.getTime()} onComplete={refreshCountdown} labelColor={hero.accent} />
+        </View>
+        <Image key={currentPrayer?.id ?? 'isha'} accessible={false} source={hero.image} resizeMode="contain" style={styles.heroArt} />
       </View>
       <View style={styles.progressArea}>
-        <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} /></View>
-        <View style={styles.progressMeta}><Text style={styles.progressLabel}>{currentPrayer?.name ?? 'Namoz'} vaqti</Text><Text style={styles.progressTime}>{formatTime(nextAt)} gacha</Text></View>
+        <View style={styles.progressTrack}><View style={[styles.progressFill, { backgroundColor: hero.accent, width: `${Math.round(progress * 100)}%` }]} /></View>
+        <View style={styles.progressMeta}><Text style={[styles.progressLabel, { color: hero.accent }]}>{currentPrayer?.name ?? 'Namoz'} vaqti</Text><Text style={styles.progressTime}>{formatTime(nextAt)} gacha</Text></View>
       </View>
     </LinearGradient>
 
@@ -153,10 +157,11 @@ const baseStyles = StyleSheet.create({
   heroPill: { minHeight: 30, borderRadius: 18, paddingHorizontal: 11, backgroundColor: '#FFFFFF17', flexDirection: 'row', alignItems: 'center', gap: 7 },
   heroPillText: { color: '#B0F0D6', fontSize: 11, fontWeight: '500' },
   heroPillStrong: { color: '#FFFFFF', fontWeight: '700' },
-  heroIcon: { width: 39, height: 39, borderRadius: 20, backgroundColor: '#FFFFFF18', alignItems: 'center', justifyContent: 'center' },
-  countdownBlock: { paddingVertical: 3 },
+  heroBody: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  heroArt: { width: '32%', aspectRatio: 1 },
+  countdownBlock: { flex: 1, minWidth: 0, paddingVertical: 3 },
   progressArea: { gap: 8 },
-  progressTrack: { height: 6, borderRadius: 4, backgroundColor: '#001D1680', overflow: 'hidden' },
+  progressTrack: { height: 6, borderRadius: 4, backgroundColor: '#00000026', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 4, backgroundColor: '#6FFBBE' },
   progressMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   progressLabel: { color: '#B0F0D6', fontSize: 10, flexShrink: 1 },
@@ -170,7 +175,7 @@ const baseStyles = StyleSheet.create({
   sectionCardHeading: { flexDirection: 'row', alignItems: 'center', gap: 6, zIndex: 1 },
   sectionCardTitle: { flex: 1, color: '#073E30', fontSize: 17, fontWeight: '700' },
   sectionCardHalo: { position: 'absolute', width: '90%', aspectRatio: 1, borderRadius: 200, bottom: '-30%', right: '-22%', backgroundColor: '#FFFFFF24' },
-  sectionCardArt: { position: 'absolute', width: '88%', height: '74%', right: -2, bottom: -4 },
+  sectionCardArt: { position: 'absolute', width: '112%', height: '96%', right: '-9%', bottom: '-12%' },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
