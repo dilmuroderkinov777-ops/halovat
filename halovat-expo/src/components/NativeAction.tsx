@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { useAppTheme, useThemeColors } from '../ui/useAppTheme';
-import { actionModifiers, largeActionLabelModifiers } from './nativeControlModifiers';
+import { actionModifiers, largeActionLabelModifiers, squareActionLabelModifiers } from './nativeControlModifiers';
 import { nativeAccessibilityLabel } from './nativeAccessibility';
 import { Colors } from '../ui/theme';
 
-export function NativeAction({ label, onPress, disabled = false, variant = 'filled', compact = false, large = false, translate = true, colorScheme, accessibilityLabel, suffix = '' }: {
+export function NativeAction({ label, onPress, disabled = false, variant = 'filled', compact = false, large = false, square = false, translate = true, colorScheme, accessibilityLabel, suffix = '' }: {
   label: string; onPress: () => void; disabled?: boolean; variant?: 'filled' | 'outlined' | 'text';
-  compact?: boolean; large?: boolean; translate?: boolean; colorScheme?: 'light' | 'dark'; accessibilityLabel?: string; suffix?: string;
+  compact?: boolean; large?: boolean; square?: boolean; translate?: boolean; colorScheme?: 'light' | 'dark'; accessibilityLabel?: string; suffix?: string;
 }) {
   const { t } = useLanguage();
   const { dark } = useAppTheme();
@@ -23,17 +23,17 @@ export function NativeAction({ label, onPress, disabled = false, variant = 'fill
   // Native sizing modifiers take points, so measure the React Native host for full-width actions.
   const [width, setWidth] = useState<number>();
   return (
-    <Host matchContents={compact ? true : { vertical: true }} ignoreSafeArea="all"
+    <Host matchContents={square ? false : compact ? true : { vertical: true }} ignoreSafeArea="all"
       colorScheme={scheme} seedColor={scheme === 'dark' ? '#78E3AF' : colors.green}
-      style={compact ? { flexShrink: 1 } : { width: '100%' }}
-      onLayout={compact ? undefined : event => setWidth(event.nativeEvent.layout.width)}>
-      <Button label={largeAction ? undefined : text} onPress={onPress} disabled={disabled} variant={variant}
+      style={square ? { width: 44, height: 44 } : compact ? { flexShrink: 1 } : { width: '100%' }}
+      onLayout={compact || square ? undefined : event => setWidth(event.nativeEvent.layout.width)}>
+      <Button label={largeAction || square ? undefined : text} onPress={onPress} disabled={disabled} variant={variant}
         modifiers={[...actionModifiers(variant, tintColor, largeAction), ...accessibility]}
-        style={largeAction && Platform.OS === 'ios' ? undefined
-          : { ...(!compact && width ? { width } : {}), height: largeAction ? Math.max(52, 28 * fontScale + 24) : 44,
+        style={(largeAction || square) && Platform.OS === 'ios' ? undefined
+          : { ...(square ? { width: 44 } : !compact && width ? { width } : {}), height: largeAction ? Math.max(52, 28 * fontScale + 24) : 44,
             ...(largeAction ? { borderRadius: 999 } : {}) }}>
-        {largeAction ? <Text modifiers={largeActionLabelModifiers()}
-          textStyle={Platform.OS === 'ios' ? undefined : { fontSize: 15, fontWeight: '600', textAlign: 'center',
+        {largeAction || square ? <Text modifiers={square ? squareActionLabelModifiers() : largeActionLabelModifiers()}
+          textStyle={Platform.OS === 'ios' ? undefined : { fontSize: square ? 19 : 15, fontWeight: '600', textAlign: 'center',
             ...(Platform.OS === 'web' ? { color: variant === 'filled' ? '#FFFFFF' : tintColor } : {}) }}>{text}</Text> : undefined}
       </Button>
     </Host>

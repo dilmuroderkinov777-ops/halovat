@@ -16,3 +16,7 @@ export function actionModifiers(_variant: 'filled' | 'outlined' | 'text', _color
 export function largeActionLabelModifiers(): ModifierConfig[] {
   return [];
 }
+
+export function squareActionLabelModifiers(): ModifierConfig[] {
+  return [];
+}

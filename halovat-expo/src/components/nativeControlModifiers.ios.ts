@@ -1,4 +1,4 @@
-import { buttonStyle, controlSize, frame, preferredColorScheme, presentationBackground, tint } from '@expo/ui/swift-ui/modifiers';
+import { buttonStyle, contentShape, controlSize, frame, preferredColorScheme, presentationBackground, shapes, tint } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import { Colors } from '../ui/theme';
 
@@ -25,4 +25,8 @@ export function largeActionModifiers(variant: 'filled' | 'outlined' | 'text', co
 export function largeActionLabelModifiers() {
   // Size the label inside the native button so its capsule fills the proposed width.
   return [frame({ maxWidth: Infinity })];
+}
+
+export function squareActionLabelModifiers() {
+  return [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())];
 }

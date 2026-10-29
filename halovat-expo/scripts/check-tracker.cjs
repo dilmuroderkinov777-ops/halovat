@@ -52,6 +52,7 @@ let tree = render();
 assert.equal(range(tree), '26 oktyabr – 1 noyabr');
 assert.equal(action(tree, '›').disabled, true);
 assert.equal(action(tree, '‹').accessibilityLabel, 'Oldingi hafta');
+for (const label of ['▦', '‹', '›']) assert.equal(action(tree, label).square, true);
 assert.ok(find(tree, 'Text').some(item => item.props.children === 'Bugun'));
 assert.equal(sheet(tree).props.visible, false);
 action(tree, '‹').onPress();
@@ -72,4 +73,46 @@ assert.equal(range(tree), '29 dekabr – 4 yanvar');
 assert.equal(find(tree, 'NativeCalendar')[0].props.maximumDate, now);
 action(tree, '›').onPress();
 assert.equal(range(render()), '5 yanvar – 11 yanvar');
-console.log('PASS: weekly strip navigation, current-week boundary, native date sheet and year rollover.');
+
+// Check the actual shared action wrapper as well: mocked callbacks alone cannot catch
+// a compact native host collapsing around the glyph instead of its touch area.
+for (const os of ['ios', 'android']) {
+  const NativeAction = load('src/components/NativeAction.tsx', name => {
+    if (name === 'react') return react;
+    if (name === '@expo/ui') return { Button: 'Button', Host: 'Host', Text: 'NativeText' };
+    if (name === 'react-native') return { Platform: { OS: os }, useWindowDimensions: () => ({ fontScale: 1 }) };
+    if (name.endsWith('/LanguageContext')) return { useLanguage: () => ({ t: text => text }) };
+    if (name.endsWith('/useAppTheme')) return { useAppTheme: () => ({ dark: false }), useThemeColors: () => ({ green: '#006C49' }) };
+    if (name.endsWith('/theme')) return { Colors: { green: '#006C49' } };
+    if (name === './nativeControlModifiers') return { actionModifiers: () => [], largeActionLabelModifiers: () => [], squareActionLabelModifiers: () => [{ type: 'square-label' }] };
+    if (name === './nativeAccessibility') return { nativeAccessibilityLabel: label => [{ label }] };
+    throw new Error('Unexpected import: ' + name);
+  }).NativeAction;
+  hooks = { values: [], cursor: 0 };
+  let pressed = 0;
+  const host = NativeAction({ label: '‹', compact: true, square: true, variant: 'text', onPress: () => pressed++ });
+  assert.equal(host.props.matchContents, false);
+  assert.equal(host.props.style.width, 44);
+  assert.equal(host.props.style.height, 44);
+  const button = find(host, 'Button')[0];
+  assert.ok(button);
+  if (os === 'android') assert.equal(button.props.style.width, 44);
+  assert.equal(find(button, 'NativeText')[0].props.modifiers[0].type, 'square-label');
+  button.props.onPress();
+  assert.equal(pressed, 1);
+}
+const iosModifiers = load('src/components/nativeControlModifiers.ios.ts', name => {
+  if (name === 'react-native') return { Platform: { Version: '26.0' } };
+  if (name.endsWith('/theme')) return { Colors: { green: '#006C49' } };
+  if (name === '@expo/ui/swift-ui/modifiers') return {
+    frame: size => ({ type: 'frame', ...size }),
+    contentShape: shape => ({ type: 'contentShape', shape }),
+    shapes: { rectangle: () => 'rectangle' },
+  };
+  throw new Error('Unexpected import: ' + name);
+});
+const touchModifiers = iosModifiers.squareActionLabelModifiers();
+assert.equal(touchModifiers[0].width, 44);
+assert.equal(touchModifiers[0].height, 44);
+assert.equal(touchModifiers[1].shape, 'rectangle');
+console.log('PASS: weekly navigation, date picker, boundaries and 44-point native action hosts.');

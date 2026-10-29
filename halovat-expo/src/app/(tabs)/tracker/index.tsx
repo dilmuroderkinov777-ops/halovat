@@ -129,9 +129,9 @@ export default function TrackerScreen() {
               <Text style={styles.dateRangeText} numberOfLines={1}>{range}</Text>
             </View>
             <View style={styles.dateNav}>
-              <NativeAction label="▦" translate={false} accessibilityLabel="Sana tanlash" compact variant="text" onPress={() => setCalendarOpen(true)} />
-              <NativeAction label="‹" translate={false} accessibilityLabel="Oldingi hafta" compact variant="text" onPress={() => changeWeek(-1)} />
-              <NativeAction label="›" translate={false} accessibilityLabel="Keyingi hafta" compact variant="text" disabled={!canGoForward} onPress={() => changeWeek(1)} />
+              <NativeAction label="▦" translate={false} accessibilityLabel="Sana tanlash" compact square variant="text" onPress={() => setCalendarOpen(true)} />
+              <NativeAction label="‹" translate={false} accessibilityLabel="Oldingi hafta" compact square variant="text" onPress={() => changeWeek(-1)} />
+              <NativeAction label="›" translate={false} accessibilityLabel="Keyingi hafta" compact square variant="text" disabled={!canGoForward} onPress={() => changeWeek(1)} />
             </View>
           </View>
           <View style={styles.dayStrip}>
@@ -268,7 +268,7 @@ const baseStyles = StyleSheet.create({
   dateSection: { gap: 9 },
   dateHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
   dateNav: { flexDirection: 'row', alignItems: 'center' },
-  dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 },
   dayStrip: { flexDirection: 'row', padding: 7, gap: 3, borderRadius: 20, backgroundColor: '#FFFFFF' },
   dayItem: { flex: 1, minHeight: 66, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 3 },
   fridayDay: { backgroundColor: '#E8F7EF' },
@@ -280,7 +280,7 @@ const baseStyles = StyleSheet.create({
   dayDotDone: { backgroundColor: EMERALD },
   dayDotMissed: { backgroundColor: '#BA1A1A' },
   dayDotToday: { backgroundColor: '#6FFBBE' },
-  dateRangeText: { color: '#404944', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
+  dateRangeText: { color: '#404944', fontSize: 12, fontWeight: '600', textTransform: 'capitalize', flexShrink: 1 },
   fridayText: { color: EMERALD },
   matrixCard: { padding: 15, borderRadius: 24, backgroundColor: '#FFFFFF', gap: 10 },
   matrixHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 5 },
