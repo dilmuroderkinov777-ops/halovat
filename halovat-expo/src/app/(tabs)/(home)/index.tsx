@@ -1,7 +1,7 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { CalendarDays, ChevronRight, Clock3, Moon, Sun } from 'lucide-react-native';
+import { BookOpen, CalendarDays, Clock3, Landmark, Moon, Sun } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -12,6 +12,7 @@ import { NativeCountdown } from '../../../components/NativeCountdown';
 import { Screen } from '../../../components/Screen';
 import { useAppLoading } from '../../../context/LaunchAnimationContext';
 import { useHalovat } from '../../../context/AppContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { dateKey, formatTime, formatUzDate, prayerKey, PrayerStatus } from '../../../domain/prayers';
 import { useForegroundClock } from '../../../hooks/useForegroundClock';
 import { Colors, Typography } from '../../../ui/theme';
@@ -40,6 +41,7 @@ function HomeContent() {
   const appLoading = useAppLoading();
   const styles = useThemedStyles(baseStyles);
   const Colors = useThemeColors();
+  const { t } = useLanguage();
   const { data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
   const { now: liveNow, refresh: refreshCountdown } = useForegroundClock(15_000);
   const [dismissedPrayers, setDismissedPrayers] = useState<string[]>([]);
@@ -67,8 +69,6 @@ function HomeContent() {
     setPrayerStatus(today, duePrayer.id, status);
     setDismissedPrayers(current => [...current, key]);
   };
-  const missedCount = Object.values(data.prayerStatus).filter(status => status === 'missed').length;
-
   return <Screen contentStyle={styles.content}>
     <View style={styles.dateSection}>
       <View style={styles.infoPills}>
@@ -102,17 +102,27 @@ function HomeContent() {
       </View>
     </View>
 
+    <View style={styles.sectionCards}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('Duolar')}
+        onPress={() => router.navigate('/duas')}
+        style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
+        <View style={styles.sectionCardIcon}><BookOpen size={28} color={Colors.green} strokeWidth={1.7} /></View>
+        <Text style={styles.sectionCardTitle}>Duolar</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('Masjidlar')}
+        onPress={() => router.navigate('/mosque')}
+        style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
+        <View style={styles.sectionCardIcon}><Landmark size={28} color={Colors.green} strokeWidth={1.7} /></View>
+        <Text style={styles.sectionCardTitle}>Masjidlar</Text>
+      </Pressable>
+    </View>
+
     <View style={styles.verseCard}>
       <View style={styles.verseHeader}><Text style={styles.verseTitle}>Kun hikmati</Text><NativeAction label="Ulashish" compact variant="text" onPress={() => void Share.share({ message: '“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.” — Ra’d surasi, 28-oyat' })} /></View>
       <Text style={styles.arabicVerse}>أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</Text>
       <View style={styles.translation}><Text style={styles.translationText}>“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.”</Text><Text style={styles.verseSource}>Ra’d surasi, 28-oyat</Text></View>
     </View>
 
-    <Pressable onPress={() => router.push('/(tabs)/tracker' as never)} style={({ pressed }) => [styles.qazoCard, pressed && styles.pressed]}>
-      <View style={styles.qazoIcon}><CalendarDays size={19} color="#FFFFFF" /></View>
-      <View style={styles.qazoCopy}><Text style={styles.qazoTitle}>Qazo namozlari hisobi</Text><Text style={styles.qazoSubtitle}>{missedCount ? `Sizda ${missedCount} ta qazo namozi qayd etilgan` : 'Qazo qaydlari hozircha yo‘q'}</Text></View>
-      <ChevronRight size={19} color={Colors.green} />
-    </Pressable>
     {duePrayer && focused && !appLoading ? <PrayerCheckinSheet prayerName={duePrayer.name} onChoose={answerCheckin} onClose={() => setDismissedPrayers(current => [...current, prayerKey(today, duePrayer.id)])} /> : null}
   </Screen>;
 }
@@ -148,6 +158,10 @@ const baseStyles = StyleSheet.create({
   prayerSection: { gap: 10 },
   sectionTitle: { ...Typography.sectionTitle, color: Colors.ink },
   prayerRow: { flexDirection: 'row', gap: 6 },
+  sectionCards: { flexDirection: 'row', gap: 12 },
+  sectionCard: { flex: 1, aspectRatio: 1, borderRadius: 24, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.paper, alignItems: 'center', justifyContent: 'center', padding: 12, gap: 14 },
+  sectionCardIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: Colors.mintSoft, alignItems: 'center', justifyContent: 'center' },
+  sectionCardTitle: { color: Colors.ink, fontSize: 17, fontWeight: '600', textAlign: 'center' },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -156,9 +170,4 @@ const baseStyles = StyleSheet.create({
   translation: { borderRadius: 16, padding: 13, gap: 7, backgroundColor: '#F4F4F0' },
   translationText: { color: Colors.body, fontSize: 13, lineHeight: 20, fontStyle: 'italic' },
   verseSource: { color: Colors.muted, fontSize: 10 },
-  qazoCard: { minHeight: 70, borderRadius: 19, paddingHorizontal: 13, paddingVertical: 12, backgroundColor: '#E8F4ED', flexDirection: 'row', alignItems: 'center', gap: 11 },
-  qazoIcon: { width: 38, height: 38, borderRadius: 14, backgroundColor: Colors.green, alignItems: 'center', justifyContent: 'center' },
-  qazoCopy: { flex: 1, gap: 3 },
-  qazoTitle: { color: Colors.ink, fontSize: 13, fontWeight: '700' },
-  qazoSubtitle: { color: Colors.body, fontSize: 10 },
 });
