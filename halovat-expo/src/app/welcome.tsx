@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeAction } from '../components/NativeAction';
 import { OnboardingArt } from '../components/OnboardingArt';
@@ -24,7 +24,7 @@ export default function WelcomeScreen() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [contentHeight, setContentHeight] = useState(height);
   const [pageHeight, setPageHeight] = useState(Math.max(240, height - 180));
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const pageRef = useRef(page);
   const finishing = useRef(false);
 

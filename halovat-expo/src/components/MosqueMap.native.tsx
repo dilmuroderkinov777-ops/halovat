@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../ui/AppText';
-import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import { WebView, type WebViewMessageEvent, type WebViewProps } from 'react-native-webview';
 import { MosqueMapProps } from './mosqueMap.types';
 import { mosqueMapDocument } from './mosqueMapDocument';
 
 const source = { html: mosqueMapDocument };
 export function MosqueMap({ center, places, onSelect, isUserLocation, selectedId }: MosqueMapProps) {
-  const webview = useRef<WebView>(null);
+  const webview = useRef<WebView<WebViewProps>>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [generation, setGeneration] = useState(0);
@@ -24,7 +24,7 @@ export function MosqueMap({ center, places, onSelect, isUserLocation, selectedId
     } catch { /* Ignore messages outside the map protocol. */ }
   };
   if (failed) return <View style={styles.offline}><Text>Xarita ochilmadi. Internetni tekshiring.</Text><Pressable onPress={() => { setReady(false); setFailed(false); setGeneration(value => value + 1); }}><Text>Qayta urinish</Text></Pressable></View>;
-  return <WebView ref={webview} key={generation} originWhitelist={['*']} source={source}
+  return <WebView<WebViewProps> ref={webview} key={generation} originWhitelist={['*']} source={source}
     style={styles.map} javaScriptEnabled domStorageEnabled cacheEnabled scrollEnabled={false}
     onMessage={handleMessage} onError={() => { setReady(false); setFailed(true); }} />;
 }

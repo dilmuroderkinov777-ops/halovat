@@ -1,5 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
+import { IosAlertStyle, AndroidImportance } from 'expo-notifications';
 import * as Haptics from 'expo-haptics';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useFocusEffect } from 'expo-router';
@@ -68,7 +69,7 @@ export default function ProfileScreen() {
         const permission = await Notifications.getPermissionsAsync();
         const channels = Platform.OS === 'android' ? await Promise.all([REMINDER_CHANNEL, CHECKIN_CHANNEL].map(id => Notifications.getNotificationChannelAsync(id))) : [];
         if (active) setDelivery({ allowed: notificationsAllowed(permission),
-          popup: Platform.OS === 'ios' ? permission.ios?.allowsAlert === true && permission.ios.alertStyle !== Notifications.IosAlertStyle.NONE : channels.every(channel => !!channel && channel.importance >= Notifications.AndroidImportance.HIGH),
+          popup: Platform.OS === 'ios' ? permission.ios?.allowsAlert === true && permission.ios.alertStyle !== IosAlertStyle.NONE : channels.every(channel => !!channel && channel.importance >= AndroidImportance.HIGH),
           sound: Platform.OS === 'ios' ? permission.ios?.allowsSound === true : true,
           lockScreen: Platform.OS === 'ios' ? permission.ios?.allowsDisplayOnLockScreen === true : true,
           warnings: iosReminderWarnings(permission),

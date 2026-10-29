@@ -76,7 +76,7 @@ export default function DuasScreen() {
           <NativeAction label={noSavedDuas ? 'Barcha duolarni ko‘rish' : 'Barcha kategoriyalar'}
             onPress={noSavedDuas ? showAllDuas : () => changeCategory('Barchasi')} variant="outlined" />
         </View>}
-        ListFooterComponent={visible.length > 0 ? <Text style={styles.note}>Duolar va ma’nolari ma’lumot sifatida berilgan.</Text> : null}
+        ListFooterComponent={visible.length > 0 ? <Text style={styles.note}>Duolar va ma’nolari ma’lumot sifatida berilgan.</Text> : undefined}
       />
     </Screen>
   );

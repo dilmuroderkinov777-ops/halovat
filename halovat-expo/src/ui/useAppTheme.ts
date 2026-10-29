@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import { useHalovatDarkMode } from '../context/AppContext';
 import { Colors } from './theme';
 
@@ -27,7 +27,7 @@ export function useAppTheme() {
 }
 
 /** Adapt shared surface and text tokens; keep devotional green cards and white labels. */
-export function useThemedStyles<T extends StyleSheet.NamedStyles<T>>(base: T): T {
+export function useThemedStyles<T extends Record<string, ViewStyle | TextStyle | ImageStyle>>(base: T): T {
   const { dark } = useAppTheme();
   return useMemo(() => {
     if (!dark) return base;

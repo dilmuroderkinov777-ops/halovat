@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { IosAuthorizationStatus, AndroidImportance, AndroidAudioUsage, AndroidAudioContentType, AndroidNotificationVisibility } from 'expo-notifications';
 import { Alert, Linking, PermissionsAndroid, Platform } from 'react-native';
 import { requestSettings } from './automaticQuiet';
 import { focusControl } from './focusControl';
@@ -8,8 +9,8 @@ export const REMINDER_CHANNEL = 'halovat-reminders-v4';
 export const CHECKIN_CHANNEL = 'prayer-checkin-v4';
 
 export function notificationsAllowed(permission: Notifications.NotificationPermissionsStatus) {
-  return permission.granted || permission.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
-    || permission.ios?.status === Notifications.IosAuthorizationStatus.EPHEMERAL;
+  return permission.granted || permission.ios?.status === IosAuthorizationStatus.PROVISIONAL
+    || permission.ios?.status === IosAuthorizationStatus.EPHEMERAL;
 }
 
 export function reminderAlertContent(content: Notifications.NotificationContentInput): Notifications.NotificationContentInput {
@@ -24,7 +25,7 @@ export function reminderAlertContent(content: Notifications.NotificationContentI
 export function iosReminderWarnings(permission: Notifications.NotificationPermissionsStatus) {
   if (Platform.OS !== 'ios') return [];
   const warnings: string[] = [];
-  if (permission.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) warnings.push('Bildirishnomalar hozir faqat sokin tarzda yetkaziladi.');
+  if (permission.ios?.status === IosAuthorizationStatus.PROVISIONAL) warnings.push('Bildirishnomalar hozir faqat sokin tarzda yetkaziladi.');
   if (permission.ios?.allowsSound === false) warnings.push('Bildirishnoma ovozi o‘chirilgan. Vibratsiya uchun ham Sounds’ni yoqing.');
   if (permission.ios?.allowsAlert === false) warnings.push('Bildirishnoma bannerlari o‘chirilgan.');
   if (permission.ios?.allowsDisplayOnLockScreen === false) warnings.push('Qulf ekranida bildirishnoma ko‘rsatish o‘chirilgan.');
@@ -35,10 +36,10 @@ export async function prepareReminderChannels() {
   if (Platform.OS !== 'android') return;
   for (const [id, name] of [[REMINDER_CHANNEL, 'Halovat eslatmalari'], [CHECKIN_CHANNEL, 'Namozdan keyingi savollar']]) {
     await Notifications.setNotificationChannelAsync(id, {
-      name, importance: Notifications.AndroidImportance.HIGH, sound: 'default',
-      audioAttributes: { usage: Notifications.AndroidAudioUsage.ALARM, contentType: Notifications.AndroidAudioContentType.SONIFICATION },
+      name, importance: AndroidImportance.HIGH, sound: 'default',
+      audioAttributes: { usage: AndroidAudioUsage.ALARM, contentType: AndroidAudioContentType.SONIFICATION },
       enableVibrate: true, vibrationPattern: [0, 10_000],
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
     });
   }
 }

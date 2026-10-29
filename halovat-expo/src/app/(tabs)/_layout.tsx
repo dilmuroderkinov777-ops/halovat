@@ -1,4 +1,4 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useThemeColors } from '../../ui/useAppTheme';
