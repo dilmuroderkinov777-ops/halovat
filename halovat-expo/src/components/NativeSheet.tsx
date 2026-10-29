@@ -8,8 +8,8 @@ import { Typography } from '../ui/theme';
 import { NativeAction } from './NativeAction';
 import { sheetAppearance } from './nativeControlModifiers';
 
-export function NativeSheet({ visible, onClose, title, children, compact = false, centeredTitle = false }: {
-  visible: boolean; onClose: () => void; title: string; children: React.ReactNode; compact?: boolean; centeredTitle?: boolean;
+export function NativeSheet({ visible, onClose, title, children, compact = false, centeredTitle = false, contentKey }: {
+  visible: boolean; onClose: () => void; title: string; children: React.ReactNode; compact?: boolean; centeredTitle?: boolean; contentKey?: string;
 }) {
   const colors = useThemeColors();
   const { dark } = useAppTheme();
@@ -26,7 +26,7 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
           <NativeAction label="Yopish" variant="text" compact onPress={onClose} />
         </View>}
         {fitContents ? <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</View>
-          : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
+          : <ScrollView key={contentKey} style={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
             contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</ScrollView>}
       </View>
     </RNHostView>

@@ -11,13 +11,16 @@ import { NativeAction } from '../../../components/NativeAction';
 import { NativeSegments } from '../../../components/NativeSegments';
 import { NativeSelect } from '../../../components/NativeSelect';
 import { NativeSheet } from '../../../components/NativeSheet';
+import { CitySelectionSheet } from '../../../components/CitySelectionSheet';
+import { IPhoneSetupGuide } from '../../../components/IPhoneSetupGuide';
+import { SettingsCard, SettingsDisclosure, SettingsNotice, SettingsStatus } from '../../../components/SettingsPanelUI';
 import { ProfileNameSheet } from '../../../components/ProfileNameSheet';
 import { Screen } from '../../../components/Screen';
 import { useHalovat } from '../../../context/AppContext';
 import { useLanguage } from '../../../context/LanguageContext';
 import { LANGUAGES } from '../../../data/languages';
 import { SUPPORT_CARDS, SUPPORT_DESCRIPTION } from '../../../data/support';
-import { CITIES, formatUzDate } from '../../../domain/prayers';
+import { formatUzDate } from '../../../domain/prayers';
 import { focusControl, type FocusCallEvent, type QuietModeStatus } from '../../../services/focusControl';
 import { CHECKIN_CHANNEL, REMINDER_CHANNEL, ensureReminderFlashAccess, iosReminderWarnings, notificationsAllowed } from '../../../services/reminders';
 import { needsManufacturerBatterySetup, reminderBatteryInstructions, showReminderBatteryGuide } from '../../../services/reminderBattery';
@@ -39,6 +42,7 @@ export default function ProfileScreen() {
   const selectedLanguage = LANGUAGES.find(item => item.id === language) ?? LANGUAGES[0];
   const { city, data, setCity, detectCity, setReminderEnabled, setPrayerTimeReminderEnabled, setDuaReminderEnabled, setReminderMinutes, setDisplayName, setArabicFontSize, setDarkMode, setPrayerAutoQuiet, setMosqueAutoQuiet, now, reminderPlan, refreshReminders, sendReminderPreview } = useHalovat();
   const [delivery, setDelivery] = useState<{ allowed: boolean; popup: boolean; sound: boolean; lockScreen: boolean; warnings: string[]; native: QuietModeStatus | null } | null>(null);
+  const [deliveryError, setDeliveryError] = useState(false);
   const [deliveryRevision, setDeliveryRevision] = useState(0);
   const [panel, setPanel] = useState<Panel>(null);
   const [nameEditorOpen, setNameEditorOpen] = useState(false);
@@ -66,6 +70,7 @@ export default function ProfileScreen() {
     if (panel !== 'delivery' || Platform.OS === 'web') return;
     let active = true;
     const update = async () => {
+      setDelivery(null); setDeliveryError(false);
       try {
         const permission = await Notifications.getPermissionsAsync();
         const channels = Platform.OS === 'android' ? await Promise.all([REMINDER_CHANNEL, CHECKIN_CHANNEL].map(id => Notifications.getNotificationChannelAsync(id))) : [];
@@ -75,7 +80,7 @@ export default function ProfileScreen() {
           lockScreen: Platform.OS === 'ios' ? permission.ios?.allowsDisplayOnLockScreen === true : true,
           warnings: iosReminderWarnings(permission),
           native: focusControl?.getStatus() ?? null });
-      } catch { if (active) setDelivery(null); }
+      } catch { if (active) { setDelivery(null); setDeliveryError(true); } }
     };
     void update();
     const listener = AppState.addEventListener('change', state => { if (state === 'active') void update(); });
@@ -227,44 +232,33 @@ export default function ProfileScreen() {
     {focusControl && callEvents.length > 0 ? <View style={styles.section}><Text style={styles.sectionTitle}>Namoz paytidagi qo‘ng‘iroqlar</Text><View style={styles.card}><View style={styles.row}><PhoneIncoming size={20} color={colors.green} /><Text style={styles.rowTitle}>{callEvents.length} ta qo‘ng‘iroq</Text><View style={styles.rowCopy} /><NativeAction appearance="minimal" label="Tarixni tozalash" compact variant="text" onPress={() => { focusControl?.clearCallEvents(); setCallEvents([]); }} /></View>{callEvents.slice(0, 6).map((event, index) => <View key={event.timestamp + ':' + index} style={styles.callEntry}><Text style={styles.rowTitle}>{event.phoneNumber ?? 'Yashirin raqam'}</Text><Text style={styles.rowSubtitle}>{formatUzDate(new Date(event.timestamp))} · {new Date(event.timestamp).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</Text></View>)}</View></View> : null}
     <View style={styles.footer}><Text style={styles.footerTitle}>Halovat — Sokin va xolis hamroh</Text><Text style={styles.footerVersion}>Versiya: v1.0.0 (Yengil va reklamasiz)</Text></View>
 
-    <NativeSheet visible={panel !== null} onClose={closePanel} title={panel ? PANEL_TITLES[panel] : ''}>
-        {panel === 'city' ? <NativeSelect value={city.id} options={CITIES.map(item => ({ value: item.id, label: item.name }))}
-          onChange={id => { void setCity(id); }} /> : null}
+  </Screen>
+    <CitySelectionSheet visible={panel === 'city'} cityId={city.id} onSelect={setCity} onClose={closePanel} />
+    <NativeSheet visible={panel !== null && panel !== 'city'} contentKey={panel ?? 'closed'} onClose={closePanel} title={panel ? PANEL_TITLES[panel] : ''}>
         {panel === 'reminders' ? <><Text style={styles.rowTitle}>Namoz vaqtidan keyin</Text>
           <NativeSegments value={data.reminderMinutes} options={DELAYS.map(minutes => ({ value: minutes, label: `${minutes} daq.` }))} onChange={setReminderMinutes} />
           <Text style={styles.rowSubtitle}>{Platform.OS === 'android' ? 'Eslatmalar 30 kun uchun saqlanadi. Ilovani ochganingizda jadval yangilanadi. Ovozsiz rejim yoqilgan bo‘lsa, savol rejim tugagandan keyin keladi.' : 'Namoz vaqti eslatmalari 7 kun, namozdan keyingi savollar 3 kun uchun saqlanadi. Ilovani ochganingizda jadval yangilanadi.'}</Text></> : null}
-        {panel === 'ios-setup' ? <>
-          <Text style={styles.rowTitle}>Bildirishnoma ruxsatlari</Text>
-          <Text style={styles.rowSubtitle}>{expoGo ? 'Sozlamalar → Bildirishnomalar → Expo Go: bildirishnomalar, ovoz va qulf ekranida ko‘rsatishni yoqing.' : 'Sozlamalar → Bildirishnomalar → Halovat: bildirishnomalar, ovoz va qulf ekranida ko‘rsatishni yoqing.'}</Text>
-          <NativeAction appearance="minimal" label="Telefon sozlamalarini ochish" onPress={() => void Linking.openSettings()} variant="outlined" />
-          <Text style={styles.rowTitle}>Eslatma vibratsiyasi</Text>
-          <Text style={styles.rowSubtitle}>Sozlamalar → Sounds & Haptics → Haptics → Always Play’ni tanlang. So‘ng Accessibility → Touch → Vibration yoqilganini tekshiring.</Text>
-          <NativeAction appearance="minimal" label="Vibratsiyani tekshirish" onPress={previewVibration} variant="outlined" />
-          <Text style={styles.rowSubtitle}>Bu sinov faqat ilova ochiq paytda ishlaydi. Qulf ekranidagi eslatma vibratsiyasini iOS boshqaradi.</Text>
-          <NativeAction appearance="minimal" label="Apple: vibratsiyani sozlash" onPress={() => void Linking.openURL('https://support.apple.com/en-mide/guide/iphone/iph07c867f28/26/ios/26')} variant="outlined" />
-          <Text style={styles.rowTitle}>Eslatma chirog‘i</Text>
-          <Text style={styles.rowSubtitle}>Sozlamalar → Accessibility → Audio & Visual → Flash for Alerts’ni yoqing. LED Flash yoki Both’ni tanlang. Telefon jim rejimda bo‘lsa, Flash in Silent Mode’ni ham yoqing.</Text>
-          <Text style={styles.rowSubtitle}>Ekran ochiq paytda ham chiroq kerak bo‘lsa, Flash While Unlocked’ni yoqing. Chiroq va vibratsiya davomiyligini iOS boshqaradi.</Text>
-          <NativeAction appearance="minimal" label="Apple: chiroqni sozlash" onPress={() => void Linking.openURL('https://support.apple.com/guide/iphone/flash-indicator-light-screen-notifications-iph79ced06b1/ios')} variant="outlined" />
-          <Text style={styles.rowTitle}>Focus rejimi</Text>
-          <Text style={styles.rowSubtitle}>iPhone’da ovozsiz rejimni Boshqaruv markazi → Focus orqali yoqing. Halovat uni avtomatik yoqmaydi va qo‘ng‘iroqlar tarixini o‘qimaydi.</Text>
-          <Text style={styles.rowSubtitle}>Eslatmalar Focus paytida ham kerak bo‘lsa, Sozlamalar → Focus → tanlangan rejim → Ilovalar orqali Halovatga ruxsat bering.</Text>
-          {expoGo ? <Text style={styles.rowSubtitle}>Expo Go testida ruxsatlar Expo Go ilovasiga beriladi.</Text> : null}
-        </> : null}
+        {panel === 'ios-setup' ? <IPhoneSetupGuide expoGo={expoGo} onVibrationTest={previewVibration} /> : null}
         {panel === 'delivery' ? <>
-          <Text style={styles.rowSubtitle}>Ruxsat berishdan tashqari, kerakli funksiyaning tugmasi ham yoqilgan bo‘lishi kerak.</Text>
-          <View style={styles.row}><Text style={styles.rowTitle}>Bildirishnomalar</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.allowed ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View>
-          <View style={styles.row}><Text style={styles.rowTitle}>Pop-up bildirishnomalar</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.popup ? 'Yoqilgan' : 'Sozlash kerak'}</Text></View>
+          <SettingsCard title="Bildirishnoma ruxsatlari">
+            <SettingsStatus label="Bildirishnomalar" value={delivery?.allowed ?? null} unavailable={deliveryError} />
+            <SettingsStatus label="Pop-up bildirishnomalar" value={delivery?.popup ?? null} unavailable={deliveryError} />
+            {Platform.OS === 'ios' ? <>
+              <SettingsStatus label="Bildirishnoma ovozi" value={delivery?.sound ?? null} unavailable={deliveryError} />
+              <SettingsStatus label="Qulf ekranida ko‘rsatish" value={delivery?.lockScreen ?? null} unavailable={deliveryError} />
+            </> : null}
+            <NativeAction appearance="minimal" label="Telefon sozlamalarini ochish" onPress={() => void Linking.openSettings()} />
+          </SettingsCard>
+          {deliveryError ? <SettingsCard><SettingsNotice warning>Ruxsatlarni tekshirib bo‘lmadi. Qayta urinib ko‘ring.</SettingsNotice><NativeAction appearance="minimal" label="Yangilash" onPress={() => setDeliveryRevision(value => value + 1)} /></SettingsCard> : null}
+          <SettingsNotice>Ruxsat berishdan tashqari, kerakli funksiyaning tugmasi ham yoqilgan bo‘lishi kerak.</SettingsNotice>
           {Platform.OS === 'ios' ? <>
-            <View style={styles.row}><Text style={styles.rowTitle}>Bildirishnoma ovozi</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.sound ? 'Yoqilgan' : 'Sozlash kerak'}</Text></View>
-            <View style={styles.row}><Text style={styles.rowTitle}>Qulf ekranida ko‘rsatish</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.lockScreen ? 'Yoqilgan' : 'Sozlash kerak'}</Text></View>
-            {delivery?.warnings.map(warning => <Text key={warning} style={[styles.rowSubtitle, { color: colors.red }]}>{warning}</Text>)}
-            <Text style={styles.rowSubtitle}>Banner, ovoz va vibratsiya iPhone’ning bildirishnoma hamda Focus sozlamalariga bog‘liq.</Text>
-            <Text style={styles.rowSubtitle}>Vibratsiya va chiroqning umumiy iPhone sozlamalarini ilova o‘qiy olmaydi. Ularni telefon sozlamalarida tekshiring.</Text>
-            {expoGo ? <Text style={styles.rowSubtitle}>Expo Go testida ruxsatlar Expo Go ilovasiga beriladi.</Text> : null}
-            <NativeAction appearance="minimal" label="Vibratsiya va chiroqni sozlash" onPress={() => setPanel('ios-setup')} variant="outlined" />
-            <NativeAction appearance="minimal" label="Vibratsiyani tekshirish" onPress={previewVibration} variant="outlined" />
+            {delivery?.warnings.map(warning => <SettingsNotice key={warning} warning>{warning}</SettingsNotice>)}
+            <SettingsCard title="Vibratsiya, chiroq va Focus">
+              <NativeAction appearance="minimal" label="Vibratsiya va chiroqni sozlash" onPress={() => setPanel('ios-setup')} />
+              <NativeAction appearance="minimal" label="Vibratsiyani tekshirish" onPress={previewVibration} />
+            </SettingsCard>
           </> : null}
+          {Platform.OS === 'android' ? <SettingsDisclosure title="Qo‘shimcha tekshiruvlar">
           {Platform.OS === 'android' ? <><View style={styles.row}><Text style={styles.rowTitle}>Aniq vaqt ruxsati</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.native?.exactAlarmAccess ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View><View style={styles.row}><Text style={styles.rowTitle}>Bezovta qilmang ruxsati</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.native?.dndAccess ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View></> : null}
           {Platform.OS === 'android' ? <><View style={styles.row}><Text style={styles.rowTitle}>Eslatma oynasi ruxsati</Text><View style={styles.rowCopy} /><Text style={styles.rowSubtitle}>{delivery?.native?.reminderPopupAccess ? 'Ruxsat berilgan' : 'Ruxsat kerak'}</Text></View><NativeAction appearance="minimal" label="Eslatma oynasini sozlash" onPress={() => focusControl?.openReminderPopupSettings()} variant="outlined" /></> : null}
           {Platform.OS === 'android' ? <>
@@ -281,8 +275,12 @@ export default function ProfileScreen() {
             {delivery?.native?.interruptionFilter === 3 ? <Text style={[styles.rowSubtitle, { color: colors.red }]}>“Mutlaqo jim” rejimi vibratsiyani ham bloklaydi.</Text> : null}
             <NativeAction appearance="minimal" label="Vibratsiyani tekshirish" onPress={previewVibration} variant="outlined" />
           </> : null}
+          </SettingsDisclosure> : null}
+          <SettingsCard title="Eslatmalar jadvali">
           <Text style={styles.rowTitle}>{reminderPlan.busy ? 'Jadval yangilanmoqda…' : `${reminderPlan.count} ta eslatma rejalashtirilgan`}</Text>
           {reminderPlan.nextAt ? <Text style={styles.rowSubtitle}>Keyingi eslatma: {new Date(reminderPlan.nextAt).toLocaleString()}</Text> : null}
+          </SettingsCard>
+          {Platform.OS === 'android' ? <SettingsDisclosure title="Batafsil holat">
           {Platform.OS === 'android' ? <Text style={styles.rowSubtitle}>{data.prayerAutoQuiet ? `Ovozsiz rejim: yoqilgan · ${delivery?.native?.prayerWindowCount ?? 0} ta namoz vaqti` : 'Namoz vaqtida ovozsiz rejim: o‘chirilgan'}</Text> : null}
           {Platform.OS === 'android' ? <>
             <Text style={styles.rowSubtitle}>{delivery?.native?.ringerMode === 0 ? 'Telefon ovozi: ovozsiz' : delivery?.native?.ringerMode === 1 ? 'Telefon ovozi: tebranish' : 'Telefon ovozi: yoqilgan'}</Text>
@@ -293,11 +291,13 @@ export default function ProfileScreen() {
             <NativeAction appearance="minimal" label="Fon sinovini to‘xtatish" onPress={() => { focusControl?.cancelQuietPreview(); setDeliveryRevision(value => value + 1); }} variant="outlined" />
             <NativeAction appearance="minimal" label="Diagnostikani nusxalash" onPress={() => void copyDiagnostics()} variant="outlined" />
           </> : null}
-          {reminderPlan.error || delivery?.native?.quietError ? <Text style={[styles.rowSubtitle, { color: colors.red }]}>{reminderPlan.error ?? delivery?.native?.quietError}</Text> : null}
+          </SettingsDisclosure> : null}
+          {reminderPlan.error || delivery?.native?.quietError ? <SettingsNotice warning>{reminderPlan.error ?? delivery?.native?.quietError}</SettingsNotice> : null}
+          <SettingsCard title="Sinab ko‘rish">
           <NativeAction appearance="minimal" label="Sinov bildirishnomasi" onPress={() => void sendReminderPreview()} />
           <Text style={styles.rowSubtitle}>{Platform.OS === 'ios' ? 'Sinov eslatmasi 10 soniyadan keyin keladi. iPhone’ni qulflab tekshiring. Focus rejimi bildirishnomani cheklashi mumkin.' : 'Sinov eslatmasi 10 soniyadan keyin keladi. Bezovta qilmang rejimi pop-up va ovozni cheklaydi.'}</Text>
-          <NativeAction appearance="minimal" label="Telefon sozlamalarini ochish" onPress={() => void Linking.openSettings()} variant="outlined" />
-          {focusControl ? <><NativeAction appearance="minimal" label="Aniq vaqt ruxsatini sozlash" onPress={() => focusControl?.openExactAlarmSettings()} variant="outlined" /><NativeAction appearance="minimal" label="Ovozsiz rejim ruxsatini sozlash" onPress={() => focusControl?.openDndSettings()} variant="outlined" /><NativeAction appearance="minimal" label="Batareya cheklovlarini sozlash" onPress={() => { void showReminderBatteryGuide(t); }} variant="outlined" /><Text style={styles.rowSubtitle}>{reminderBatteryInstructions(delivery?.native ?? null)}</Text>{needsManufacturerBatterySetup(delivery?.native ?? null) ? <Text style={styles.rowSubtitle}>Qulf ekranida ko‘rsatish va fonda qalqib chiquvchi oynalar ruxsatini ham yoqing.</Text> : null}</> : null}
+          </SettingsCard>
+          {focusControl ? <SettingsDisclosure title="Ruxsatlar va batareya"><NativeAction appearance="minimal" label="Aniq vaqt ruxsatini sozlash" onPress={() => focusControl?.openExactAlarmSettings()} variant="outlined" /><NativeAction appearance="minimal" label="Ovozsiz rejim ruxsatini sozlash" onPress={() => focusControl?.openDndSettings()} variant="outlined" /><NativeAction appearance="minimal" label="Batareya cheklovlarini sozlash" onPress={() => { void showReminderBatteryGuide(t); }} variant="outlined" /><Text style={styles.rowSubtitle}>{reminderBatteryInstructions(delivery?.native ?? null)}</Text>{needsManufacturerBatterySetup(delivery?.native ?? null) ? <Text style={styles.rowSubtitle}>Qulf ekranida ko‘rsatish va fonda qalqib chiquvchi oynalar ruxsatini ham yoqing.</Text> : null}</SettingsDisclosure> : null}
         </> : null}
         {panel === 'language' ? <>
           <NativeSelect value={language} options={LANGUAGES.map(item => ({ value: item.id, label: item.name }))}
@@ -307,7 +307,6 @@ export default function ProfileScreen() {
           <Text style={{ color: colors.green, fontSize: data.arabicFontSize, lineHeight: data.arabicFontSize * 1.8, textAlign: 'center' }}>رَبِّ زِدْنِي عِلْمًا</Text>
         </> : null}
     </NativeSheet>
-  </Screen>
     <ProfileNameSheet visible={nameEditorOpen} name={data.displayName} onSave={setDisplayName} onClose={() => setNameEditorOpen(false)} />
   </>;
 }
