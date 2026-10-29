@@ -53,7 +53,7 @@ function RootNavigator({ onReady, loading }: { onReady: () => void; loading: boo
     <StatusBar style={loading || data.darkMode ? 'light' : 'dark'} />
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="welcome" options={{ title: 'Halovat', animation: 'fade', headerBackVisible: false, headerTransparent: false, headerBlurEffect: undefined, scrollEdgeEffects: { top: 'hidden' }, headerStyle: { backgroundColor: '#FAF9F5' }, headerTintColor: '#064E3B', headerShadowVisible: false }} />
+      <Stack.Screen name="welcome" options={{ title: 'Halovat', headerShown: false, animation: 'fade', headerBackVisible: false, headerTransparent: false, headerBlurEffect: undefined, scrollEdgeEffects: { top: 'hidden' }, headerStyle: { backgroundColor: '#FAF9F5' }, headerTintColor: '#064E3B', headerShadowVisible: false }} />
       <Stack.Screen name="duas" options={{ title: t('Kundalik duolar') }} />
       <Stack.Screen name="prayer-mode" options={{ title: t('Halovat vaqti'), headerTransparent: false, headerBlurEffect: undefined, scrollEdgeEffects: { top: 'hidden' }, headerStyle: { backgroundColor: '#00784B' }, headerTintColor: '#FFFFFF' }} />
     </Stack>

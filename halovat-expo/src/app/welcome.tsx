@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
@@ -76,9 +76,11 @@ export default function WelcomeScreen() {
     router.replace('/(tabs)');
   };
 
-  return <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.safe, desktop && styles.desktop]}>
+  return <SafeAreaView edges={languageStep ? ['top', 'left', 'right', 'bottom'] : ['left', 'right', 'bottom']} style={[styles.safe, desktop && styles.desktop]}>
+    <Stack.Screen options={{ headerShown: !languageStep }} />
     <StatusBar style="dark" />
     <View onLayout={event => setContentHeight(event.nativeEvent.layout.height)} style={[styles.frame, { width: frameWidth }, desktop && { maxHeight: Math.min(844, height - 32), borderRadius: 38, marginVertical: 16 }]}>
+      {languageStep && <View style={styles.languageHeader}><Text translate={false} style={styles.logo}>Halovat</Text></View>}
       {languageStep ? <LanguageSelection compact={contentHeight < 700} reducedMotion={reducedMotion} busy={busy} onContinue={continueWithLanguage} /> : <>
       <ScrollView ref={scroll} horizontal pagingEnabled bounces={false} scrollEnabled={!busy} showsHorizontalScrollIndicator={false} style={styles.pages}
         onLayout={event => setPageHeight(event.nativeEvent.layout.height)}
@@ -124,6 +126,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FAF9F5', alignItems: 'center' },
   desktop: { backgroundColor: '#DDDBD6' },
   frame: { flex: 1, backgroundColor: '#FAF9F5', overflow: 'hidden' },
+  languageHeader: { paddingTop: 22, paddingHorizontal: 28 },
+  logo: { color: '#064E3B', fontSize: 22, lineHeight: 28, fontFamily: 'PlusJakartaSans_800ExtraBold', fontWeight: 'normal' },
   pages: { flex: 1 },
   slide: { height: '100%' },
   slideContent: { flexGrow: 1, paddingHorizontal: 28 },
