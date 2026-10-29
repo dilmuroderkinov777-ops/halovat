@@ -165,7 +165,7 @@ export default function ProfileScreen() {
       <View style={styles.identityRow}>
         <View style={styles.avatarWrap}><View style={styles.avatar}><Text style={styles.initials}>{initials || 'H'}</Text></View><View style={styles.verified}><ShieldCheck size={14} color="#006C49" /></View></View>
         <View style={styles.identityCopy}><Text translate={false} numberOfLines={1} style={styles.identityTitle}>{data.displayName}</Text><View style={styles.memberRow}><CalendarDays size={14} color={colors.green} /><Text style={styles.identitySubtitle}>Halovat bilan {memberDays} kundan beri birga</Text></View></View>
-        <NativeAction appearance="minimal" label="Tahrirlash" onPress={() => setNameEditorOpen(true)} compact variant="outlined" />
+        <NativeAction label="Tahrirlash" onPress={() => setNameEditorOpen(true)} compact variant="outlined" />
       </View>
       <View style={styles.metrics}>
         <View style={styles.metric}><View style={styles.metricIcon}><CheckCheck size={20} color={colors.green} /></View><View style={styles.metricCopy}><Text style={styles.metricValue}>{completed}</Text><Text style={styles.metricLabel}>Ado etilgan namoz</Text></View></View>
