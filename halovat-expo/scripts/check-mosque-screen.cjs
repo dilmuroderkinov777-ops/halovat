@@ -30,7 +30,7 @@ const places = Array.from({ length: 64 }, (_, index) => ({
   latitude: 41 + index / 1000, longitude: 69, distanceMeters: 100 + index * 100,
   address: index === 10 ? 'Maxsus manzil' : 'Toshkent', amenities: [],
 }));
-const navigations = [], selections = [], writes = [], directions = [], lookups = [];
+const navigations = [], selections = [], bookmarkAccess = [], directions = [], lookups = [];
 let results = [...places].reverse(); // The screen must rank results, regardless of service order.
 let lookupError;
 let permissionGranted = false;
@@ -56,8 +56,8 @@ function requireModule(name) {
     requestForegroundPermissionsAsync: async () => { permissionRequests++; return { granted: permissionGranted }; },
   };
   if (name === '@react-native-async-storage/async-storage') return {
-    getItem: async () => JSON.stringify(['node/1']),
-    setItem: async (key, value) => { writes.push({ key, value: JSON.parse(value) }); },
+    getItem: async key => { bookmarkAccess.push(key); return JSON.stringify(['node/1']); },
+    setItem: async key => { bookmarkAccess.push(key); },
   };
   if (name === 'lucide-react-native') return Object.fromEntries(['Bookmark', 'Landmark', 'MapPin'].map(type => [type, type]));
   if (name.endsWith('/LanguageContext')) return { useLanguage: () => ({ t: text => text, language: 'uz' }) };
@@ -164,24 +164,21 @@ async function main() {
   assert.ok(!findAll(tree, 'NativeAction').some(node => ['Filtr', 'Masofa bo‘yicha', 'Nom bo‘yicha'].includes(node.props.label)));
   assert.equal(permissionRequests, 0, 'Opening the page must not request location permission');
   assert.equal(list.keyExtractor(places[0]), places[0].id);
-  assert.ok(action(list.renderItem({ item: places[0] }), 'Tanlash'), 'The nearest result must not falsely appear as the persisted selection');
-  let row = list.renderItem({ item: places[1] });
-  assert.equal(findAll(row, 'Image').length, 0, 'Cards must not contain large photo placeholders');
-  assert.equal(findAll(row, 'NativeAction').length, 2, 'Only select and directions remain as text actions');
-  assert.ok(findAll(row, 'NativeAction').every(node => node.props.appearance === 'minimal'));
-  const bookmark = node => findAll(node, 'Pressable')[0].props;
-  assert.equal(bookmark(row).accessibilityState.selected, true, 'Restored bookmark must be visible');
-  bookmark(row).onPress();
-  list = renderList();
-  row = list.renderItem({ item: places[1] });
-  assert.equal(bookmark(row).accessibilityState.selected, false);
-  bookmark(row).onPress();
-  assert.equal(writes.at(-1).key, 'halovat:mosque-bookmarks');
-  assert.deepEqual(Array.from(writes.at(-1).value), ['node/1']);
-  action(row, 'Tanlash').onPress();
-  list = renderList();
-  assert.ok(action(list.renderItem({ item: places[1] }), 'Tanlangan'));
-  action(list.renderItem({ item: places[2] }), 'Yo‘nalish').onPress();
+  const rowAt = (current, index) => current.renderItem({ item: current.data[index], index });
+  for (let index = 0; index < list.data.length; index++) {
+    const row = rowAt(list, index);
+    for (const removed of ['Image', 'Bookmark', 'Pressable']) assert.equal(findAll(row, removed).length, 0, removed + ' must not appear in mosque rows');
+    assert.equal(findAll(row, 'NativeAction').length, 1, 'Directions must be the only action per mosque');
+    const routeAction = action(row, 'Yo‘nalish');
+    assert.equal(routeAction.appearance, 'minimal');
+    assert.equal(routeAction.accessibilityLabel, 'Yo‘nalish: ' + list.data[index].name, 'Repeated buttons must identify their destination to screen readers');
+    const text = findAll(row, 'Text');
+    assert.ok(text.some(node => node.props.children === index + 1), 'Row numbers must match the order sent to the map');
+    assert.ok(text.some(node => node.props.children === list.data[index].name && node.props.translate === false), 'Place names must remain unchanged');
+    assert.ok(text.some(node => node.props.children === `${list.data[index].distanceMeters} m`));
+  }
+  assert.equal(selections.length, 0, 'The nearest result must not automatically change the saved quiet-mode location');
+  action(rowAt(list, 2), 'Yo‘nalish').onPress();
   assert.equal(directions.at(-1), 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(`${places[2].latitude},${places[2].longitude}`));
   assert.deepEqual(selections.at(-1), [places[2].name, places[2].latitude, places[2].longitude]);
   const selectionCount = selections.length;
@@ -190,7 +187,8 @@ async function main() {
   map(list).onSelect(places[0].id);
   list = renderList();
   assert.equal(map(list).selectedId, places[0].id);
-  assert.ok(action(list.renderItem({ item: places[0] }), 'Tanlangan'));
+  assert.deepEqual(selections.at(-1), [places[0].name, places[0].latitude, places[0].longitude], 'Map selection must preserve the existing quiet-mode location flow');
+  assert.deepEqual(findAll(rowAt(list, 0), 'NativeAction').map(node => node.props.label), ['Yo‘nalish']);
 
   while (list.data.length < places.length) {
     const previousCount = list.data.length;
@@ -200,6 +198,7 @@ async function main() {
     assert.equal(list.data.length, Math.min(previousCount + 3, places.length), 'Each explicit press must add just three results');
     assert.deepEqual(Array.from(list.data, place => place.id), places.slice(0, list.data.length).map(place => place.id));
     assert.equal(map(list).places.length, list.data.length);
+    assert.ok(findAll(rowAt(list, list.data.length - 1), 'Text').some(node => node.props.children === list.data.length), 'Expanded results must continue the map numbering');
   }
   assert.equal(list.ListFooterComponent, undefined, 'There must be no more button once results end');
 
@@ -246,7 +245,8 @@ async function main() {
   assert.equal(map(list).isUserLocation, true);
   assert.deepEqual({ ...map(list).center }, { latitude: 41.2, longitude: 69.2 });
   assert.equal(findAll(list.ListHeaderComponent, 'ActivityIndicator').length, 0);
+  assert.deepEqual(bookmarkAccess, [], 'Removed bookmarks must not be read, written or deleted');
 
-  console.log('PASS: iOS/Android route discovery keeps both mosque routes under the five native tabs; shared screen title, Qibla entry, nearest-three pagination, map, GPS, cache, bookmarks and directions.');
+  console.log('PASS: five native tabs on iOS/Android; numbered mosque rows with directions only; nearest-three pagination, map selection, GPS, cache and quiet-mode location preserved; no bookmark access.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

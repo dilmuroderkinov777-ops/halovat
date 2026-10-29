@@ -23,17 +23,20 @@ assert.ok(mosqueMapDocument.includes('tile.openstreetmap.org'));
 assert.ok(mosqueMapDocument.includes('preferCanvas:true'));
 
 // Run the map bridge against Leaflet adapters, without opening a browser.
-const fits = [], layers = [];
+const fits = [], layers = [], messages = [];
 const map = { setView() { return this; }, invalidateSize() {}, fitBounds(points, options) { fits.push({ points, options }); } };
+function createLayer(position, options) {
+  return { position, options, icon: options.icon, removed: false, handlers: {},
+    addTo() { layers.push(this); return this; }, on(event, handler) { this.handlers[event] = handler; return this; },
+    bindPopup(content) { this.popup = content; return this; }, setLatLng(next) { this.position = next; },
+    setIcon(icon) { this.icon = icon; }, setZIndexOffset(offset) { this.zIndex = offset; },
+    remove() { this.removed = true; } };
+}
 const L = {
   map: () => map, control: { zoom: () => ({ addTo() {} }) }, tileLayer: () => ({ addTo() {} }),
-  circleMarker: () => {
-    const layer = { removed: false, addTo() { layers.push(this); return this; }, on() {},
-      bindPopup() { return this; }, setLatLng() {}, setStyle() {}, remove() { this.removed = true; } };
-    return layer;
-  },
+  circleMarker: createLayer, marker: createLayer, divIcon: options => options,
 };
-const window = { L, parent: { postMessage() {} }, addEventListener() {} };
+const window = { L, parent: { postMessage(message) { messages.push(JSON.parse(message)); } }, addEventListener() {} };
 const bridge = [...mosqueMapDocument.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
 vm.runInNewContext(bridge, { L, window, document: { createElement: () => ({}) } });
 const center = { latitude: 41, longitude: 69 };
@@ -43,10 +46,20 @@ assert.equal(fits.length, 1);
 assert.equal(fits[0].points.length, 4, 'Compact map must fit the center and all three visible mosques');
 assert.equal(fits[0].options.maxZoom, 15);
 assert.equal(layers.filter(layer => !layer.removed).length, 3);
+assert.deepEqual(layers.map(layer => layer.icon.html), ['<span>1</span>', '<span>2</span>', '<span>3</span>'], 'Numbered markers must match the result order');
+assert.equal(layers[0].popup.textContent, visible[0].name, 'Mosque names must be inserted as text, not HTML');
+layers[1].handlers.click();
+assert.deepEqual(messages.at(-1), { type: 'select', id: visible[1].id });
 window.updateHalovatMap({ center, places: visible, selectedId: visible[1].id });
 assert.equal(fits.length, 1, 'Selecting a marker must preserve map panning/zoom');
+assert.equal(layers[1].icon.className, 'mosque-pin active');
+assert.equal(layers[1].zIndex, 1000, 'The active marker must remain visible above neighbouring markers');
+window.updateHalovatMap({ center, places: [...visible].reverse(), selectedId: visible[1].id });
+assert.equal(layers[0].icon.html, '<span>3</span>', 'Existing markers must be renumbered when the result order changes');
+assert.equal(layers[2].icon.html, '<span>1</span>');
 window.updateHalovatMap({ center, places: catalogue.places.slice(0, 6) });
 assert.equal(fits.at(-1).points.length, 7, 'Show more must fit the newly visible results');
+assert.equal(layers.at(-1).icon.html, '<span>6</span>');
 window.updateHalovatMap({ center, places: visible });
 assert.equal(layers.filter(layer => !layer.removed).length, 3, 'Refresh must remove hidden markers');
 window.updateHalovatMap({ center, places: [] });
@@ -69,4 +82,4 @@ for (const [id, photo] of Object.entries(remotePhotos)) {
   assert.match(photo.url, /^https:\/\/(upload|thumb)\.wikimedia\.org\//);
 }
 assert.ok(mosquePhoto({ ...minor, name: 'Minor jome’ masjidi' }));
-console.log('PASS: offline Leaflet runtime, embedded script syntax, canvas map, Cyrillic/long landmark names and geographic photo matching.');
+console.log('PASS: offline Leaflet runtime, numbered marker order and selection, visible-result bounds, embedded script syntax, Cyrillic/long landmark names and geographic photo matching.');

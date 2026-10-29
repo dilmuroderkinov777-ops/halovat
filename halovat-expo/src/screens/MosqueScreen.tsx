@@ -1,9 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { Stack, useFocusEffect, useIsFocused } from 'expo-router';
-import { Bookmark, Landmark, MapPin } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Linking, Pressable, StyleSheet, View, type ListRenderItemInfo } from 'react-native';
+import { Landmark, MapPin } from 'lucide-react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, Linking, StyleSheet, View, type ListRenderItemInfo } from 'react-native';
 import { MosqueMap } from '../components/MosqueMap';
 import { NativeAction } from '../components/NativeAction';
 import { Screen } from '../components/Screen';
@@ -15,7 +14,6 @@ import { Text } from '../ui/AppText';
 import { useThemedStyles, useThemeColors } from '../ui/useAppTheme';
 
 const PAGE_SIZE = 3;
-const BOOKMARKS_KEY = 'halovat:mosque-bookmarks';
 const INK = '#1B1C1A';
 const MUTED = '#707974';
 function formatDistance(meters: number) {
@@ -37,18 +35,7 @@ export default function MosqueScreen() {
   const [selectedId, setSelectedId] = useState<string>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
-  const [savedIds, setSavedIds] = useState<string[]>([]);
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
-
-  useEffect(() => {
-    let active = true;
-    void AsyncStorage.getItem(BOOKMARKS_KEY).then(value => {
-      if (!active || !value) return;
-      const parsed: unknown = JSON.parse(value);
-      if (Array.isArray(parsed)) setSavedIds(parsed.filter((id): id is string => typeof id === 'string'));
-    }).catch(() => {});
-    return () => { active = false; };
-  }, []);
 
   const loadPlaces = useCallback(async (point: Point, force = false) => {
     const request = ++requests.current;
@@ -130,32 +117,21 @@ export default function MosqueScreen() {
     void Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`);
   };
 
-  const toggleBookmark = (id: string) => {
-    const next = savedIds.includes(id) ? savedIds.filter(saved => saved !== id) : [...savedIds, id];
-    setSavedIds(next);
-    void AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(next)).catch(() => {});
-  };
-
-  const renderPlace = ({ item: place }: ListRenderItemInfo<MosqueResult>) => {
-    const selected = place.name === data.mosqueName
-      && (data.mosqueLatitude === undefined || (place.latitude === data.mosqueLatitude && place.longitude === data.mosqueLongitude));
-    const bookmarked = savedIds.includes(place.id);
-    return <View style={[styles.placeCard, selected && styles.placeCardSelected]}>
+  const renderPlace = ({ item: place, index }: ListRenderItemInfo<MosqueResult>) => {
+    const highlighted = place.id === selectedPlace?.id;
+    return <View style={styles.placeRow}>
       <View style={styles.placeHeading}>
-        <View style={styles.placeIcon}><Landmark size={20} color={colors.green} /></View>
-        <View style={styles.placeCopy}>
-          <Text numberOfLines={2} style={styles.placeName}>{place.name}</Text>
-          <Text translate={false} style={styles.distance}>{formatDistance(place.distanceMeters)}</Text>
+        <View style={[styles.placeNumber, highlighted && styles.placeNumberActive]}>
+          <Text translate={false} style={[styles.number, highlighted && styles.numberActive]}>{index + 1}</Text>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={`${t(bookmarked ? 'Saqlanganlardan olib tashlash' : 'Saqlash')}: ${place.name}`}
-          accessibilityState={{ selected: bookmarked }} onPress={() => toggleBookmark(place.id)} style={styles.bookmarkButton}>
-          <Bookmark size={19} color={colors.green} fill={bookmarked ? colors.green : 'transparent'} />
-        </Pressable>
+        <Text translate={false} numberOfLines={2} style={styles.placeName}>{place.name}</Text>
+        <Text translate={false} style={styles.distance}>{formatDistance(place.distanceMeters)}</Text>
       </View>
-      {place.address ? <Text numberOfLines={1} style={styles.address}>{place.address}</Text> : null}
-      <View style={styles.cardActions}>
-        <View style={styles.action}><NativeAction label={selected ? 'Tanlangan' : 'Tanlash'} appearance="minimal" variant="outlined" onPress={() => selectPlace(place)} /></View>
-        <View style={styles.action}><NativeAction label="Yo‘nalish" appearance="minimal" variant="outlined" onPress={() => openDirections(place)} /></View>
+      <View style={styles.placeDetails}>
+        <View style={styles.addressColumn}>
+          {place.address ? <Text translate={false} numberOfLines={2} style={styles.address}>{place.address}</Text> : null}
+        </View>
+        <NativeAction label="Yo‘nalish" accessibilityLabel={`${t('Yo‘nalish')}: ${place.name}`} compact appearance="minimal" variant="outlined" onPress={() => openDirections(place)} />
       </View>
     </View>;
   };
@@ -189,12 +165,14 @@ export default function MosqueScreen() {
           {focused && <MosqueMap center={center} isUserLocation={isUserLocation} selectedId={selectedPlace?.id} places={visiblePlaces}
             onSelect={id => { const place = visiblePlaces.find(item => item.id === id); if (place) selectPlace(place); }} />}
         </View>
-        <Text accessibilityRole="header" style={styles.resultsTitle}>Yaqin atrofdagi masjidlar</Text>
+        <View style={styles.resultsHeading}>
+          <Text accessibilityRole="header" style={styles.resultsTitle}>Yaqin masjidlar</Text>
+          <Text style={styles.orderHint}>Masofa bo‘yicha</Text>
+        </View>
         {busy ? <View style={styles.loading}><ActivityIndicator size="small" color={colors.green} /><Text style={styles.messageText}>Masjidlar qidirilmoqda</Text></View> : null}
         {error ? <View style={styles.messageCard}><Text style={styles.messageText}>{error}</Text>{!busy ? <NativeAction label={error.includes('joylashuv ruxsati') ? 'Ruxsat berish' : 'Qayta urinish'} appearance="minimal" variant="outlined" onPress={() => void (error.includes('joylashuv ruxsati') ? locate() : loadPlaces(center, true))} /> : null}</View> : null}
         {!busy && !error && visiblePlaces.length === 0 ? <View style={styles.messageCard}><Landmark size={24} color={colors.muted} /><Text style={styles.messageText}>Bu joyga yaqin masjid topilmadi.</Text><NativeAction label="Yangilash" appearance="minimal" variant="outlined" onPress={() => void loadPlaces(center, true)} /></View> : null}
       </View>}
-      ItemSeparatorComponent={MosqueSeparator}
       ListFooterComponent={visibleLimit < nearbyPlaces.length ? <View style={styles.listFooter}>
         <NativeAction label="Yana ko‘rsatish" disabled={busy} appearance="minimal" variant="outlined" onPress={() => setVisibleLimit(limit => limit + PAGE_SIZE)} />
       </View> : undefined}
@@ -203,35 +181,32 @@ export default function MosqueScreen() {
   </>;
 }
 
-function MosqueSeparator() {
-  return <View style={baseStyles.separator} />;
-}
-
 const baseStyles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0, gap: 0 },
   list: { flex: 1, width: '100%' },
-  listContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 },
-  listHeader: { gap: 14, paddingBottom: 12 },
-  listFooter: { paddingTop: 14 },
-  separator: { height: 10 },
+  listContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
+  listHeader: { gap: 16 },
+  listFooter: { paddingTop: 20 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   locationCopy: { flex: 1, gap: 2 },
-  locationTitle: { color: INK, fontSize: 13, lineHeight: 18, fontWeight: '600' },
-  locationHint: { color: MUTED, fontSize: 11, lineHeight: 16 },
-  map: { height: 180, borderRadius: 16, overflow: 'hidden', backgroundColor: '#E9F2EC' },
-  resultsTitle: { color: INK, fontSize: 17, lineHeight: 23, fontWeight: '700' },
+  locationTitle: { color: INK, fontSize: 14, lineHeight: 20, fontWeight: '600' },
+  locationHint: { color: MUTED, fontSize: 12, lineHeight: 17 },
+  map: { height: 196, borderRadius: 20, overflow: 'hidden', backgroundColor: '#E9F2EC' },
+  resultsHeading: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 12, rowGap: 4, justifyContent: 'space-between', paddingTop: 6, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#E3E2DF' },
+  resultsTitle: { color: INK, fontSize: 20, lineHeight: 27, fontWeight: '700', letterSpacing: -0.4 },
+  orderHint: { color: MUTED, fontSize: 11, lineHeight: 16 },
   loading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   messageCard: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, gap: 10 },
   messageText: { color: MUTED, fontSize: 13, lineHeight: 19 },
-  placeCard: { borderRadius: 16, backgroundColor: '#FFFFFF', padding: 12, borderWidth: 1, borderColor: '#ECEFEA', gap: 10 },
-  placeCardSelected: { borderColor: '#BFDBC8' },
+  placeRow: { paddingVertical: 16, gap: 8, borderBottomWidth: 1, borderBottomColor: '#E3E2DF' },
   placeHeading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  placeIcon: { width: 36, height: 36, borderRadius: 11, backgroundColor: '#E9F2EC', alignItems: 'center', justifyContent: 'center' },
-  placeCopy: { flex: 1, gap: 3 },
-  placeName: { color: INK, fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  distance: { color: MUTED, fontSize: 12, lineHeight: 16 },
-  bookmarkButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ECEFEA', borderRadius: 10 },
-  address: { color: MUTED, fontSize: 12, lineHeight: 17 },
-  cardActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  action: { flex: 1 },
+  placeNumber: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#E9F2EC', alignItems: 'center', justifyContent: 'center' },
+  placeNumberActive: { backgroundColor: '#006C49' },
+  number: { color: '#006C49', fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  numberActive: { color: '#FFFFFF' },
+  placeName: { flex: 1, color: INK, fontSize: 16, lineHeight: 22, fontWeight: '600', letterSpacing: -0.2 },
+  distance: { color: '#006C49', fontSize: 16, lineHeight: 22, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  placeDetails: { marginLeft: 38, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  addressColumn: { flex: 1 },
+  address: { color: MUTED, fontSize: 12, lineHeight: 18 },
 });
