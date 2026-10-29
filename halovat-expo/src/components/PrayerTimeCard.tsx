@@ -70,7 +70,7 @@ export const PrayerTimeCard = memo(function PrayerTimeCard({ prayer, day, status
       {status === 'done' && <LinearGradient colors={['#BFF1DB', '#77D3AF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.doneFill} />}
       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.name, active && styles.nameActive, status === 'done' && styles.doneText]}>{prayer.name}</Text>
       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.time, active && { color: colors.green }, status === 'done' && styles.doneText]}>{formatTime(prayer.at)}</Text>
-      <Image accessible={false} source={PRAYER_HERO[prayer.id].image} resizeMode="contain" style={styles.art} />
+      <Image accessible={false} source={PRAYER_HERO[prayer.id].image} resizeMode="contain" style={[styles.art, (prayer.id === 'fajr' || prayer.id === 'maghrib') && styles.raisedArt]} />
     </Animated.View>
   </Pressable>;
 });
@@ -86,4 +86,5 @@ const baseStyles = StyleSheet.create({
   time: { color: Colors.ink, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
   // Enlarge both dimensions by 30%, keeping the top edge below the time.
   art: { position: 'absolute', width: '156%', height: 91, left: '-28%', bottom: -35 },
+  raisedArt: { bottom: -29 },
 });
