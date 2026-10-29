@@ -442,7 +442,7 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     if (enabled) {
       if (data.mosqueLatitude === undefined || data.mosqueLongitude === undefined) {
         Alert.alert('Masjidni tanlang', 'Masjidlar xaritasidan kerakli masjidni tanlang. Ovozsiz rejim shu masjidning 150 metr hududida ishlaydi.', [
-          { text: 'Hozir emas', style: 'cancel' }, { text: 'Masjidlarni ochish', onPress: () => router.push('/mosque') },
+          { text: 'Hozir emas', style: 'cancel' }, { text: 'Masjidlarni ochish', onPress: () => router.push('/(tabs)/qibla/mosque') },
         ]);
         return;
       }

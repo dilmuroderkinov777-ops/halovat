@@ -87,7 +87,7 @@ for (const card of cards) {
   assert.ok(fs.existsSync('src/app/(tabs)/(home)/' + art.source));
   card.props.onPress();
 }
-assert.deepEqual(navigated, ['/duas', '/mosque', '/(tabs)/tracker', '/(tabs)/tasbeeh']);
+assert.deepEqual(navigated, ['/duas', '/(tabs)/(home)/mosque', '/(tabs)/tracker', '/(tabs)/tasbeeh']);
 assert.equal(new Set(Object.values(themes).map(x => x.colors.join(','))).size, 5);
 for (const id of Object.keys(themes)) assert.ok(fs.existsSync('assets/prayer-hero/' + id + '.png'));
 console.log('PASS: five current-prayer themes, exact prayer boundaries, midnight/foreground refresh, next-prayer countdown and destination navigation.');

@@ -97,7 +97,7 @@ function HomeContent() {
         </LinearGradient>
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={t('Masjidlar')}
-        onPress={() => router.navigate('/mosque')}
+        onPress={() => router.navigate('/(tabs)/(home)/mosque')}
         style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
         <LinearGradient pointerEvents="none" colors={['#FFDBB7', '#F2AD7C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sectionCardFill}>
           <View style={styles.sectionCardHeading}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.sectionCardTitle}>Masjidlar</Text><ArrowUpRight size={18} color="#064E3B" /></View>

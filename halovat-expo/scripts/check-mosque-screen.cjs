@@ -3,6 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
+const { getRoutes } = require('expo-router/build/getRoutesCore');
+
+const NativeTabs = { Trigger: { Icon: 'TabIcon', Label: 'TabLabel' } };
 
 let hooks;
 const react = {
@@ -46,7 +49,8 @@ function requireModule(name) {
     StyleSheet: { create: value => value, absoluteFill: {} },
     Linking: { openURL: async url => directions.push(url) },
   };
-  if (name === 'expo-router') return { router: { navigate: route => navigations.push(route) }, useIsFocused: () => true, useFocusEffect: callback => react.useEffect(callback, [callback]) };
+  if (name === 'expo-router') return { Stack: { Screen: 'Stack.Screen' }, router: { navigate: route => navigations.push(route) }, useIsFocused: () => true, useFocusEffect: callback => react.useEffect(callback, [callback]) };
+  if (name === 'expo-router/native-tabs') return { NativeTabs };
   if (name === 'expo-location') return {
     getForegroundPermissionsAsync: async () => ({ granted: permissionGranted }),
     requestForegroundPermissionsAsync: async () => { permissionRequests++; return { granted: permissionGranted }; },
@@ -105,6 +109,33 @@ const action = (node, label) => {
 };
 
 async function main() {
+  // Use Expo Router's actual route discovery to verify the navigator ancestry on
+  // both native platforms; a root-stack mosque screen would cover the tab bar.
+  const context = () => ({ default: () => null });
+  context.keys = () => fs.readdirSync('src/app', { recursive: true })
+    .filter(file => file.endsWith('.tsx')).map(file => './' + file);
+  for (const platform of ['ios', 'android']) {
+    const routes = getRoutes(context, { platform, ignoreEntryPoints: true });
+    const mosquePaths = [];
+    const visit = (node, parents = []) => {
+      const path = [...parents, node.contextKey];
+      if (node.contextKey.endsWith('/mosque.tsx')) mosquePaths.push(path);
+      for (const child of node.children ?? []) visit(child, path);
+    };
+    visit(routes);
+    assert.deepEqual(mosquePaths.sort((a, b) => a.at(-1).localeCompare(b.at(-1))), [
+      ['./_layout.tsx', './(tabs)/_layout.tsx', './(tabs)/(home)/_layout.tsx', './(tabs)/(home)/mosque.tsx'],
+      ['./_layout.tsx', './(tabs)/_layout.tsx', './(tabs)/qibla/_layout.tsx', './(tabs)/qibla/mosque.tsx'],
+    ], platform + ': both mosque entries must stay inside their originating tab stacks');
+    for (const path of mosquePaths) {
+      assert.match(fs.readFileSync('src/app/' + path.at(-1).slice(2), 'utf8'), /export \{ default \} from '\.\.\/\.\.\/\.\.\/screens\/MosqueScreen'/,
+        'Both tab routes must reuse the same mosque implementation');
+    }
+  }
+  const tabs = mount(load('src/app/(tabs)/_layout.tsx')).render();
+  assert.deepEqual(findAll(tabs, NativeTabs.Trigger).map(node => node.props.name), ['(home)', 'tracker', 'tasbeeh', 'qibla', 'settings'],
+    'Mosques must use the existing five native tabs');
+
   const qibla = mount(load('src/app/(tabs)/qibla/index.tsx')).render();
   assert.equal(findAll(qibla, 'NativeSegments').length, 0);
   assert.equal(findAll(qibla, 'QiblaCompass').length, 1);
@@ -112,11 +143,12 @@ async function main() {
   assert.deepEqual(Array.from(qibla.props.children, child => child.type), ['QiblaCompass', 'NativeAction']);
   assert.equal(findAll(qibla, 'NativeAction').length, 1);
   action(qibla, 'Yaqin masjidlar').onPress();
-  assert.deepEqual(navigations, ['/mosque']);
+  assert.deepEqual(navigations, ['/(tabs)/qibla/mosque']);
 
-  const screen = mount(load('src/app/mosque.tsx'));
+  const screen = mount(load('src/screens/MosqueScreen.tsx'));
   let tree = screen.render();
-  assert.equal(tree.props.scroll, false, 'FlatList must not be nested in Screen’s ScrollView');
+  assert.equal(findAll(tree, 'Screen')[0].props.scroll, false, 'FlatList must not be nested in Screen’s ScrollView');
+  assert.equal(findAll(tree, 'Stack.Screen')[0].props.options.title, 'Masjidlar');
   assert.equal(findAll(findAll(tree, 'FlatList')[0].props.ListHeaderComponent, 'ActivityIndicator').length, 1);
   await screen.flush();
   const renderList = () => findAll(screen.render(), 'FlatList')[0].props;
@@ -215,6 +247,6 @@ async function main() {
   assert.deepEqual({ ...map(list).center }, { latitude: 41.2, longitude: 69.2 });
   assert.equal(findAll(list.ListHeaderComponent, 'ActivityIndicator').length, 0);
 
-  console.log('PASS: simplified mosque screen: nearest three, explicit batches of three, matching map markers, final/empty states, refresh/GPS resets, cached failure recovery, bookmarks, selection and directions; search/filter controls removed.');
+  console.log('PASS: iOS/Android route discovery keeps both mosque routes under the five native tabs; shared screen title, Qibla entry, nearest-three pagination, map, GPS, cache, bookmarks and directions.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

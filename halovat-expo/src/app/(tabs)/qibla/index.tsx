@@ -10,7 +10,7 @@ import { useHalovat } from '../../../context/AppContext';
 export default function QiblaScreen() {
   const styles = useThemedStyles(baseStyles);
   const { city } = useHalovat();
-  const openMosques = () => router.navigate('/mosque');
+  const openMosques = () => router.navigate('/(tabs)/qibla/mosque');
 
   return <Screen contentStyle={styles.content}>
     <QiblaCompass city={city} />

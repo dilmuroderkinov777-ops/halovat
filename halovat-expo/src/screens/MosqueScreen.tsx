@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import { useFocusEffect, useIsFocused } from 'expo-router';
+import { Stack, useFocusEffect, useIsFocused } from 'expo-router';
 import { Bookmark, Landmark, MapPin } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Linking, Pressable, StyleSheet, View, type ListRenderItemInfo } from 'react-native';
@@ -160,7 +160,9 @@ export default function MosqueScreen() {
     </View>;
   };
 
-  return <Screen scroll={false} contentStyle={styles.content}>
+  return <>
+    <Stack.Screen options={{ title: t('Masjidlar') }} />
+    <Screen scroll={false} contentStyle={styles.content}>
     <FlatList
       style={styles.list}
       contentContainerStyle={styles.listContent}
@@ -197,7 +199,8 @@ export default function MosqueScreen() {
         <NativeAction label="Yana ko‘rsatish" disabled={busy} appearance="minimal" variant="outlined" onPress={() => setVisibleLimit(limit => limit + PAGE_SIZE)} />
       </View> : undefined}
     />
-  </Screen>;
+    </Screen>
+  </>;
 }
 
 function MosqueSeparator() {
