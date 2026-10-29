@@ -126,6 +126,27 @@ function HomeContent() {
       </Pressable>
     </View>
 
+    <View style={styles.sectionCards}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('Namozlar')}
+        onPress={() => router.navigate('/(tabs)/tracker')}
+        style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
+        <LinearGradient pointerEvents="none" colors={['#D6EEF0', '#9CCDCF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sectionCardFill}>
+          <View style={styles.sectionCardHeading}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.sectionCardTitle}>Namozlar</Text><ArrowUpRight size={18} color="#064E3B" /></View>
+          <View style={styles.sectionCardHalo} />
+          <Image accessible={false} source={require('../../../../assets/home-cards/prayers-3d.png')} resizeMode="contain" style={styles.sectionCardArt} />
+        </LinearGradient>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('Tasbeh')}
+        onPress={() => router.navigate('/(tabs)/tasbeeh')}
+        style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
+        <LinearGradient pointerEvents="none" colors={['#FFF0CF', '#E9CE93']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sectionCardFill}>
+          <View style={styles.sectionCardHeading}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.sectionCardTitle}>Tasbeh</Text><ArrowUpRight size={18} color="#064E3B" /></View>
+          <View style={styles.sectionCardHalo} />
+          <Image accessible={false} source={require('../../../../assets/home-cards/tasbeeh-3d.png')} resizeMode="contain" style={styles.sectionCardArt} />
+        </LinearGradient>
+      </Pressable>
+    </View>
+
     <View style={styles.verseCard}>
       <Text style={styles.verseTitle}>Kun hikmati</Text>
       <Text style={styles.arabicVerse}>أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</Text>
