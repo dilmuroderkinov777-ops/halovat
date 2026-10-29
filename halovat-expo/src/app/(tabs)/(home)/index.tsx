@@ -1,7 +1,7 @@
-import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
+import { useThemedStyles } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { ArrowUpRight, CalendarDays, Clock3 } from 'lucide-react-native';
+import { ArrowUpRight, Clock3 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -13,21 +13,9 @@ import { useAppLoading } from '../../../context/LaunchAnimationContext';
 import { useHalovat } from '../../../context/AppContext';
 import { useLanguage } from '../../../context/LanguageContext';
 import { PRAYER_HERO } from '../../../data/prayerHero';
-import { dateKey, formatTime, formatUzDate, prayerKey, PrayerStatus } from '../../../domain/prayers';
+import { dateKey, formatTime, prayerKey, PrayerStatus } from '../../../domain/prayers';
 import { useForegroundClock } from '../../../hooks/useForegroundClock';
 import { Colors, Typography } from '../../../ui/theme';
-
-const HIJRI_MONTHS = ['Muharram', 'Safar', 'Rabi’ul avval', 'Rabi’us soni', 'Jumodul avval', 'Jumodul oxir', 'Rajab', 'Sha’bon', 'Ramazon', 'Shavvol', 'Zulqa’da', 'Zulhijja'];
-function hijriDate(date: Date) {
-  try {
-    const parts = new Intl.DateTimeFormat('en-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(date);
-    const day = Number(parts.find(part => part.type === 'day')?.value);
-    const month = Number(parts.find(part => part.type === 'month')?.value);
-    const year = Number(parts.find(part => part.type === 'year')?.value);
-    if (day && month && year) return `${day} ${HIJRI_MONTHS[month - 1]}, ${year}-yil`;
-  } catch { /* Fall back when an older device lacks the Islamic calendar. */ }
-  return formatUzDate(date, true);
-}
 
 export default function HomeScreen() {
   const { hydrated, onboardingComplete } = useHalovat();
@@ -40,7 +28,6 @@ function HomeContent() {
   const focused = useIsFocused();
   const appLoading = useAppLoading();
   const styles = useThemedStyles(baseStyles);
-  const Colors = useThemeColors();
   const { t } = useLanguage();
   const { data, timesFor, togglePrayerStatus, setPrayerStatus } = useHalovat();
   const { now: liveNow, refresh: refreshCountdown } = useForegroundClock(15_000);
@@ -71,13 +58,7 @@ function HomeContent() {
     setDismissedPrayers(current => [...current, key]);
   };
   return <Screen contentStyle={styles.content}>
-    <View style={styles.dateSection}>
-      <View style={styles.infoPills}>
-        <View style={styles.datePill}><CalendarDays size={14} color={Colors.green} /><Text style={styles.dateText}>{hijriDate(today)}</Text></View>
-        <View style={styles.nowPill}><View style={styles.liveDot} /><Text style={styles.nowText}>Hozir: <Text style={styles.nowStrong}>{currentPrayer?.name ?? 'Bomdod'}</Text></Text></View>
-      </View>
-      <View style={styles.greeting}><Text style={styles.greetingTitle}>Assalomu alaykum</Text><Text style={styles.greetingSub}>Halovat bilan har kun ibodatda</Text></View>
-    </View>
+    <View style={styles.greeting}><Text style={styles.greetingTitle}>Assalomu alaykum</Text><Text style={styles.greetingSub}>Halovat bilan har kun ibodatda</Text></View>
 
     <LinearGradient colors={hero.colors} start={{ x: 0.1, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
       <View pointerEvents="none" style={[styles.heroGlowTop, { backgroundColor: hero.accent + '18' }]} /><View pointerEvents="none" style={[styles.heroGlowBottom, { backgroundColor: hero.accent + '12' }]} />
@@ -159,15 +140,7 @@ function HomeContent() {
 
 const baseStyles = StyleSheet.create({
   content: { gap: 18 },
-  dateSection: { gap: 12, paddingTop: 1 },
-  infoPills: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  datePill: { minHeight: 29, paddingHorizontal: 10, borderRadius: 16, backgroundColor: '#EFEEEA', flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dateText: { color: Colors.body, fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
-  nowPill: { minHeight: 29, borderRadius: 16, backgroundColor: '#E9E8E4', paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.green },
-  nowText: { color: Colors.body, fontSize: 10 },
-  nowStrong: { color: Colors.ink, fontWeight: '700' },
-  greeting: { gap: 3 },
+  greeting: { gap: 3, paddingTop: 1 },
   greetingTitle: { ...Typography.intro, color: Colors.ink },
   greetingSub: { color: Colors.muted, fontSize: 14, flexDirection: 'row', alignItems: 'center' },
   hero: { minHeight: 236, borderRadius: 26, padding: 24, justifyContent: 'space-between', overflow: 'hidden', elevation: 4, shadowColor: '#003527', shadowOpacity: 0.16, shadowRadius: 13, shadowOffset: { width: 0, height: 6 } },
