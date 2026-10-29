@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "prompts": [
+    {
+      "key": "duas",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent 3D illustration cutout for a small square mobile Islamic devotional app card, NOT a screenshot or UI mockup. Subject: a beautiful small closed emerald green prayer book with a simple gold geometric cover ornament, cream layered page edges, resting diagonally on a low ivory book stand, with a short elegant strand of glossy mint prayer beads curling around its lower corner. No writing, letters, Arabic or logos anywhere. Style: polished premium playful 3D product render, soft rounded bevels, believable dimensional thickness, smooth ceramic and satin materials, tasteful restrained gold detailing. Three-quarter isometric view from slightly above, object fills centered 85% of square image, whole silhouette visible, tight balanced composition, empty transparent space surrounding the object. Color palette deep emerald #006C49, sage mint, warm ivory, small pale gold highlights. Soft studio lighting upper left, gentle self shadows, ambient occlusion, no ground plane, no solid backdrop, truly transparent alpha background. Clean readable silhouette when displayed only 125px wide. No people, hands, text, frame, drop shadow box, extra objects or background scene."
+    },
+    {
+      "key": "mosques",
+      "prompt": "Use case: stylized-concept. Asset type: production transparent 3D illustration cutout for a small square mobile Islamic devotional app card, NOT a screenshot or UI mockup. Subject: one elegant miniature mosque with a large soft emerald green dome, one slender matching minaret, warm ivory walls, arched doorway and simple arched windows, restrained pale gold finial detail. Compact architectural model on a tiny warm ivory foundation, no surrounding landscape. Style: polished premium playful 3D product render, soft rounded bevels, believable dimensional thickness, smooth ceramic and satin materials, architectural dignity and simplicity. Three-quarter isometric view from slightly above, object fills centered 85% of square image, whole minaret and silhouette visible, tight balanced composition with empty transparent margins. Palette deep emerald #006C49, mint, warm ivory and small pale gold accents. Soft studio lighting upper left, gentle self shadows and ambient occlusion. No ground plane, no solid backdrop, truly transparent alpha background. Clean readable silhouette at only 125px wide. No people, text, letters, logos, frame, extra objects or background scene."
+    }
+  ]
+}

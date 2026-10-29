@@ -1,9 +1,9 @@
 import { useThemedStyles, useThemeColors } from '../../../ui/useAppTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
-import { BookOpen, CalendarDays, Clock3, Landmark, Moon, Sun } from 'lucide-react-native';
+import { ArrowUpRight, CalendarDays, Clock3, Moon, Sun } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Image, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { NativeAction } from '../../../components/NativeAction';
 import { PrayerCheckinSheet } from '../../../components/PrayerCheckinSheet';
@@ -106,14 +106,20 @@ function HomeContent() {
       <Pressable accessibilityRole="button" accessibilityLabel={t('Duolar')}
         onPress={() => router.navigate('/duas')}
         style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
-        <View style={styles.sectionCardIcon}><BookOpen size={28} color={Colors.green} strokeWidth={1.7} /></View>
-        <Text style={styles.sectionCardTitle}>Duolar</Text>
+        <LinearGradient pointerEvents="none" colors={['#BFF1DB', '#77D3AF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sectionCardFill}>
+          <View style={styles.sectionCardHeading}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.sectionCardTitle}>Duolar</Text><ArrowUpRight size={18} color="#064E3B" /></View>
+          <View style={styles.sectionCardHalo} />
+          <Image accessible={false} source={require('../../../../assets/home-cards/duas-3d.png')} resizeMode="contain" style={styles.sectionCardArt} />
+        </LinearGradient>
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={t('Masjidlar')}
         onPress={() => router.navigate('/mosque')}
         style={({ pressed }) => [styles.sectionCard, pressed && styles.pressed]}>
-        <View style={styles.sectionCardIcon}><Landmark size={28} color={Colors.green} strokeWidth={1.7} /></View>
-        <Text style={styles.sectionCardTitle}>Masjidlar</Text>
+        <LinearGradient pointerEvents="none" colors={['#FFDBB7', '#F2AD7C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sectionCardFill}>
+          <View style={styles.sectionCardHeading}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.sectionCardTitle}>Masjidlar</Text><ArrowUpRight size={18} color="#064E3B" /></View>
+          <View style={styles.sectionCardHalo} />
+          <Image accessible={false} source={require('../../../../assets/home-cards/mosque-3d.png')} resizeMode="contain" style={styles.sectionCardArt} />
+        </LinearGradient>
       </Pressable>
     </View>
 
@@ -159,9 +165,12 @@ const baseStyles = StyleSheet.create({
   sectionTitle: { ...Typography.sectionTitle, color: Colors.ink },
   prayerRow: { flexDirection: 'row', gap: 6 },
   sectionCards: { flexDirection: 'row', gap: 12 },
-  sectionCard: { flex: 1, aspectRatio: 1, borderRadius: 24, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.paper, alignItems: 'center', justifyContent: 'center', padding: 12, gap: 14 },
-  sectionCardIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: Colors.mintSoft, alignItems: 'center', justifyContent: 'center' },
-  sectionCardTitle: { color: Colors.ink, fontSize: 17, fontWeight: '600', textAlign: 'center' },
+  sectionCard: { flex: 1, aspectRatio: 1, borderRadius: 24, overflow: 'hidden' },
+  sectionCardFill: { flex: 1, padding: 16 },
+  sectionCardHeading: { flexDirection: 'row', alignItems: 'center', gap: 6, zIndex: 1 },
+  sectionCardTitle: { flex: 1, color: '#073E30', fontSize: 17, fontWeight: '700' },
+  sectionCardHalo: { position: 'absolute', width: '90%', aspectRatio: 1, borderRadius: 200, bottom: '-30%', right: '-22%', backgroundColor: '#FFFFFF24' },
+  sectionCardArt: { position: 'absolute', width: '88%', height: '74%', right: -2, bottom: -4 },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
