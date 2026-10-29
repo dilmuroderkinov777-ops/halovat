@@ -2,7 +2,7 @@ import { useThemedStyles } from '../../../ui/useAppTheme';
 import { Typography } from '../../../ui/theme';
 import { BookOpen, Check, CheckCircle2, Flame, History, Minus, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { PrayerCalendarSheet } from '../../../components/PrayerCalendarSheet';
@@ -218,7 +218,7 @@ export default function TrackerScreen() {
         <View style={styles.ayahCard}>
           <View style={styles.ayahRow}><Text style={styles.ayahEyebrow}>KUNNING OYATI KARIMASI</Text><BookOpen size={20} color="#95D3BA" /></View>
           <Text style={styles.ayahText}>«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir».</Text>
-          <View style={styles.ayahRow}><Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text><NativeAction label="Ulashish" compact variant="text" colorScheme="dark" onPress={() => void Share.share({ message: '«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir». «Ankavut» surasi, 45-oyat' })} /></View>
+          <Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text>
         </View>
       </View>
     </Screen>
