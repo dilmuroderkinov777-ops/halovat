@@ -1,4 +1,4 @@
-import { buttonStyle, contentShape, controlSize, frame, preferredColorScheme, presentationBackground, shapes, tint } from '@expo/ui/swift-ui/modifiers';
+import { buttonStyle, contentShape, controlSize, frame, padding, preferredColorScheme, presentationBackground, shapes, tint } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import { Colors } from '../ui/theme';
 
@@ -29,4 +29,8 @@ export function largeActionLabelModifiers() {
 
 export function squareActionLabelModifiers() {
   return [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())];
+}
+
+export function minimalActionLabelModifiers(compact: boolean) {
+  return [padding({ horizontal: 12 }), frame({ minHeight: 44, ...(compact ? {} : { maxWidth: Infinity }) }), contentShape(shapes.rectangle())];
 }

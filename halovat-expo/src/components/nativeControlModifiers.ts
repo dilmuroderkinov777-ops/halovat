@@ -20,3 +20,7 @@ export function largeActionLabelModifiers(): ModifierConfig[] {
 export function squareActionLabelModifiers(): ModifierConfig[] {
   return [];
 }
+
+export function minimalActionLabelModifiers(_compact: boolean): ModifierConfig[] {
+  return [];
+}
