@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useState } from 'react';
@@ -56,12 +56,7 @@ function RootNavigator({ onReady, loading }: { onReady: () => void; loading: boo
       <Stack.Screen name="welcome" options={{ title: 'Halovat', animation: 'fade', headerBackVisible: false, headerTransparent: false, headerBlurEffect: undefined, scrollEdgeEffects: { top: 'hidden' }, headerStyle: { backgroundColor: '#FAF9F5' }, headerTintColor: '#064E3B', headerShadowVisible: false }} />
       <Stack.Screen name="mosque" options={{ title: t('Masjidlar') }} />
       <Stack.Screen name="duas" options={{ title: t('Kundalik duolar') }} />
-      <Stack.Screen name="prayer-mode" options={{ title: t('Halovat vaqti'), headerTransparent: false, headerBlurEffect: undefined, scrollEdgeEffects: { top: 'hidden' }, headerStyle: { backgroundColor: '#00784B' }, headerTintColor: '#FFFFFF' }}>
-        <Stack.Toolbar placement="right">
-          <Stack.Toolbar.Button icon={Platform.OS === 'ios' ? 'person.crop.circle' : require('../../assets/header-profile.xml')}
-            onPress={() => router.navigate('/(tabs)/settings')} accessibilityLabel={t('Profil')} />
-        </Stack.Toolbar>
-      </Stack.Screen>
+      <Stack.Screen name="prayer-mode" options={{ title: t('Halovat vaqti'), headerTransparent: false, headerBlurEffect: undefined, scrollEdgeEffects: { top: 'hidden' }, headerStyle: { backgroundColor: '#00784B' }, headerTintColor: '#FFFFFF' }} />
     </Stack>
   </View></ThemeProvider>;
 }
