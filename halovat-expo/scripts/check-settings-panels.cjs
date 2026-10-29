@@ -9,6 +9,8 @@ const react = {
   useState: initial => { const i = cursor++; if (!(i in hooks)) hooks[i] = initial; return [hooks[i], value => { hooks[i] = typeof value === 'function' ? value(hooks[i]) : value; }]; },
 };
 const native = Object.fromEntries(['BottomSheet', 'Button', 'Column', 'Host', 'Row', 'ScrollView', 'Spacer', 'Text', 'TextInput'].map(x => [x, x]));
+const platform = { OS: 'ios' };
+native.Icon = Object.assign(function Icon() {}, { select: spec => platform.OS === 'ios' ? spec.ios : spec.android });
 native.useNativeState = initial => react.useRef({ value: initial, set(value) { this.value = value; } }).current;
 function load(path, resolver) {
   const exports = {};
@@ -21,15 +23,17 @@ const prayers = load('src/domain/prayers.ts', require);
 function resolver(name) {
   if (name === 'react') return react;
   if (name === '@expo/ui') return native;
-  if (name === 'react-native') return { Pressable: 'Pressable', View: 'View', Keyboard: { dismiss: () => dismissed++ }, StyleSheet: { create: x => x, absoluteFill: {} }, Linking: {} };
+  if (name === 'react-native') return { Platform: platform, Pressable: 'Pressable', View: 'View', Keyboard: { dismiss: () => dismissed++ }, StyleSheet: { create: x => x, absoluteFill: {} }, Linking: {} };
   if (name === 'lucide-react-native') return Object.fromEntries(['Check', 'ChevronDown', 'ChevronUp', 'Info', 'Minus'].map(x => [x, x]));
   if (name.endsWith('/LanguageContext')) return { useLanguage: () => ({ t: x => x }) };
   if (name.endsWith('/useAppTheme')) return { useThemedStyles: x => x, useAppTheme: () => ({ dark: false }), useThemeColors: () => ({ green: '#006C49' }) };
   if (name.endsWith('/domain/prayers')) return prayers;
   if (name.endsWith('/AppText')) return { Text: 'Text' };
-  if (name === './nativeControlModifiers') return { actionModifiers: () => [], minimalActionLabelModifiers: () => [], sheetAppearance: () => [] };
+  if (name === './nativeControlModifiers') return { actionModifiers: () => [], minimalActionLabelModifiers: () => [], squareActionLabelModifiers: () => [], sheetAppearance: () => [] };
   if (name === './nativeAccessibility') return { nativeAccessibilityLabel: label => [{ label }] };
   if (name === './NativeAction') return { NativeAction: 'NativeAction' };
+  if (name === './NativeCloseButton') return { NativeCloseButton: 'NativeCloseButton' };
+  if (name.endsWith('.xml')) return name;
   if (name === './SettingsPanelUI') return Object.fromEntries(['SettingsDisclosure', 'SettingsNotice', 'SettingsSteps'].map(x => [x, x]));
   throw new Error('Unexpected import: ' + name);
 }
@@ -51,11 +55,12 @@ function render() { cursor = 0; return City(props); }
 async function main() {
   let tree = render();
   assert.equal(find(tree, 'RNHostView').length, 0, 'Native search sheet can adapt to keyboard height');
-  assert.equal(find(tree, 'Button').length, prayers.CITIES.length + 1);
+  assert.equal(find(tree, 'NativeCloseButton').length, 1);
+  assert.equal(find(tree, 'Button').length, prayers.CITIES.length);
   assert.ok(text(tree).includes('✓  Toshkent'));
   const search = query => { const input = find(render(), 'TextInput')[0].props; input.value.set(query); input.onChangeText(query); return render(); };
   tree = search("  MARG'ILON  ");
-  assert.equal(find(tree, 'Button').length, 2, 'Search ignores apostrophe variants, case and outer spaces');
+  assert.equal(find(tree, 'Button').length, 1, 'Search ignores apostrophe variants, case and outer spaces');
   assert.ok(text(tree).includes('Marg‘ilon'));
   tree = search('nonexistent');
   assert.ok(text(tree).includes('Shahar topilmadi'));
@@ -72,11 +77,26 @@ async function main() {
   cityButtons(tree)[0].props.onPress(); await new Promise(setImmediate);
   assert.equal(props.visible, true, 'Save errors keep the picker open');
   assert.ok(text(render()).includes('Shahar saqlanmadi. Qayta urinib ko‘ring.'));
-  find(render(), 'BottomSheet')[0].props.onDismiss();
+  find(render(), 'NativeCloseButton')[0].props.onPress();
   props.visible = true;
-  assert.equal(find(render(), 'Button').length, prayers.CITIES.length + 1, 'Reopening clears search and errors');
+  assert.equal(find(render(), 'Button').length, prayers.CITIES.length, 'Reopening clears search and errors');
   assert.ok(!text(render()).includes('Shahar saqlanmadi'));
   assert.equal(dismissed, 2);
+
+  const Close = load('src/components/NativeCloseButton.tsx', resolver).NativeCloseButton;
+  let closeCount = 0;
+  for (const os of ['ios', 'android', 'web']) {
+    platform.OS = os;
+    const close = Close({ onPress: () => closeCount++ });
+    const button = find(close, 'Button')[0];
+    assert.equal(button.props.label, undefined, 'Close control has no visible word label');
+    assert.ok(button.props.style.width >= 44 && button.props.style.height >= 44);
+    assert.ok(button.props.modifiers.some(modifier => modifier.label === 'Yopish'), 'Accessible close label is retained');
+    button.props.onPress();
+    if (os !== 'web') assert.equal(find(close, native.Icon)[0].props.name, os === 'ios' ? 'xmark.circle.fill' : '../../assets/sheet-close.xml');
+    else assert.ok(text(close).includes('×'), 'Web also has a visible close control');
+  }
+  assert.equal(closeCount, 3);
 
   const ui = load('src/components/SettingsPanelUI.tsx', resolver);
   hooks = []; cursor = 0;
@@ -98,6 +118,6 @@ async function main() {
   find(guide, 'NativeAction').find(x => x.props.label === 'Vibratsiyani tekshirish').props.onPress();
   assert.equal(tests, 1);
   assert.ok(find(guide, 'SettingsSteps').some(x => x.props.steps.includes('Expo Go ilovasiga ruxsat bering.')));
-  console.log('PASS: city search, selected state, async save/error/dismiss/reset; expandable guides and loading/allowed/denied permission badges.');
+  console.log('PASS: city search/save/error/dismiss/reset; native close icons, accessible labels and callbacks; expandable guides and permission badges.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

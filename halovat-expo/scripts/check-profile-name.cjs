@@ -20,7 +20,7 @@ const react = {
     hooks[index] = deps;
   },
 };
-const ui = Object.fromEntries(['BottomSheet', 'Button', 'Column', 'Host', 'ScrollView', 'Text', 'TextInput'].map(type => [type, type]));
+const ui = Object.fromEntries(['BottomSheet', 'Button', 'Column', 'Host', 'Row', 'ScrollView', 'Spacer', 'Text', 'TextInput'].map(type => [type, type]));
 ui.useNativeState = initial => react.useRef({ value: initial, set(value) { this.value = value; } }).current;
 const compiled = ts.transpileModule(fs.readFileSync('src/components/ProfileNameSheet.tsx', 'utf8'), { compilerOptions: {
   module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, esModuleInterop: true,
@@ -34,6 +34,7 @@ vm.runInNewContext(compiled, { exports: exportsObject, require(name) {
   if (name.endsWith('/useAppTheme')) return { useAppTheme: () => ({ dark: false }), useThemeColors: () => ({ green: '#006C49', ink: '#1B1C1A', body: '#404944', muted: '#707974', paper: '#FFFFFF' }) };
   if (name.endsWith('/theme')) return { Colors: { green: '#006C49' } };
   if (name === './nativeAccessibility') return { nativeAccessibilityLabel: label => [{ label }] };
+  if (name === './NativeCloseButton') return { NativeCloseButton: 'NativeCloseButton' };
   if (name === './nativeControlModifiers') return { actionModifiers: () => [], largeActionLabelModifiers: () => [], sheetAppearance: () => [] };
   throw new Error('Unexpected import: ' + name);
 } });
@@ -75,7 +76,8 @@ tree = render();
 input = find(tree, 'TextInput')[0].props;
 assert.equal(input.value.value, 'Wikki');
 input.value.set('Unsaved name');
-find(tree, 'Button')[1].props.onPress();
+assert.equal(find(tree, 'NativeCloseButton').length, 1);
+find(tree, 'NativeCloseButton')[0].props.onPress();
 assert.deepEqual(saved, ['Wikki'], 'Closing does not save an unfinished draft');
 render();
 props.visible = true;

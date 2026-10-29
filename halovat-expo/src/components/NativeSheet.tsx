@@ -1,11 +1,11 @@
-import { BottomSheet, RNHostView } from '@expo/ui';
+import { BottomSheet, Host, RNHostView } from '@expo/ui';
 import React from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../ui/AppText';
 import { useAppTheme, useThemeColors } from '../ui/useAppTheme';
 import { Typography } from '../ui/theme';
-import { NativeAction } from './NativeAction';
+import { NativeCloseButton } from './NativeCloseButton';
 import { sheetAppearance } from './nativeControlModifiers';
 
 export function NativeSheet({ visible, onClose, title, children, compact = false, centeredTitle = false, contentKey }: {
@@ -23,7 +23,9 @@ export function NativeSheet({ visible, onClose, title, children, compact = false
       <View style={[styles.sheet, fitContents ? undefined : { height: Math.min(720, height - insets.top - 72) }]}>
         {centeredTitle ? <Text accessibilityRole="header" style={[styles.centeredTitle, { color: colors.ink }]}>{title}</Text> : <View style={styles.heading}>
           <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>{title}</Text>
-          <NativeAction label="Yopish" variant="text" compact onPress={onClose} />
+          <Host style={{ width: 48, height: 48 }} colorScheme={dark ? 'dark' : 'light'} ignoreSafeArea="all">
+            <NativeCloseButton onPress={onClose} />
+          </Host>
         </View>}
         {fitContents ? <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>{children}</View>
           : <ScrollView key={contentKey} style={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"

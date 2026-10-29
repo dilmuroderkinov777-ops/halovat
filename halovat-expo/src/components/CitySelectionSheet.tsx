@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { CITIES } from '../domain/prayers';
 import { useAppTheme, useThemeColors } from '../ui/useAppTheme';
 import { nativeAccessibilityLabel } from './nativeAccessibility';
+import { NativeCloseButton } from './NativeCloseButton';
 import { actionModifiers, minimalActionLabelModifiers, sheetAppearance } from './nativeControlModifiers';
 
 const normalize = (text: string) => text.toLocaleLowerCase().replace(/['’‘ʻ`]/g, '').trim();
@@ -35,7 +36,7 @@ export function CitySelectionSheet({ visible, cityId, onSelect, onClose }: {
           <Row alignment="center" spacing={12} style={{ width: '100%' }}>
             <Text textStyle={{ fontSize: 22, fontWeight: '600', color: colors.ink }}>{t('Shaharni tanlang')}</Text>
             <Spacer flexible />
-            <Button label={t('Yopish')} variant="text" onPress={close} style={{ height: 44 }} modifiers={actionModifiers('text', colors.green)} />
+            <NativeCloseButton onPress={close} />
           </Row>
           <Text textStyle={{ fontSize: 13, color: colors.body }}>{t('Namoz vaqtlari tanlangan shahar bo‘yicha hisoblanadi.')}</Text>
           <TextInput ref={input} value={search} onChangeText={setQuery} autoCorrect={false} autoCapitalize="none"

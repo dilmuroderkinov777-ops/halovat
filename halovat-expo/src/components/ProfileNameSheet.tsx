@@ -1,10 +1,11 @@
-import { BottomSheet, Button, Column, Host, ScrollView, Text, TextInput, useNativeState } from '@expo/ui';
+import { BottomSheet, Button, Column, Host, Row, ScrollView, Spacer, Text, TextInput, useNativeState } from '@expo/ui';
 import React, { useEffect, useRef } from 'react';
 import { Keyboard, StyleSheet } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { Colors } from '../ui/theme';
 import { useAppTheme, useThemeColors } from '../ui/useAppTheme';
 import { nativeAccessibilityLabel } from './nativeAccessibility';
+import { NativeCloseButton } from './NativeCloseButton';
 import { actionModifiers, largeActionLabelModifiers, sheetAppearance } from './nativeControlModifiers';
 
 export function ProfileNameSheet({ visible, name, onSave, onClose }: {
@@ -39,7 +40,11 @@ export function ProfileNameSheet({ visible, name, onSave, onClose }: {
       modifiers={sheetAppearance(dark ? 'dark' : 'light', colors.paper)}>
       <ScrollView style={{ width: '100%', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 }}>
         <Column spacing={16} style={{ width: '100%' }}>
-          <Text textStyle={{ fontSize: 20, fontWeight: '600', color: colors.ink }}>{t('Profilni tahrirlash')}</Text>
+          <Row alignment="center" spacing={12} style={{ width: '100%' }}>
+            <Text textStyle={{ fontSize: 20, fontWeight: '600', color: colors.ink }}>{t('Profilni tahrirlash')}</Text>
+            <Spacer flexible />
+            <NativeCloseButton onPress={close} />
+          </Row>
           <Text textStyle={{ fontSize: 14, color: colors.body }}>{t('Ismingiz')}</Text>
           <TextInput ref={input} value={draft} maxLength={40} selectTextOnFocus
             placeholder={t('Ismingiz')} placeholderTextColor={colors.muted}
@@ -51,8 +56,6 @@ export function ProfileNameSheet({ visible, name, onSave, onClose }: {
             modifiers={actionModifiers('filled', Colors.green, true)}>
             <Text modifiers={largeActionLabelModifiers()}>{t('Saqlash')}</Text>
           </Button>
-          <Button label={t('Yopish')} onPress={close} variant="text" style={{ width: '100%', height: 44 }}
-            modifiers={actionModifiers('text', colors.green)} />
         </Column>
       </ScrollView>
     </BottomSheet>
