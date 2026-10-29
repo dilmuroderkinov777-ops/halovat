@@ -3,6 +3,9 @@ import { AppLanguage } from '../data/languages';
 // Uzbek source copy remains unchanged. Other languages are UI translations.
 const entries: readonly (readonly [string, string, string])[] = [
   ['Sana', 'Дата', 'Date'],
+  ['Sana tanlash', 'Выбрать дату', 'Choose date'],
+  ['Oldingi hafta', 'Предыдущая неделя', 'Previous week'],
+  ['Keyingi hafta', 'Следующая неделя', 'Next week'],
   ['Ulashish', 'Поделиться', 'Share'],
   ['Saqlangan', 'Сохранено', 'Saved'],
   ['Filtr', 'Фильтр', 'Filter'],

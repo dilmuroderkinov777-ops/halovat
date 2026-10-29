@@ -42,6 +42,7 @@ export default function TrackerScreen() {
   const [period, setPeriod] = useState<Period>('week');
   const [selectedDate, setSelectedDate] = useState(() => new Date(now));
   const [qazoOpen, setQazoOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const monday = startOfWeek(selectedDate);
   const days = Array.from({ length: 7 }, (_, index) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index));
   const todayKey = dateKey(now);
@@ -107,6 +108,12 @@ export default function TrackerScreen() {
     const [day, prayer] = key.split(':');
     setPrayerStatus(asDate(day), prayer as typeof PRAYERS[number]['id'], 'done');
   };
+  const nextMonday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7);
+  const canGoForward = dateKey(nextMonday) <= todayKey;
+  const changeWeek = (direction: -1 | 1) => {
+    const next = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 7 * direction);
+    setSelectedDate(dateKey(next) > todayKey ? new Date(now) : next);
+  };
   const range = formatUzDate(days[0]) + ' – ' + formatUzDate(days[6]);
   const chartTitle = period === 'week' ? 'Haftalik natija' : period === 'month' ? 'Oylik natija' : 'Yillik natija';
 
@@ -116,11 +123,30 @@ export default function TrackerScreen() {
         <NativeSegments value={period} options={PERIODS.map(item => ({ value: item.id, label: item.title }))} onChange={setPeriod} />
 
         <View style={styles.dateSection}>
-          <View style={styles.dateRange}>
-            <CalendarDays size={16} color={EMERALD} />
-            <Text style={styles.dateRangeText}>{range}</Text>
+          <View style={styles.dateHeader}>
+            <View style={styles.dateRange}>
+              <CalendarDays size={16} color={EMERALD} />
+              <Text style={styles.dateRangeText} numberOfLines={1}>{range}</Text>
+            </View>
+            <View style={styles.dateNav}>
+              <NativeAction label="▦" translate={false} accessibilityLabel="Sana tanlash" compact onPress={() => setCalendarOpen(true)} />
+              <NativeAction label="‹" translate={false} accessibilityLabel="Oldingi hafta" compact onPress={() => changeWeek(-1)} />
+              <NativeAction label="›" translate={false} accessibilityLabel="Keyingi hafta" compact disabled={!canGoForward} onPress={() => changeWeek(1)} />
+            </View>
           </View>
-          <NativeCalendar value={selectedDate} onChange={setSelectedDate} maximumDate={now} />
+          <View style={styles.dayStrip}>
+            {days.map((day, index) => {
+              const today = dateKey(day) === todayKey;
+              const statuses = PRAYERS.map(prayer => data.prayerStatus[prayerKey(day, prayer.id)]);
+              const hasMissed = statuses.includes('missed');
+              const hasDone = statuses.includes('done');
+              return <View key={dateKey(day)} style={[styles.dayItem, index === 4 && styles.fridayDay, today && styles.todayDay]}>
+                <Text style={[styles.dayName, index === 4 && styles.fridayText, today && styles.todayText]}>{today ? 'Bugun' : DAY_NAMES[index]}</Text>
+                <Text style={[styles.dayNumber, index === 4 && styles.fridayText, today && styles.todayText]}>{day.getDate()}</Text>
+                <View style={[styles.dayDot, hasDone && styles.dayDotDone, hasMissed && styles.dayDotMissed, today && !hasMissed && styles.dayDotToday]} />
+              </View>;
+            })}
+          </View>
         </View>
 
         <View style={styles.matrixCard}>
@@ -221,6 +247,9 @@ export default function TrackerScreen() {
           <Text style={styles.ayahText}>«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir».</Text>
           <View style={styles.ayahRow}><Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text><NativeAction label="Ulashish" compact variant="text" colorScheme="dark" onPress={() => void Share.share({ message: '«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir». «Ankavut» surasi, 45-oyat' })} /></View>
         </View>
+        <NativeSheet visible={calendarOpen} onClose={() => setCalendarOpen(false)} title="Sana tanlash">
+          <NativeCalendar value={selectedDate} onChange={date => { setSelectedDate(date); setCalendarOpen(false); }} maximumDate={now} />
+        </NativeSheet>
         <NativeSheet visible={qazoOpen} onClose={() => setQazoOpen(false)} title="Qazo namozlar daftarchasi">
           {missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}>
             <View style={styles.qazoEntryText}><Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text><Text style={styles.qazoDate}>{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text></View>
@@ -237,7 +266,20 @@ const baseStyles = StyleSheet.create({
   content: { gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 20 },
   dateSection: { gap: 9 },
-  dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+  dateHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+  dateNav: { flexDirection: 'row', alignItems: 'center' },
+  dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  dayStrip: { flexDirection: 'row', padding: 7, gap: 3, borderRadius: 20, backgroundColor: '#FFFFFF' },
+  dayItem: { flex: 1, minHeight: 66, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  fridayDay: { backgroundColor: '#E8F7EF' },
+  todayDay: { backgroundColor: FOREST },
+  dayName: { color: MUTED, fontSize: 10, fontWeight: '600' },
+  dayNumber: { color: INK, fontSize: 16, fontWeight: '700' },
+  todayText: { color: '#FFFFFF' },
+  dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#E3E2DF' },
+  dayDotDone: { backgroundColor: EMERALD },
+  dayDotMissed: { backgroundColor: '#BA1A1A' },
+  dayDotToday: { backgroundColor: '#6FFBBE' },
   dateRangeText: { color: '#404944', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
   fridayText: { color: EMERALD },
   matrixCard: { padding: 15, borderRadius: 24, backgroundColor: '#FFFFFF', gap: 10 },

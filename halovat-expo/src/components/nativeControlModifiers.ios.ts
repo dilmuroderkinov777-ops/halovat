@@ -1,5 +1,4 @@
 import { buttonStyle, controlSize, frame, preferredColorScheme, presentationBackground } from '@expo/ui/swift-ui/modifiers';
-import { Platform } from 'react-native';
 
 export function sheetAppearance(scheme: 'light' | 'dark', backgroundColor: string) {
   // A sheet is its own presentation and otherwise follows the device's appearance.
@@ -7,12 +6,9 @@ export function sheetAppearance(scheme: 'light' | 'dark', backgroundColor: strin
   return [preferredColorScheme(scheme), { ...presentationBackground(backgroundColor), color: backgroundColor }];
 }
 
-export function largeActionModifiers(variant: 'filled' | 'outlined' | 'text') {
-  const liquidGlass = Number.parseInt(String(Platform.Version), 10) >= 26;
+export function largeActionModifiers(_variant: 'filled' | 'outlined' | 'text') {
   return [
-    buttonStyle(variant === 'text' ? 'plain'
-      : variant === 'filled' ? (liquidGlass ? 'glassProminent' : 'borderedProminent')
-        : (liquidGlass ? 'glass' : 'bordered')),
+    buttonStyle('plain'),
     controlSize('large'),
   ];
 }

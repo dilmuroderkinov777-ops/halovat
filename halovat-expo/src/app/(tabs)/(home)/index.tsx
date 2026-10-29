@@ -94,7 +94,7 @@ function HomeContent() {
     </LinearGradient>
 
     <View style={styles.prayerSection}>
-      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text><NativeAction label="To‘liq taqvim" onPress={() => router.push('/(tabs)/tracker' as never)} compact variant="outlined" /></View>
+      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Bugungi namoz vaqtlari</Text><NativeAction label="To‘liq taqvim" suffix=" →" onPress={() => router.navigate('/(tabs)/tracker')} compact variant="text" /></View>
       <View style={styles.prayerRow}>
         {prayers.map(prayer => <PrayerTimeCard key={prayer.id} prayer={prayer} day={today}
           status={data.prayerStatus[prayerKey(today, prayer.id)]} active={prayer.id === currentPrayer?.id}
