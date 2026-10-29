@@ -1,6 +1,6 @@
 import { useThemedStyles } from '../../../ui/useAppTheme';
 import { Typography } from '../../../ui/theme';
-import { BookOpen, Check, CheckCircle2, Flame, History, Info, Minus, X } from 'lucide-react-native';
+import { BookOpen, Check, CheckCircle2, Flame, History, Minus, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../../ui/AppText';
@@ -210,10 +210,10 @@ export default function TrackerScreen() {
                 <Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text>
                 <Text style={styles.qazoDate}>{dateKey(entry.date) === todayKey ? 'Bugun · ' : ''}{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text>
               </View>
-              <NativeAction label="O‘qidim" compact onPress={() => markDone(entry.key)} />
+              <NativeAction appearance="minimal" label="O‘qidim" compact onPress={() => markDone(entry.key)} />
             </View>
           )) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}
-          <View style={styles.qazoFooter}><View style={styles.qazoFooterLabel}><Info size={14} color={EMERALD} /><Text style={styles.qazoFooterText}>Qazo namozlar daftarchasi</Text></View><NativeAction label="Batafsil hisob" compact variant="text" onPress={() => setQazoOpen(true)} /></View>
+          <View style={styles.qazoFooter}><NativeAction appearance="minimal" label="Batafsil hisob" compact onPress={() => setQazoOpen(true)} /></View>
         </View>
         <View style={styles.ayahCard}>
           <View style={styles.ayahRow}><Text style={styles.ayahEyebrow}>KUNNING OYATI KARIMASI</Text><BookOpen size={20} color="#95D3BA" /></View>
@@ -227,7 +227,7 @@ export default function TrackerScreen() {
     <NativeSheet visible={qazoOpen} onClose={() => setQazoOpen(false)} title="Qazo namozlar daftarchasi">
       {missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}>
         <View style={styles.qazoEntryText}><Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text><Text style={styles.qazoDate}>{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text></View>
-        <NativeAction label="O‘qidim" compact onPress={() => markDone(entry.key)} />
+        <NativeAction appearance="minimal" label="O‘qidim" compact onPress={() => markDone(entry.key)} />
       </View>) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}
     </NativeSheet>
     </>
@@ -298,9 +298,7 @@ const baseStyles = StyleSheet.create({
   qazoPrayer: { color: INK, fontSize: 13, fontWeight: '700' },
   qazoDate: { color: MUTED, fontSize: 10, marginTop: 2, textTransform: 'capitalize' },
   qazoEmpty: { color: MUTED, fontSize: 12, backgroundColor: '#F4F4F0', padding: 13, borderRadius: 14 },
-  qazoFooter: { paddingTop: 4, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },
-  qazoFooterLabel: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' },
-  qazoFooterText: { color: '#404944', fontSize: 9, fontWeight: '500' },
+  qazoFooter: { paddingTop: 4, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' },
   ayahCard: { borderRadius: 22, padding: 20, backgroundColor: FOREST, gap: 12 },
   ayahEyebrow: { color: '#89E5BA', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   ayahText: { color: '#FFFFFF', fontSize: 14, lineHeight: 23, fontWeight: '500', fontStyle: 'italic' },
