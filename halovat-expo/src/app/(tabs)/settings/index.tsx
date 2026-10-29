@@ -6,11 +6,12 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useFocusEffect } from 'expo-router';
 import { Battery, BellRing, CalendarDays, CheckCheck, Globe, Landmark, HandHeart, ListChecks, MapPin, Moon, PhoneIncoming, RefreshCw, ShieldCheck, Sunrise, VolumeX } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, AppState, Linking, Keyboard, Platform, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, AppState, Linking, Keyboard, Platform, StyleSheet, Switch, View } from 'react-native';
 import { NativeAction } from '../../../components/NativeAction';
 import { NativeSegments } from '../../../components/NativeSegments';
 import { NativeSelect } from '../../../components/NativeSelect';
 import { NativeSheet } from '../../../components/NativeSheet';
+import { ProfileNameSheet } from '../../../components/ProfileNameSheet';
 import { Screen } from '../../../components/Screen';
 import { useHalovat } from '../../../context/AppContext';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -28,8 +29,8 @@ import { Typography } from '../../../ui/theme';
 
 const DELAYS = [15, 20, 30];
 const expoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-type Panel = 'name' | 'city' | 'reminders' | 'language' | 'delivery' | 'ios-setup' | null;
-const PANEL_TITLES = { name: 'Profilni tahrirlash', city: 'Shaharni tanlang', reminders: 'Eslatmalar va Bildirishnomalar', language: 'Ilova tili', delivery: 'Eslatmalar holati', 'ios-setup': 'iPhone sozlamalari' };
+type Panel = 'city' | 'reminders' | 'language' | 'delivery' | 'ios-setup' | null;
+const PANEL_TITLES = { city: 'Shaharni tanlang', reminders: 'Eslatmalar va Bildirishnomalar', language: 'Ilova tili', delivery: 'Eslatmalar holati', 'ios-setup': 'iPhone sozlamalari' };
 
 export default function ProfileScreen() {
   const styles = useThemedStyles(baseStyles);
@@ -40,7 +41,7 @@ export default function ProfileScreen() {
   const [delivery, setDelivery] = useState<{ allowed: boolean; popup: boolean; sound: boolean; lockScreen: boolean; warnings: string[]; native: QuietModeStatus | null } | null>(null);
   const [deliveryRevision, setDeliveryRevision] = useState(0);
   const [panel, setPanel] = useState<Panel>(null);
-  const [nameDraft, setNameDraft] = useState(data.displayName);
+  const [nameEditorOpen, setNameEditorOpen] = useState(false);
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
   const [callEvents, setCallEvents] = useState<FocusCallEvent[]>([]);
   const [batteryStatus, setBatteryStatus] = useState<QuietModeStatus | null>(null);
@@ -117,7 +118,6 @@ export default function ProfileScreen() {
       { text: t('To‘xtatish'), onPress: () => { native.endQuietSession(); setDeliveryRevision(value => value + 1); } },
     ]);
   };
-  const saveName = () => { setDisplayName(nameDraft); closePanel(); };
   const previewScheduledQuiet = async () => {
     if (!focusControl || !await ensureAutomaticQuietAccess(true)) return;
     if (focusControl.getStatus().sessionActive) { Alert.alert(t('Ovozsiz rejim'), t('Ovozsiz rejim hozir faol. Sinovni rejim tugagandan keyin boshlang.')); return; }
@@ -154,13 +154,13 @@ export default function ProfileScreen() {
   };
   const switchControl = (value: boolean, onChange: (value: boolean) => void) => <Switch value={value} onValueChange={onChange} trackColor={{ false: '#BFC9C3', true: '#006C49' }} thumbColor="#FFFFFF" style={styles.switchHost} />;
 
-  return <Screen style={styles.screen} contentStyle={styles.content}>
+  return <><Screen style={styles.screen} contentStyle={styles.content}>
     <View style={[styles.card, styles.identityCard]}>
       <View pointerEvents="none" style={styles.identityGlow} />
       <View style={styles.identityRow}>
         <View style={styles.avatarWrap}><View style={styles.avatar}><Text style={styles.initials}>{initials || 'H'}</Text></View><View style={styles.verified}><ShieldCheck size={14} color="#006C49" /></View></View>
         <View style={styles.identityCopy}><Text translate={false} numberOfLines={1} style={styles.identityTitle}>{data.displayName}</Text><View style={styles.memberRow}><CalendarDays size={14} color={colors.green} /><Text style={styles.identitySubtitle}>Halovat bilan {memberDays} kundan beri birga</Text></View></View>
-        <NativeAction label="Tahrirlash" onPress={() => { setNameDraft(data.displayName); setPanel('name'); }} compact variant="outlined" />
+        <NativeAction label="Tahrirlash" onPress={() => setNameEditorOpen(true)} compact variant="outlined" />
       </View>
       <View style={styles.metrics}>
         <View style={styles.metric}><View style={styles.metricIcon}><CheckCheck size={20} color={colors.green} /></View><View style={styles.metricCopy}><Text style={styles.metricValue}>{completed}</Text><Text style={styles.metricLabel}>Ado etilgan namoz</Text></View></View>
@@ -228,7 +228,6 @@ export default function ProfileScreen() {
     <View style={styles.footer}><Text style={styles.footerTitle}>Halovat — Sokin va xolis hamroh</Text><Text style={styles.footerVersion}>Versiya: v1.0.0 (Yengil va reklamasiz)</Text></View>
 
     <NativeSheet visible={panel !== null} onClose={closePanel} title={panel ? PANEL_TITLES[panel] : ''}>
-        {panel === 'name' ? <><Text style={styles.rowTitle}>Ismingiz</Text><TextInput accessibilityLabel="Ismingiz" value={nameDraft} onChangeText={setNameDraft} maxLength={40} autoFocus selectTextOnFocus placeholder={t('Ismingiz')} placeholderTextColor={colors.muted} style={styles.nameInput} returnKeyType="done" onSubmitEditing={saveName} /><NativeAction label="Saqlash" onPress={saveName} /></> : null}
         {panel === 'city' ? <NativeSelect value={city.id} options={CITIES.map(item => ({ value: item.id, label: item.name }))}
           onChange={id => { void setCity(id); }} /> : null}
         {panel === 'reminders' ? <><Text style={styles.rowTitle}>Namoz vaqtidan keyin</Text>
@@ -308,7 +307,9 @@ export default function ProfileScreen() {
           <Text style={{ color: colors.green, fontSize: data.arabicFontSize, lineHeight: data.arabicFontSize * 1.8, textAlign: 'center' }}>رَبِّ زِدْنِي عِلْمًا</Text>
         </> : null}
     </NativeSheet>
-  </Screen>;
+  </Screen>
+    <ProfileNameSheet visible={nameEditorOpen} name={data.displayName} onSave={setDisplayName} onClose={() => setNameEditorOpen(false)} />
+  </>;
 }
 
 const baseStyles = StyleSheet.create({
@@ -364,5 +365,4 @@ const baseStyles = StyleSheet.create({
   footerTitle: { color: '#404944', fontSize: 12, fontWeight: '600' },
   footerVersion: { color: '#707974', fontSize: 10 },
   callEntry: { gap: 3, paddingVertical: 6 },
-  nameInput: { minHeight: 48, borderRadius: 12, paddingHorizontal: 12, backgroundColor: '#F4F4F0', color: '#1B1C1A', fontSize: 16 },
 });
