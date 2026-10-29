@@ -1,3 +1,4 @@
+import type { NavigationState } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -14,7 +15,17 @@ export default function TabLayout() {
       unstable_nativeProps={{ colorScheme: dark ? 'dark' : 'light' }}
       iconColor={{ default: colors.body, selected: colors.green }}
       labelStyle={{ default: { color: colors.body }, selected: { color: colors.green } }}>
-      <NativeTabs.Trigger name="(home)">
+      <NativeTabs.Trigger name="(home)" listeners={({ navigation, route }) => ({
+        blur: () => {
+          const tabs: NavigationState | undefined = navigation.getState();
+          // Only reset when switching tabs, not when a modal covers Home.
+          if (!tabs || tabs.routes[tabs.index]?.key === route.key) return;
+          const homeStack = tabs.routes.find(tab => tab.key === route.key)?.state;
+          if (homeStack?.type === 'stack' && homeStack.key && (homeStack.index ?? 0) > 0) {
+            navigation.dispatch({ type: 'POP_TO_TOP', target: homeStack.key });
+          }
+        },
+      })}>
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
         <NativeTabs.Trigger.Label>{t('Bosh sahifa')}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
