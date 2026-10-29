@@ -61,7 +61,7 @@ function requireModule(name) {
   };
   if (name === 'lucide-react-native') return Object.fromEntries(['Bookmark', 'Landmark', 'MapPin'].map(type => [type, type]));
   if (name.endsWith('/LanguageContext')) return { useLanguage: () => ({ t: text => text, language: 'uz' }) };
-  if (name.endsWith('/useAppTheme')) return { useThemedStyles: styles => styles, useThemeColors: () => ({ green: '#006C49', muted: '#707974' }) };
+  if (name.endsWith('/useAppTheme')) return { useAppTheme: () => ({ dark: false }), useThemedStyles: styles => styles, useThemeColors: () => ({ green: '#006C49', muted: '#707974' }) };
   if (name.endsWith('/theme')) return { Typography: {} };
   if (name.endsWith('/AppText')) return { Text: 'Text' };
   if (name.endsWith('/AppContext')) return { useHalovat: () => store };

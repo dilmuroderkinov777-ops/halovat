@@ -1,14 +1,19 @@
 import { NativeTabs } from 'expo-router/native-tabs';
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { useThemeColors } from '../../ui/useAppTheme';
+import { useAppTheme, useThemeColors } from '../../ui/useAppTheme';
 
 export default function TabLayout() {
+  const { dark } = useAppTheme();
   const colors = useThemeColors();
   const { t } = useLanguage();
 
   return (
-    <NativeTabs tintColor={colors.green} backgroundColor={colors.paper}>
+    <NativeTabs tintColor={colors.green} backgroundColor={colors.paper}
+      // iOS Liquid Glass follows the native host's interface style, not JS colors.
+      unstable_nativeProps={{ colorScheme: dark ? 'dark' : 'light' }}
+      iconColor={{ default: colors.body, selected: colors.green }}
+      labelStyle={{ default: { color: colors.body }, selected: { color: colors.green } }}>
       <NativeTabs.Trigger name="(home)">
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
         <NativeTabs.Trigger.Label>{t('Bosh sahifa')}</NativeTabs.Trigger.Label>
