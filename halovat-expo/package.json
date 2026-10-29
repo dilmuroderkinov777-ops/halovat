@@ -36,15 +36,19 @@
     "react-native-screens": "~4.30.0",
     "react-native-svg": "15.16.0",
     "react-native-web": "^0.21.4",
-    "react-native-webview": "14.0.1"
+    "react-native-webview": "14.0.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
+    "@types/three": "^0.186.0",
+    "esbuild": "^0.28.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "build:qibla": "node scripts/build-qibla-scene.cjs",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",

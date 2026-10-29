@@ -2,6 +2,16 @@ import { AppLanguage } from '../data/languages';
 
 // Uzbek source copy remains unchanged. Other languages are UI translations.
 const entries: readonly (readonly [string, string, string])[] = [
+  ['Qiblaga yo‘naldingiz', 'Вы направлены к кибле', 'Facing the Qibla'],
+  ['O‘ngga buring', 'Повернитесь вправо', 'Turn right'],
+  ['Chapga buring', 'Повернитесь влево', 'Turn left'],
+  ['Qayta sozlash', 'Калибровка', 'Calibrate'],
+  ['Shahar bo‘yicha', 'По городу', 'City location'],
+  ['Telefon', 'Телефон', 'Phone'],
+  ['Joylashuvni o‘zgartirish', 'Изменить местоположение', 'Change location'],
+  ['Qibla sahnasi ochilmoqda', 'Загрузка сцены киблы', 'Loading Qibla scene'],
+  ['Telefon ushlagan personaj va Qibla yo‘nalishidagi Ka’ba', 'Персонаж с телефоном и Кааба в направлении киблы', 'Person holding a phone and the Kaaba in the Qibla direction'],
+  ['3D sahna ochilmadi. Yo‘nalishni pastdagi ko‘rsatkichdan kuzating.', 'Не удалось открыть 3D-сцену. Следуйте указателю ниже.', 'The 3D scene could not load. Follow the direction below.'],
   ["Kerakli bo‘limni oching va bosqichlarni bajaring.","Откройте нужный раздел и выполните шаги.","Open a section and follow the steps."],
   ["Ovoz va qulf ekranidagi eslatmalar","Звук и уведомления на экране блокировки","Sound and Lock Screen alerts"],
   ["Sozlamalar → Bildirishnomalar","Настройки → Уведомления","Settings → Notifications"],

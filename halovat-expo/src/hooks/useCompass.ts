@@ -4,6 +4,7 @@ import { Animated, AppState, Easing, Platform } from 'react-native';
 import { useCallback, useState } from 'react';
 import { foregroundLocation } from '../services/foregroundLocation';
 import { createHeadingFilter, headingDelta } from '../domain/compassHeading';
+import { createCompassMotion } from '../domain/compassMotion';
 
 type Point = { latitude: number; longitude: number };
 type Reading = { heading: number | null; accuracy: number; trueNorth: boolean; source: string; tilt: number };
@@ -18,6 +19,7 @@ export function useCompass(city: Point) {
   const [status, setStatus] = useState<'waiting' | 'ready' | 'permission' | 'unavailable' | 'no_sensor'>('waiting');
   const [generation, setGeneration] = useState(0);
   const [animatedHeading] = useState(() => new Animated.Value(0));
+  const [motion] = useState(createCompassMotion);
   const restart = useCallback(() => setGeneration(value => value + 1), []);
 
   useFocusEffect(useCallback(() => {
@@ -46,6 +48,7 @@ export function useCompass(city: Point) {
       clearTimeout(timer); clearTimeout(motionTimer); clearTimeout(readingTimer);
       motionTimer = readingTimer = undefined;
       animation?.stop(); animation = undefined;
+      motion.publish(null);
     };
     const start = async () => {
       stop();
@@ -85,8 +88,8 @@ export function useCompass(city: Point) {
           const delta = headingDelta(target, heading);
           if (delta !== 0) {
             target += delta;
-            // One native value drives the needle; the Qibla target stays fixed.
-            // No JS frame loop or second smoothing filter is needed.
+            // Preserve the shared native value for native compass consumers;
+            // the 3D scene gets bounded targets through motion below.
             animation?.stop();
             animation = Animated.timing(animatedHeading, {
               toValue: target, duration: MOTION_INTERVAL, easing: Easing.linear,
@@ -95,7 +98,9 @@ export function useCompass(city: Point) {
             animation.start();
           }
         }
+        const motionChanged = processed.heading !== heading || confidenceChanged;
         processed = { heading, accuracy: sample.accuracy, trueNorth: sample.trueNorth, source: 'expo_location', tilt: 0 };
+        if (motionChanged) motion.publish({ heading, accuracy: sample.accuracy, trueNorth: sample.trueNorth });
         if (!ready) { ready = true; setStatus('ready'); }
         if (published.heading === null || confidenceChanged || Date.now() - lastReadingAt >= READING_INTERVAL) {
           clearTimeout(readingTimer); readingTimer = undefined;
@@ -146,9 +151,9 @@ export function useCompass(city: Point) {
       if (state === 'active') void start(); else { stop(); setReading(empty); }
     });
     return () => { disposed = true; stop(); listener.remove(); };
-  }, [animatedHeading, generation]));
+  }, [animatedHeading, generation, motion]));
 
   return { coordinates: position?.coords ?? city, gpsAccuracy: position?.coords.accuracy ?? null,
-    animatedHeading, heading: reading.heading, headingAccuracy: reading.accuracy, trueNorth: reading.trueNorth,
+    animatedHeading, motion, heading: reading.heading, headingAccuracy: reading.accuracy, trueNorth: reading.trueNorth,
     sensorSource: reading.source, tilt: reading.tilt, status, restart };
 }

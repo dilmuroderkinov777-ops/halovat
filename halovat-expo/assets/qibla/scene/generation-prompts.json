@@ -1,0 +1,27 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "../../../../design/qibla-proposals/12-third-person-isometric-map.png",
+  "encoding": "Generated PNG assets resized and encoded as WebP; transparency preserved. No runtime image generation or downloads.",
+  "assets": [
+    {
+      "file": "person.webp",
+      "transparent_background": true,
+      "prompt": "Use case: background-extraction / identity-preserve. Create a production transparent PNG sprite for a mobile 3D Qibla compass, based on the EXACT small man in the attached reference. Extract and faithfully reconstruct ONLY the full-body man holding a smartphone. Match his original 3/4 rear view from an elevated isometric camera, cream embroidered kufi cap, short black hair, beige-ivory long-sleeve shirt with real fabric folds, dark green charcoal trousers, off-white sneakers, warm skin and realistic hands holding the black smartphone at chest height to his right. Back visible, face mostly hidden, phone screen visible showing a tiny mint compass arrow. The character stands naturally looking forward and slightly to image upper right, as in the reference. Maintain the reference's premium detailed soft 3D render style, physically shaded cloth, detailed embroidery on cap, clean anatomy, soft warm light from upper left. Full body including shoes in frame, large character occupies 85% image height, centered. TRANSPARENT BACKGROUND. Remove ALL surrounding scene: no ground, no circle, no arrow beneath feet, no Kaaba, no plants, no UI, no text, no panel, no shadow plane, no background. Preserve this exact outfit, pose and viewing angle rather than inventing a different character. This asset will remain fixed on screen while a real-time 3D environment rotates behind it."
+    },
+    {
+      "file": "kiswa.webp",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Production UV texture for one square wall of the Kaaba, based on the attached reference. Flat front-on square black woven silk cloth with subtle damask and vertical folds. Ornate antique-gold belt at 22–30% height, small gold panels and teardrops at 34–46%, restrained thin bottom trim. No door, roof, other sides, perspective, floor, background or UI. Match the reference's black cloth and gold embroidery; no readable invented wording."
+    },
+    {
+      "file": "door.webp",
+      "transparent_background": false,
+      "prompt": "Use case: precise-object-edit. Preserve the supplied square kiswa wall texture, gold belt and black cloth. Add a centered tall ornate gold double door from 39–92% height, 24% image width, with an ornate frame. Keep the flat front-on UV texture and all other details unchanged."
+    },
+    {
+      "file": "planter.webp",
+      "transparent_background": true,
+      "prompt": "Use case: background-extraction. Transparent production sprite of the reference's small rectangular ivory travertine planter with two date palm saplings. Elevated 35-degree three-quarter front/right view, fine olive-green fronds, pale soil, softly shaded cream stone, warm upper-left light. Match the reference's premium detailed 3D render. No surrounding ground, other objects, UI, text or shadow plane."
+    }
+  ]
+}

@@ -59,7 +59,8 @@ function requireModule(name) {
     getItem: async key => { bookmarkAccess.push(key); return JSON.stringify(['node/1']); },
     setItem: async key => { bookmarkAccess.push(key); },
   };
-  if (name === 'lucide-react-native') return Object.fromEntries(['Bookmark', 'Landmark', 'MapPin'].map(type => [type, type]));
+  if (name === 'lucide-react-native') return Object.fromEntries(['Bookmark', 'Landmark', 'MapPin', 'ChevronRight'].map(type => [type, type]));
+  if (name.endsWith('/mosque-3d.png')) return 'mosque-3d.png';
   if (name.endsWith('/LanguageContext')) return { useLanguage: () => ({ t: text => text, language: 'uz' }) };
   if (name.endsWith('/useAppTheme')) return { useAppTheme: () => ({ dark: false }), useThemedStyles: styles => styles, useThemeColors: () => ({ green: '#006C49', muted: '#707974' }) };
   if (name.endsWith('/theme')) return { Typography: {} };
@@ -139,10 +140,11 @@ async function main() {
   const qibla = mount(load('src/app/(tabs)/qibla/index.tsx')).render();
   assert.equal(findAll(qibla, 'NativeSegments').length, 0);
   assert.equal(findAll(qibla, 'QiblaCompass').length, 1);
-  assert.equal(action(qibla, 'Yaqin masjidlar').large, true);
-  assert.deepEqual(Array.from(qibla.props.children, child => child.type), ['QiblaCompass', 'NativeAction']);
-  assert.equal(findAll(qibla, 'NativeAction').length, 1);
-  action(qibla, 'Yaqin masjidlar').onPress();
+  const nearby = findAll(qibla, 'Pressable').find(node => node.props.accessibilityLabel === 'Yaqin masjidlar');
+  assert.ok(nearby, 'Nearby mosques card must be an accessible button');
+  assert.equal(findAll(nearby, 'Image')[0].props.source, 'mosque-3d.png');
+  assert.deepEqual(Array.from(qibla.props.children, child => child.type), ['QiblaCompass', 'Pressable']);
+  nearby.props.onPress();
   assert.deepEqual(navigations, ['/(tabs)/qibla/mosque']);
 
   const screen = mount(load('src/screens/MosqueScreen.tsx'));

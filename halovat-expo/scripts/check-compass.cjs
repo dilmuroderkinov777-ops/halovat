@@ -139,6 +139,7 @@ function harness({ granted = true, deferWatcher = false, platform = 'android' } 
     },
     '../services/foregroundLocation': { foregroundLocation: () => gps },
     '../domain/compassHeading': headingMath,
+    '../domain/compassMotion': loadMath('src/domain/compassMotion.ts'),
   };
   class ClockDate extends Date { static now() { return clock.now; } }
   const box = {
@@ -189,7 +190,7 @@ function checkMath() {
   assert.equal(headingDelta(179, -179), 2);
 }
 
-// Render the actual compass and needle with native views mocked; this checks
+// Render the actual compass with native views mocked; this checks
 // visibility decisions, not physical sensor accuracy or device compositing.
 function compassView(reading) {
   const react = {
@@ -198,24 +199,32 @@ function compassView(reading) {
     useMemo: create => create(),
     useCallback: callback => callback,
     useState: initial => [initial, () => {}],
+    useEffect: () => {},
   };
   const dependencies = {
     react,
     'react-native': {
       View: 'View', Pressable: 'Pressable', Animated: { View: 'Animated.View' },
-      StyleSheet: { create: styles => styles, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390 }),
+      StyleSheet: { create: styles => styles, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390, height: 844 }),
     },
     'react-native-svg': { __esModule: true, default: 'Svg', Circle: 'Circle', Line: 'Line', Path: 'Path' },
     'expo-router': { router: {} },
-    'lucide-react-native': { LocateFixed: 'LocateFixed' },
+    'lucide-react-native': Object.fromEntries(['Check', 'CornerUpLeft', 'CornerUpRight', 'LocateFixed', 'MapPin', 'Pencil'].map(name => [name, name])),
     '../context/LanguageContext': { useLanguage: () => ({ t: text => text }) },
     '../domain/prayers': { nearestCity: () => null },
     '../domain/qibla': loadMath('src/domain/qibla.ts'),
     '../hooks/useCompass': { useCompass: () => reading },
     '../ui/AppText': { Text: 'Text' },
-    '../ui/useAppTheme': { useThemedStyles: styles => styles, useThemeColors: () => ({ paper: '#FFFFFF', green: '#006C49' }) },
+    '../ui/useAppTheme': { useAppTheme: () => ({ dark: false }), useThemedStyles: styles => styles, useThemeColors: () => ({ paper: '#FFFFFF', green: '#006C49' }) },
+    '../hooks/useQiblaAlignment': {
+      useQiblaActive: () => true,
+      useQiblaAlignment: (motion, bearing) => {
+        const sample = motion.current();
+        return sample && sample.accuracy >= 3 && sample.trueNorth && Math.abs(headingMath.headingDelta(sample.heading, bearing)) <= 8;
+      },
+    },
   };
-  for (const name of ['CompassCalibrationGuide', 'KaabaIcon', 'NativeAction']) dependencies['./' + name] = { [name]: name };
+  for (const name of ['CompassCalibrationGuide', 'QiblaScene', 'QiblaCalibrationAction']) dependencies['./' + name] = { [name]: name };
   const load = file => {
     const box = { exports: {}, require: name => {
       assert.ok(name in dependencies, 'Unexpected view dependency: ' + name);
@@ -224,15 +233,14 @@ function compassView(reading) {
     vm.runInNewContext(compile(file), box);
     return box.exports;
   };
-  const { QiblaNeedle } = load('src/components/QiblaNeedle.tsx');
-  dependencies['./QiblaNeedle'] = { QiblaNeedle };
   const { QiblaCompass } = load('src/components/QiblaCompass.tsx');
   const tree = QiblaCompass({ city: { name: 'Toshkent' } });
   const all = node => Array.isArray(node) ? node.flatMap(all) : node?.props ? [node, ...all(node.props.children)] : [];
   const nodes = all(tree);
-  const needle = QiblaNeedle(nodes.find(node => node.type === QiblaNeedle).props);
+  const scene = nodes.find(node => node.type === 'QiblaScene');
+  assert.equal(scene.props.motion, reading.motion, 'Scene must consume the actual live motion signal');
   return {
-    opacity: needle.props.style.at(-1).opacity,
+    opacity: scene.props.motion.current() ? 1 : 0,
     texts: nodes.filter(node => node.type === 'Text').flatMap(node => node.props.children),
   };
 }
@@ -248,12 +256,12 @@ async function checkNeedleVisibility() {
     h.emit(bearing, 0);
     assert.equal(view().opacity, 1, platform + ': a finite low-confidence first heading must show the needle');
     assert.ok(view().texts.includes('Kompas aniqligi past'));
-    assert.ok(!view().texts.includes('Qibla tomoni to‘g‘rilandi'));
+    assert.ok(!view().texts.includes('Qiblaga yo‘naldingiz'));
     h.emit(bearing, 3);
-    assert.ok(view().texts.includes('Qibla tomoni to‘g‘rilandi'));
+    assert.ok(view().texts.includes('Qiblaga yo‘naldingiz'));
     h.emit(bearing, 0);
     assert.equal(view().opacity, 1, platform + ': calibration loss must not hide a live needle');
-    assert.ok(!view().texts.includes('Qibla tomoni to‘g‘rilandi'));
+    assert.ok(!view().texts.includes('Qiblaga yo‘naldingiz'));
     h.emit(90, 0, false);
     assert.equal(view().opacity, 1, 'Magnetic fallback must remain visible with a warning');
     await h.appState('background');
@@ -267,7 +275,7 @@ async function checkNeedleVisibility() {
     assert.equal(view().opacity, 0, 'A real sensor failure must hide the stale direction');
     await h.blur();
   }
-  console.log('PASS: actual needle visibility survives accuracy loss and magnetic fallback on both platforms; missing/invalid/stale readings stay hidden.');
+  console.log('PASS: actual 3D scene keeps live targets during accuracy loss/magnetic fallback; missing, invalid and stale readings stay hidden on both platforms.');
 }
 
 async function checkPublishing() {
