@@ -5,7 +5,11 @@ export function sheetAppearance(_scheme: 'light' | 'dark', _backgroundColor: str
   return [];
 }
 
-export function largeActionModifiers(_variant: 'filled' | 'outlined' | 'text'): ModifierConfig[] {
+export function largeActionModifiers(_variant: 'filled' | 'outlined' | 'text', _color?: string): ModifierConfig[] {
+  return [];
+}
+
+export function actionModifiers(_variant: 'filled' | 'outlined' | 'text', _color: string, _large = false): ModifierConfig[] {
   return [];
 }
 

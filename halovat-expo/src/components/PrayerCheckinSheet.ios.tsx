@@ -61,10 +61,10 @@ export function PrayerCheckinSheet({ prayerName, onChoose, onClose }: PrayerChec
       <Button onPress={() => onChoose('done')} modifiers={largeActionModifiers('filled')}>
         <Text modifiers={largeActionLabelModifiers()}>{t('Ha, o‘qidim')}</Text>
       </Button>
-      <Button onPress={() => onChoose('missed')} modifiers={largeActionModifiers('outlined')}>
+      <Button onPress={() => onChoose('missed')} modifiers={largeActionModifiers('outlined', colors.green)}>
         <Text modifiers={largeActionLabelModifiers()}>{t('Yo‘q, qazo bo‘ldi')}</Text>
       </Button>
-      <Button onPress={onClose} modifiers={largeActionModifiers('outlined')}>
+      <Button onPress={onClose} modifiers={largeActionModifiers('outlined', colors.green)}>
         <Text modifiers={largeActionLabelModifiers()}>{t('Keyinroq belgilayman')}</Text>
       </Button>
     </VStack>

@@ -21,7 +21,7 @@ export default function QiblaScreen() {
   const openMosques = () => router.navigate('/mosque');
 
   return <Screen contentStyle={styles.content}>
-    <NativeAction label="Yaqin masjidlar" onPress={openMosques} large variant="outlined" />
+    <NativeAction label="Yaqin masjidlar" onPress={openMosques} large variant="filled" />
 
     <QiblaCompass city={city} />
 

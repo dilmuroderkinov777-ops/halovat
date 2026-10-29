@@ -78,7 +78,7 @@ export default function TasbeehScreen() {
   return (
       <Screen style={styles.screen} contentStyle={styles.content}>
         <View style={styles.page}>
-          <NativeAction label="Kundalik Duolar" onPress={() => router.navigate('/duas')} large variant="outlined" />
+          <NativeAction label="Kundalik Duolar" onPress={() => router.navigate('/duas')} large variant="filled" />
 
           <LinearGradient colors={['#064E3B', '#003527']} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={styles.hero}>
             <View pointerEvents="none" style={styles.heroGlowTop} />

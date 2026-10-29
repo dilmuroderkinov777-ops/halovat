@@ -129,9 +129,9 @@ export default function TrackerScreen() {
               <Text style={styles.dateRangeText} numberOfLines={1}>{range}</Text>
             </View>
             <View style={styles.dateNav}>
-              <NativeAction label="▦" translate={false} accessibilityLabel="Sana tanlash" compact onPress={() => setCalendarOpen(true)} />
-              <NativeAction label="‹" translate={false} accessibilityLabel="Oldingi hafta" compact onPress={() => changeWeek(-1)} />
-              <NativeAction label="›" translate={false} accessibilityLabel="Keyingi hafta" compact disabled={!canGoForward} onPress={() => changeWeek(1)} />
+              <NativeAction label="▦" translate={false} accessibilityLabel="Sana tanlash" compact variant="text" onPress={() => setCalendarOpen(true)} />
+              <NativeAction label="‹" translate={false} accessibilityLabel="Oldingi hafta" compact variant="text" onPress={() => changeWeek(-1)} />
+              <NativeAction label="›" translate={false} accessibilityLabel="Keyingi hafta" compact variant="text" disabled={!canGoForward} onPress={() => changeWeek(1)} />
             </View>
           </View>
           <View style={styles.dayStrip}>
