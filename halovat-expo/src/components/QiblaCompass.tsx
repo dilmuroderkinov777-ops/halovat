@@ -68,7 +68,6 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
 
   const calibrationGroup = useMemo(() => <View style={styles.calibrationGroup}>
     <NativeAction label="Kompasni qayta sozlash" onPress={showCalibration} variant="outlined" />
-    <Text style={styles.calibrationHint}>Telefoningizni sakkiz (8) shaklida ohista aylantiring</Text>
   </View>, [showCalibration, styles]);
 
   return <>
@@ -105,6 +104,6 @@ const baseStyles = StyleSheet.create({
   alignmentTextActive: { color: '#FFFFFF' },
   reading: { alignItems: 'center' },
   readingTitle: { color: INK, fontSize: 15, fontWeight: '600', textAlign: 'center' },
-  calibrationGroup: { gap: 6, alignItems: 'center' },
+  calibrationGroup: { alignItems: 'center' },
   calibrationHint: { color: MUTED, fontSize: 10, textAlign: 'center' },
 });

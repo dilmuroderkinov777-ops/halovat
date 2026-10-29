@@ -95,10 +95,10 @@ async function main() {
   assert.equal(findAll(qibla, 'NativeSegments').length, 0);
   assert.equal(findAll(qibla, 'QiblaCompass').length, 1);
   assert.equal(action(qibla, 'Yaqin masjidlar').large, true);
+  assert.deepEqual(Array.from(qibla.props.children, child => child.type), ['QiblaCompass', 'NativeAction']);
+  assert.equal(findAll(qibla, 'NativeAction').length, 1);
   action(qibla, 'Yaqin masjidlar').onPress();
-  action(qibla, 'Barchasi').onPress();
-  findAll(qibla, 'Pressable')[0].props.onPress();
-  assert.deepEqual(navigations, ['/mosque', '/mosque', '/mosque']);
+  assert.deepEqual(navigations, ['/mosque']);
 
   const screen = mount(load('src/app/mosque.tsx'));
   let tree = screen.render();
