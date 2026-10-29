@@ -1,16 +1,17 @@
 import { useThemedStyles } from '../../../ui/useAppTheme';
 import { Typography } from '../../../ui/theme';
-import { BookOpen, CalendarDays, Check, CheckCircle2, Flame, History, Info, Minus, X } from 'lucide-react-native';
+import { BookOpen, Check, CheckCircle2, Flame, History, Info, Minus, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Pressable, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
-import { NativeCalendar } from '../../../components/NativeCalendar';
+import { PrayerCalendarSheet } from '../../../components/PrayerCalendarSheet';
 import { NativeAction } from '../../../components/NativeAction';
 import { NativeSegments } from '../../../components/NativeSegments';
 import { NativeSheet } from '../../../components/NativeSheet';
 import { Screen } from '../../../components/Screen';
 import { useHalovat } from '../../../context/AppContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { dateKey, formatUzDate, formatUzShortMonth, PRAYERS, prayerKey, startOfWeek } from '../../../domain/prayers';
 
 type Period = 'week' | 'month' | 'year';
@@ -34,6 +35,7 @@ function asDate(key: string) {
 
 export default function TrackerScreen() {
   const styles = useThemedStyles(baseStyles);
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const RING_SIZE = Math.min(112, (Math.min(width, 440) - 44) * 5 / 12 - 20);
   const RING_RADIUS = RING_SIZE / 2 - 8;
@@ -108,44 +110,50 @@ export default function TrackerScreen() {
     const [day, prayer] = key.split(':');
     setPrayerStatus(asDate(day), prayer as typeof PRAYERS[number]['id'], 'done');
   };
-  const nextMonday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7);
-  const canGoForward = dateKey(nextMonday) <= todayKey;
-  const changeWeek = (direction: -1 | 1) => {
-    const next = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 7 * direction);
-    setSelectedDate(dateKey(next) > todayKey ? new Date(now) : next);
-  };
   const range = formatUzDate(days[0]) + ' – ' + formatUzDate(days[6]);
   const chartTitle = period === 'week' ? 'Haftalik natija' : period === 'month' ? 'Oylik natija' : 'Yillik natija';
 
   return (
+    <>
     <Screen style={styles.screen} contentStyle={styles.content}>
       <View style={styles.page}>
         <NativeSegments value={period} options={PERIODS.map(item => ({ value: item.id, label: item.title }))} onChange={setPeriod} />
 
-        <View style={styles.dateSection}>
-          <View style={styles.dateHeader}>
-            <View style={styles.dateRange}>
-              <CalendarDays size={16} color={EMERALD} />
-              <Text style={styles.dateRangeText} numberOfLines={1}>{range}</Text>
-            </View>
-            <View style={styles.dateNav}>
-              <NativeAction label="▦" translate={false} accessibilityLabel="Sana tanlash" compact square variant="text" onPress={() => setCalendarOpen(true)} />
-              <NativeAction label="‹" translate={false} accessibilityLabel="Oldingi hafta" compact square variant="text" onPress={() => changeWeek(-1)} />
-              <NativeAction label="›" translate={false} accessibilityLabel="Keyingi hafta" compact square variant="text" disabled={!canGoForward} onPress={() => changeWeek(1)} />
-            </View>
+        <View style={styles.resultsSection}>
+          <View style={styles.resultsHeader}>
+            <Text style={styles.sectionTitle}>{chartTitle}</Text>
+            <Text style={styles.percentSummary}>{percent}% yakunlandi</Text>
           </View>
-          <View style={styles.dayStrip}>
-            {days.map((day, index) => {
-              const today = dateKey(day) === todayKey;
-              const statuses = PRAYERS.map(prayer => data.prayerStatus[prayerKey(day, prayer.id)]);
-              const hasMissed = statuses.includes('missed');
-              const hasDone = statuses.includes('done');
-              return <View key={dateKey(day)} style={[styles.dayItem, index === 4 && styles.fridayDay, today && styles.todayDay]}>
-                <Text style={[styles.dayName, index === 4 && styles.fridayText, today && styles.todayText]}>{today ? 'Bugun' : DAY_NAMES[index]}</Text>
-                <Text style={[styles.dayNumber, index === 4 && styles.fridayText, today && styles.todayText]}>{day.getDate()}</Text>
-                <View style={[styles.dayDot, hasDone && styles.dayDotDone, hasMissed && styles.dayDotMissed, today && !hasMissed && styles.dayDotToday]} />
-              </View>;
-            })}
+          <View style={styles.summaryRow}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('Bajarilish darajasi')}
+              accessibilityHint={t('To‘liq taqvim')} onPress={() => setCalendarOpen(true)}
+              style={({ pressed }) => [styles.progressCard, pressed && styles.pressed]}>
+              <View style={[styles.ringWrap, { width: RING_SIZE, height: RING_SIZE }]}>
+                <Svg width={RING_SIZE} height={RING_SIZE} viewBox={'0 0 ' + RING_SIZE + ' ' + RING_SIZE}>
+                  <SvgCircle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} stroke="#EFEEEA" strokeWidth="9" fill="none" />
+                  <SvgCircle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} stroke={EMERALD} strokeWidth="9" strokeLinecap="round" fill="none" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - percent / 100)} transform={'rotate(-90 ' + RING_SIZE / 2 + ' ' + RING_SIZE / 2 + ')'} />
+                </Svg>
+                <View style={styles.ringCenter}><Text style={styles.ringCount}>{totalDone}</Text><Text style={styles.ringTotal}>/ {totalPossible} namoz</Text></View>
+              </View>
+              <Text style={styles.progressLabel}>Bajarilish darajasi</Text>
+            </Pressable>
+            <View style={styles.trendCard}>
+              <View style={styles.trendHeader}>
+                <Text style={styles.trendTitle}>{period === 'week' ? 'Kunlik taqsimot' : period === 'month' ? 'Haftalik taqsimot' : 'Oylik taqsimot'}</Text>
+                {period === 'week' ? <Text style={styles.trendPill}>{fullDays} / {completedDays} to‘liq kun</Text> : <Text style={styles.trendPill}>{totalDone} / {totalPossible}</Text>}
+              </View>
+              <View style={styles.bars}>
+                {groups.map((item, index) => (
+                  <View key={item.label + index} style={styles.barColumn}>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: `${item.possible ? Math.round(item.done / item.possible * 100) : 0}%` as `${number}%` }]} />
+                    </View>
+                    <Text numberOfLines={1} style={styles.barLabel}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.streakBanner}><View style={styles.streakIcon}><Flame size={14} color="#FFB95F" /></View><Text numberOfLines={1} style={styles.streakText}>{streak ? `Ajoyib! ${streak} kunlik uzluksiz namoz silsilasi.` : 'Namoz silsilasini boshlang'}</Text></View>
+            </View>
           </View>
         </View>
 
@@ -157,6 +165,7 @@ export default function TrackerScreen() {
             </View>
             <Text style={styles.tapHint}>Katakka bosing</Text>
           </View>
+          <Text style={styles.weekRange}>{range}</Text>
           <View style={styles.matrixHeader}>
             <Text style={styles.prayerColumnHeader}>Namoz</Text>
             {DAY_NAMES.map((name, index) => <Text key={name} style={[styles.weekdayHeader, index === 4 && styles.fridayText]}>{name}{'\n'}{days[index].getDate()}</Text>)}
@@ -186,42 +195,6 @@ export default function TrackerScreen() {
           </View>
         </View>
 
-        <View style={styles.resultsSection}>
-          <View style={styles.resultsHeader}>
-            <Text style={styles.sectionTitle}>{chartTitle}</Text>
-            <Text style={styles.percentSummary}>{percent}% yakunlandi</Text>
-          </View>
-          <View style={styles.summaryRow}>
-          <View style={styles.progressCard}>
-            <View style={[styles.ringWrap, { width: RING_SIZE, height: RING_SIZE }]}>
-              <Svg width={RING_SIZE} height={RING_SIZE} viewBox={'0 0 ' + RING_SIZE + ' ' + RING_SIZE}>
-                <SvgCircle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} stroke="#EFEEEA" strokeWidth="9" fill="none" />
-                <SvgCircle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} stroke={EMERALD} strokeWidth="9" strokeLinecap="round" fill="none" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - percent / 100)} transform={'rotate(-90 ' + RING_SIZE / 2 + ' ' + RING_SIZE / 2 + ')'} />
-              </Svg>
-              <View style={styles.ringCenter}><Text style={styles.ringCount}>{totalDone}</Text><Text style={styles.ringTotal}>/ {totalPossible} namoz</Text></View>
-            </View>
-            <Text style={styles.progressLabel}>Bajarilish darajasi</Text>
-          </View>
-          <View style={styles.trendCard}>
-            <View style={styles.trendHeader}>
-              <Text style={styles.trendTitle}>{period === 'week' ? 'Kunlik taqsimot' : period === 'month' ? 'Haftalik taqsimot' : 'Oylik taqsimot'}</Text>
-              {period === 'week' ? <Text style={styles.trendPill}>{fullDays} / {completedDays} to‘liq kun</Text> : <Text style={styles.trendPill}>{totalDone} / {totalPossible}</Text>}
-            </View>
-            <View style={styles.bars}>
-              {groups.map((item, index) => (
-                <View key={item.label + index} style={styles.barColumn}>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { height: `${item.possible ? Math.round(item.done / item.possible * 100) : 0}%` as `${number}%` }]} />
-                  </View>
-                  <Text numberOfLines={1} style={styles.barLabel}>{item.label}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.streakBanner}><View style={styles.streakIcon}><Flame size={14} color="#FFB95F" /></View><Text numberOfLines={1} style={styles.streakText}>{streak ? `Ajoyib! ${streak} kunlik uzluksiz namoz silsilasi.` : 'Namoz silsilasini boshlang'}</Text></View>
-          </View>
-          </View>
-        </View>
-
         <View style={styles.qazoCard}>
           <View style={styles.qazoHeader}>
             <View style={styles.qazoHeaderLeft}>
@@ -247,17 +220,17 @@ export default function TrackerScreen() {
           <Text style={styles.ayahText}>«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir».</Text>
           <View style={styles.ayahRow}><Text style={styles.ayahSource}>«Ankavut» surasi, 45-oyat</Text><NativeAction label="Ulashish" compact variant="text" colorScheme="dark" onPress={() => void Share.share({ message: '«Albatta, namoz fahsh va yomon ishlardan qaytarur. Allohning zikri esa, shubhasiz, eng buyukdir». «Ankavut» surasi, 45-oyat' })} /></View>
         </View>
-        <NativeSheet visible={calendarOpen} onClose={() => setCalendarOpen(false)} title="Sana tanlash">
-          <NativeCalendar value={selectedDate} onChange={date => { setSelectedDate(date); setCalendarOpen(false); }} maximumDate={now} />
-        </NativeSheet>
-        <NativeSheet visible={qazoOpen} onClose={() => setQazoOpen(false)} title="Qazo namozlar daftarchasi">
-          {missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}>
-            <View style={styles.qazoEntryText}><Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text><Text style={styles.qazoDate}>{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text></View>
-            <NativeAction label="O‘qidim" compact onPress={() => markDone(entry.key)} />
-          </View>) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}
-        </NativeSheet>
       </View>
     </Screen>
+    <PrayerCalendarSheet visible={calendarOpen} value={selectedDate} now={now} statuses={data.prayerStatus}
+      onChange={setSelectedDate} onToggle={togglePrayerStatus} onClose={() => setCalendarOpen(false)} />
+    <NativeSheet visible={qazoOpen} onClose={() => setQazoOpen(false)} title="Qazo namozlar daftarchasi">
+      {missed.length ? missed.map(entry => <View key={entry.key} style={styles.qazoEntry}>
+        <View style={styles.qazoEntryText}><Text style={styles.qazoPrayer}>{entry.prayer.name} namozi</Text><Text style={styles.qazoDate}>{formatUzDate(entry.date)} {entry.date.getFullYear()}</Text></View>
+        <NativeAction label="O‘qidim" compact onPress={() => markDone(entry.key)} />
+      </View>) : <Text style={styles.qazoEmpty}>Hozircha qazo namozlar yo‘q.</Text>}
+    </NativeSheet>
+    </>
   );
 }
 
@@ -265,22 +238,7 @@ const baseStyles = StyleSheet.create({
   screen: { backgroundColor: '#FAF9F5' },
   content: { gap: 0 },
   page: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 20 },
-  dateSection: { gap: 9 },
-  dateHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  dateNav: { flexDirection: 'row', alignItems: 'center' },
-  dateRange: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 },
-  dayStrip: { flexDirection: 'row', padding: 7, gap: 3, borderRadius: 20, backgroundColor: '#FFFFFF' },
-  dayItem: { flex: 1, minHeight: 66, borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  fridayDay: { backgroundColor: '#E8F7EF' },
-  todayDay: { backgroundColor: FOREST },
-  dayName: { color: MUTED, fontSize: 10, fontWeight: '600' },
-  dayNumber: { color: INK, fontSize: 16, fontWeight: '700' },
-  todayText: { color: '#FFFFFF' },
-  dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#E3E2DF' },
-  dayDotDone: { backgroundColor: EMERALD },
-  dayDotMissed: { backgroundColor: '#BA1A1A' },
-  dayDotToday: { backgroundColor: '#6FFBBE' },
-  dateRangeText: { color: '#404944', fontSize: 12, fontWeight: '600', textTransform: 'capitalize', flexShrink: 1 },
+  weekRange: { color: MUTED, fontSize: 11, textTransform: 'capitalize' },
   fridayText: { color: EMERALD },
   matrixCard: { padding: 15, borderRadius: 24, backgroundColor: '#FFFFFF', gap: 10 },
   matrixHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 5 },
@@ -310,6 +268,7 @@ const baseStyles = StyleSheet.create({
   percentSummary: { color: EMERALD, fontSize: 12, fontWeight: '700' },
   summaryRow: { flexDirection: 'row', gap: 12, alignItems: 'stretch' },
   progressCard: { flex: 5, minWidth: 0, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 10, minHeight: 168, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  pressed: { opacity: 0.75 },
   ringWrap: { width: RING_SIZE, height: RING_SIZE, alignItems: 'center', justifyContent: 'center' },
   ringCenter: { position: 'absolute', alignItems: 'center' },
   ringCount: { color: INK, fontSize: 25, lineHeight: 29, fontWeight: '700', fontVariant: ['tabular-nums'] },
