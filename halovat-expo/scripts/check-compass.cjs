@@ -5,7 +5,7 @@ const ts = require('typescript');
 const { Coordinates, Qibla } = require('adhan');
 
 const compile = file => ts.transpileModule(fs.readFileSync(file, 'utf8'), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, esModuleInterop: true },
 }).outputText;
 const loadMath = file => {
   const box = { exports: {} };
@@ -65,6 +65,7 @@ function harness({ granted = true, deferWatcher = false, platform = 'android' } 
 
   class AnimatedValue {
     constructor(value) { this.value = value; state.values.push(this); }
+    interpolate(config) { return { value: this, config }; }
     setValue(value) { this.stopAnimation(); this.value = value; }
     stopAnimation(callback) { this.active?.stop(); callback?.(this.value); }
   }
@@ -186,6 +187,87 @@ function checkMath() {
   assert.equal(steady(270), 270);
   assert.equal(headingDelta(359, 1), 2);
   assert.equal(headingDelta(179, -179), 2);
+}
+
+// Render the actual compass and needle with native views mocked; this checks
+// visibility decisions, not physical sensor accuracy or device compositing.
+function compassView(reading) {
+  const react = {
+    createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
+    memo: component => component,
+    useMemo: create => create(),
+    useCallback: callback => callback,
+    useState: initial => [initial, () => {}],
+  };
+  const dependencies = {
+    react,
+    'react-native': {
+      View: 'View', Pressable: 'Pressable', Animated: { View: 'Animated.View' },
+      StyleSheet: { create: styles => styles, absoluteFill: {} }, useWindowDimensions: () => ({ width: 390 }),
+    },
+    'react-native-svg': { __esModule: true, default: 'Svg', Circle: 'Circle', Line: 'Line', Path: 'Path' },
+    'expo-router': { router: {} },
+    'lucide-react-native': { LocateFixed: 'LocateFixed' },
+    '../context/LanguageContext': { useLanguage: () => ({ t: text => text }) },
+    '../domain/prayers': { nearestCity: () => null },
+    '../domain/qibla': loadMath('src/domain/qibla.ts'),
+    '../hooks/useCompass': { useCompass: () => reading },
+    '../ui/AppText': { Text: 'Text' },
+    '../ui/useAppTheme': { useThemedStyles: styles => styles, useThemeColors: () => ({ paper: '#FFFFFF', green: '#006C49' }) },
+  };
+  for (const name of ['CompassCalibrationGuide', 'KaabaIcon', 'NativeAction']) dependencies['./' + name] = { [name]: name };
+  const load = file => {
+    const box = { exports: {}, require: name => {
+      assert.ok(name in dependencies, 'Unexpected view dependency: ' + name);
+      return dependencies[name];
+    } };
+    vm.runInNewContext(compile(file), box);
+    return box.exports;
+  };
+  const { QiblaNeedle } = load('src/components/QiblaNeedle.tsx');
+  dependencies['./QiblaNeedle'] = { QiblaNeedle };
+  const { QiblaCompass } = load('src/components/QiblaCompass.tsx');
+  const tree = QiblaCompass({ city: { name: 'Toshkent' } });
+  const all = node => Array.isArray(node) ? node.flatMap(all) : node?.props ? [node, ...all(node.props.children)] : [];
+  const nodes = all(tree);
+  const needle = QiblaNeedle(nodes.find(node => node.type === QiblaNeedle).props);
+  return {
+    opacity: needle.props.style.at(-1).opacity,
+    texts: nodes.filter(node => node.type === 'Text').flatMap(node => node.props.children),
+  };
+}
+
+async function checkNeedleVisibility() {
+  for (const platform of ['ios', 'android']) {
+    const h = harness({ platform });
+    const view = () => compassView(h.snapshot());
+    await h.focus();
+    assert.equal(view().opacity, 0, 'Do not show a direction before the first heading');
+    const { qiblaBearing } = loadMath('src/domain/qibla.ts');
+    const bearing = qiblaBearing(41.3111, 69.2797);
+    h.emit(bearing, 0);
+    assert.equal(view().opacity, 1, platform + ': a finite low-confidence first heading must show the needle');
+    assert.ok(view().texts.includes('Kompas aniqligi past'));
+    assert.ok(!view().texts.includes('Qibla tomoni to‘g‘rilandi'));
+    h.emit(bearing, 3);
+    assert.ok(view().texts.includes('Qibla tomoni to‘g‘rilandi'));
+    h.emit(bearing, 0);
+    assert.equal(view().opacity, 1, platform + ': calibration loss must not hide a live needle');
+    assert.ok(!view().texts.includes('Qibla tomoni to‘g‘rilandi'));
+    h.emit(90, 0, false);
+    assert.equal(view().opacity, 1, 'Magnetic fallback must remain visible with a warning');
+    await h.appState('background');
+    assert.equal(view().opacity, 0, 'Background must not retain a stale direction');
+    await h.appState('active');
+    h.emit(NaN);
+    assert.equal(view().opacity, 0, 'Invalid samples must not reveal a fabricated direction');
+    h.emit(0, 3);
+    assert.equal(view().opacity, 1, 'A fresh north heading after resume must show the needle');
+    h.error();
+    assert.equal(view().opacity, 0, 'A real sensor failure must hide the stale direction');
+    await h.blur();
+  }
+  console.log('PASS: actual needle visibility survives accuracy loss and magnetic fallback on both platforms; missing/invalid/stale readings stay hidden.');
 }
 
 async function checkPublishing() {
@@ -341,6 +423,7 @@ async function checkLifecycle() {
 
 async function main() {
   checkMath();
+  await checkNeedleVisibility();
   await checkPublishing();
   await checkSparseAndSafety();
   await checkLifecycle();

@@ -31,7 +31,9 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   const locationName = useMemo(() => gpsAccuracy === null ? city.name : (nearestCity(latitude, longitude)?.name ?? city.name),
     [city.name, gpsAccuracy, latitude, longitude]);
   const bearing = useMemo(() => qiblaBearing(latitude, longitude), [latitude, longitude]);
-  const hasHeading = status === 'ready' && heading !== null && Number.isFinite(heading) && headingAccuracy > 0;
+  // Calibration quality can drop while valid heading samples still arrive.
+  // Keep the needle visible; low accuracy warns below and never confirms alignment.
+  const hasHeading = status === 'ready' && heading !== null && Number.isFinite(heading);
   const qiblaAngle = hasHeading ? relativeBearing(bearing, heading) : 0;
   const aligned = hasHeading && headingAccuracy >= 3 && trueNorth && Math.abs(qiblaAngle) <= 8;
   const dialSize = Math.min(width - 70, 300);
