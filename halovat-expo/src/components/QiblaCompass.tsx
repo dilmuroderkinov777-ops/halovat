@@ -35,7 +35,7 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   const qiblaAngle = hasHeading ? relativeBearing(bearing, heading) : 0;
   const aligned = hasHeading && headingAccuracy >= 3 && trueNorth && Math.abs(qiblaAngle) <= 8;
   const dialSize = Math.min(width - 70, 300);
-  const kaabaSize = dialSize * 0.16;
+  const kaabaSize = dialSize * 0.20;
   const marker = useMemo(() => <View pointerEvents="none" accessibilityLabel={t('Qibla')} style={[styles.qiblaMarker, {
     width: kaabaSize, height: kaabaSize,
     left: (dialSize - kaabaSize) / 2, top: (dialSize - kaabaSize) / 2 - dialSize * 0.32,
