@@ -121,7 +121,7 @@ function HomeContent() {
         <LinearGradient pointerEvents="none" colors={['#FFDBB7', '#F2AD7C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sectionCardFill}>
           <View style={styles.sectionCardHeading}><Text numberOfLines={1} adjustsFontSizeToFit style={styles.sectionCardTitle}>Masjidlar</Text><ArrowUpRight size={18} color="#064E3B" /></View>
           <View style={styles.sectionCardHalo} />
-          <Image accessible={false} source={require('../../../../assets/home-cards/mosque-3d.png')} resizeMode="contain" style={styles.sectionCardArt} />
+          <Image accessible={false} source={require('../../../../assets/home-cards/mosque-3d.png')} resizeMode="contain" style={[styles.sectionCardArt, styles.mosqueCardArt]} />
         </LinearGradient>
       </Pressable>
     </View>
@@ -196,6 +196,7 @@ const baseStyles = StyleSheet.create({
   sectionCardTitle: { flex: 1, color: '#073E30', fontSize: 17, fontWeight: '700' },
   sectionCardHalo: { position: 'absolute', width: '90%', aspectRatio: 1, borderRadius: 200, bottom: '-30%', right: '-22%', backgroundColor: '#FFFFFF24' },
   sectionCardArt: { position: 'absolute', width: '112%', height: '96%', right: '-9%', bottom: '-12%' },
+  mosqueCardArt: { transform: [{ scale: 1.2 }] },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
   verseTitle: { color: Colors.ink, fontSize: 12, fontWeight: '700', letterSpacing: 0.4, textTransform: 'uppercase' },
