@@ -76,8 +76,8 @@ export const PrayerTimeCard = memo(function PrayerTimeCard({ prayer, day, status
 const baseStyles = StyleSheet.create({
   slot: { flex: 1, minWidth: 0 },
   card: { minHeight: 112, borderRadius: 17, overflow: 'hidden', backgroundColor: '#F4F4F0', borderColor: Colors.line, borderWidth: 1, paddingTop: 10, paddingHorizontal: 3, paddingBottom: 60, gap: 6, alignItems: 'center' },
-  done: { backgroundColor: Colors.mintSoft },
-  missed: { backgroundColor: '#FFF0ED' },
+  done: { backgroundColor: Colors.mint },
+  missed: { backgroundColor: '#FFDAD6' },
   name: { color: Colors.body, fontSize: 10, fontWeight: '500' },
   nameActive: { fontWeight: '700' },
   time: { color: Colors.ink, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
