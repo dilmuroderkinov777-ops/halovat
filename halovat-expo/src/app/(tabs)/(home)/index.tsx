@@ -3,9 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useIsFocused } from 'expo-router';
 import { ArrowUpRight, CalendarDays, Clock3 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Image, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../../../ui/AppText';
-import { NativeAction } from '../../../components/NativeAction';
 import { PrayerCheckinSheet } from '../../../components/PrayerCheckinSheet';
 import { PrayerTimeCard } from '../../../components/PrayerTimeCard';
 import { NativeCountdown } from '../../../components/NativeCountdown';
@@ -128,7 +127,7 @@ function HomeContent() {
     </View>
 
     <View style={styles.verseCard}>
-      <View style={styles.verseHeader}><Text style={styles.verseTitle}>Kun hikmati</Text><NativeAction label="Ulashish" compact variant="text" onPress={() => void Share.share({ message: '“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.” — Ra’d surasi, 28-oyat' })} /></View>
+      <Text style={styles.verseTitle}>Kun hikmati</Text>
       <Text style={styles.arabicVerse}>أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</Text>
       <View style={styles.translation}><Text style={styles.translationText}>“Ogoh bo‘lingizkim, Allohning zikri ila qalblar orom olur.”</Text><Text style={styles.verseSource}>Ra’d surasi, 28-oyat</Text></View>
     </View>
@@ -178,7 +177,6 @@ const baseStyles = StyleSheet.create({
   sectionCardArt: { position: 'absolute', width: '112%', height: '96%', right: '-9%', bottom: '-12%' },
   pressed: { opacity: 0.86, transform: [{ scale: 0.99 }] },
   verseCard: { borderRadius: 23, padding: 16, backgroundColor: '#FFFFFF', gap: 12, borderWidth: 1, borderColor: '#F0F0EB' },
-  verseHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   verseTitle: { color: Colors.ink, fontSize: 12, fontWeight: '700', letterSpacing: 0.4, textTransform: 'uppercase' },
   arabicVerse: { color: Colors.ink, fontSize: 21, lineHeight: 37, textAlign: 'right' },
   translation: { borderRadius: 16, padding: 13, gap: 7, backgroundColor: '#F4F4F0' },
