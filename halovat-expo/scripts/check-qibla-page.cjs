@@ -49,6 +49,9 @@ async function main() {
     const scene = await page.locator('iframe[title="Qibla 3D"]').elementHandle();
     const frame = await scene.contentFrame();
     await frame.waitForFunction(() => window.__halovatQibla?.inspect().texturesReady && window.__halovatQibla.inspect().draws > 0);
+    const pivot = await frame.evaluate(() => window.__halovatQibla.inspect().personScreen);
+    assert.ok(Math.abs(pivot[0]) < 0.002 && Math.abs(pivot[1]) < 0.002,
+      'The real screen must display the person and rotation pivot at the center');
     const text = await page.locator('body').innerText();
     assert.ok(text.includes('52°') && text.includes('O‘ngga buring') && text.includes('GPS · ±17 m'));
     const output = path.join(root, '.expo/qibla-check'); fs.mkdirSync(output, { recursive: true });

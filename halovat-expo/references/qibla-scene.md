@@ -2,7 +2,7 @@
 
 The screen uses an offline Three.js scene inside the app's existing WebView. No Spline, remote model service, map API or extra native module is required.
 
-The fixed character and palm planters are detailed, transparent, pre-rendered sprites. The marble plane, Kaaba, direction path, foot marker, light, shadows and reflection are live 3D. The person and camera remain fixed; geographic objects rotate around the person's feet. The numeric bearing and haptic alignment use the same true-north sensor readings.
+The fixed character and palm planters are detailed, transparent, pre-rendered sprites. The marble plane, Kaaba, direction path, foot marker, light, shadows and reflection are live 3D. The person and camera remain fixed; geographic objects rotate around the person's feet. The camera aims at that pivot in the center of the scene, with room for the complete Kaaba orbit on each side. The numeric bearing and haptic alignment use the same true-north sensor readings.
 
 Reference: `design/qibla-proposals/12-third-person-isometric-map.png` at the repository root. Asset generation specifications: `assets/qibla/scene/generation-prompts.json`. Assets were generated with built-in ImageGen and encoded locally as WebP, preserving alpha.
 

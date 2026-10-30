@@ -7,7 +7,7 @@ import { createContactShadow, createKaaba, createMarbleTexture, createPerson, cr
 export type QiblaSceneState = {
   heading: number | null; bearing: number; aligned: boolean; active: boolean; dark: boolean; reduceMotion: boolean;
 };
-const RADIUS = 8.6;
+const RADIUS = 5;
 
 /** Camera and person are fixed. Geographic objects rotate about the person's feet. */
 export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: string) => void) {
@@ -21,8 +21,9 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = T.VSMShadowMap;
   const camera = new T.OrthographicCamera(-4.5, 4.5, 4.5, -4.5, 0.1, 65);
-  camera.position.set(1.163, 11.471, 8.973);
-  camera.lookAt(3.443, 0, -7.250);
+  // Aim at the geographic pivot under the person's feet, not an offset point on the map.
+  camera.position.set(-2.280, 11.471, 16.223);
+  camera.lookAt(0, 0, 0);
   const sky = new T.HemisphereLight('#ffffff', '#b6b3a6', 1.8);
   scene.add(sky);
   const sun = new T.DirectionalLight('#fff2db', 2.1);
@@ -113,7 +114,8 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   function resize() {
     const width = Math.max(canvas.clientWidth, 1), height = Math.max(canvas.clientHeight, 1);
     renderer.setSize(width, height, false);
-    const viewHeight = Math.max(11.8, 12.0 / (width / height));
+    // Leave space on every side of the centered pivot for the Kaaba's complete orbit.
+    const viewHeight = Math.max(14.2, 15.0 / (width / height));
     camera.left = -viewHeight * width / height / 2; camera.right = -camera.left;
     camera.top = viewHeight / 2; camera.bottom = -camera.top; camera.updateProjectionMatrix();
     invalidate();
