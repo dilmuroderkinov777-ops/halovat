@@ -82,9 +82,26 @@ async function main() {
     assert.equal(await page.getByText('O‘ngga buring', { exact: true }).count(), 0);
     if (await hostWarning.isVisible()) await hostWarning.locator('button').click();
     await page.screenshot({ path: path.join(output, 'page-zero-degrees-low-accuracy.png'), fullPage: true });
+    for (let turn = 0; turn < 6; turn++) {
+      for (const heading of [300, 0, 60, 120, 180, 240]) {
+        await page.evaluate(({ heading, turn }) => {
+          const fixture = window.__qiblaFixture;
+          fixture.heading = heading;
+          fixture.headingAccuracy = turn % 4;
+          fixture.trueNorth = turn % 2 === 0;
+          fixture.motion.publish({ heading, accuracy: fixture.headingAccuracy, trueNorth: fixture.trueNorth });
+        }, { heading, turn });
+        if (heading === 300) await page.getByText('Qiblaga yo‘naldingiz', { exact: true }).waitFor({ state: 'hidden' });
+        if (heading === 240) {
+          await page.getByText('Qiblaga yo‘naldingiz', { exact: true }).waitFor();
+          assert.equal(await page.getByText('0°', { exact: true }).count(), 1, 'Every turn must return to the same aligned guidance');
+        }
+      }
+    }
     assert.deepEqual(errors, [], 'No screen runtime errors');
     console.log('PASS: real screen renders enlarged offline map and sensor fixture; nearby-mosques button is absent; calibration still restarts sensor and opens guide.');
     console.log('PASS: real screen shows alignment at 0° with low accuracy, keeps the quality warning and never asks the aligned user to turn right.');
+    console.log('PASS: real screen confirms alignment after all six full rotations with changing sensor accuracy and north reference.');
     console.log('Preview:', path.join(output, 'page-zero-degrees-low-accuracy.png'));
   } finally { await browser.close(); }
 }

@@ -222,10 +222,7 @@ function compassView(reading) {
     '../ui/useAppTheme': { useAppTheme: () => ({ dark: false }), useThemedStyles: styles => styles, useThemeColors: () => ({ paper: '#FFFFFF', green: '#006C49' }) },
     '../hooks/useQiblaAlignment': {
       useQiblaActive: () => true,
-      useQiblaAlignment: (motion, bearing) => {
-        const sample = motion.current();
-        return sample && sample.accuracy >= 3 && sample.trueNorth && Math.abs(headingMath.headingDelta(sample.heading, bearing)) <= 5;
-      },
+      useQiblaAlignment: () => {}, // Feedback behavior is covered by check-qibla-alignment.cjs.
     },
   };
   for (const name of ['CompassCalibrationGuide', 'QiblaScene', 'QiblaCalibrationAction']) dependencies['./' + name] = { [name]: name };

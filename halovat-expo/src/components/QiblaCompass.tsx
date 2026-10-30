@@ -28,7 +28,7 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   const locationName = useMemo(() => gpsAccuracy === null ? city.name : (nearestCity(latitude, longitude)?.name ?? city.name),
     [city.name, gpsAccuracy, latitude, longitude]);
   const bearing = useMemo(() => qiblaBearing(latitude, longitude), [latitude, longitude]);
-  // Haptic confirmation requires reliable data; the label follows the displayed angle.
+  // Feedback follows the same ±5° rule, with rearming only after turning away.
   useQiblaAlignment(motion, bearing, active);
   const hasHeading = active && status === 'ready' && heading !== null && Number.isFinite(heading);
   const angle = hasHeading ? relativeBearing(bearing, heading) : null;

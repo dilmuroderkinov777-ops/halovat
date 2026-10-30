@@ -19,8 +19,8 @@ export function useQiblaAlignment(motion: CompassMotion, bearing: number, active
   const [tracker] = useState(createQiblaAlignment);
   const [aligned, setAligned] = useState(false);
   useEffect(() => motion.subscribe(sample => {
-    const reliable = active && sample !== null && sample.accuracy >= 3 && sample.trueNorth;
-    const result = tracker(bearing, sample?.heading ?? null, reliable, Date.now());
+    // Confidence is shown as a separate warning, not a veto on the visible alignment.
+    const result = tracker(bearing, sample?.heading ?? null, active);
     setAligned(result.aligned);
     if (result.feedback) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {
       // Alignment remains visible on devices without haptic support.
