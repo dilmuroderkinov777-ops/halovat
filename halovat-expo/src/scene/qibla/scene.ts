@@ -1,6 +1,6 @@
 import * as T from 'three';
 import { createFloorReflection } from './reflection';
-import { headingDelta } from '../../domain/compassHeading';
+import { createHeadingSpring } from '../../domain/compassHeading';
 import { radians } from '../../domain/qibla';
 import { createContactShadow, createKaaba, createMarbleTexture, createPerson, loadSceneTextures } from './models';
 import { createSurroundings } from './palms';
@@ -64,8 +64,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   if (reflection) scene.add(reflection);
 
   let state: QiblaSceneState = { heading: null, bearing: 0, aligned: false, active: false, dark: false, reduceMotion: false };
-  let currentHeading: number | null = null;
-  let targetHeading = 0;
+  const rotation = createHeadingSpring();
   let disposed = false;
   let frame = 0;
   let lastFrame = 0;
@@ -95,18 +94,16 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   function render(time: number) {
     frame = 0;
     if (disposed || !state.active || contextLost) return;
-    if (lastFrame && time - lastFrame < 1000 / 30) { frame = requestAnimationFrame(render); return; }
-    const dt = lastFrame ? Math.min((time - lastFrame) / 1000, 0.12) : 0.033;
+    const dt = lastFrame ? Math.min((time - lastFrame) / 1000, 0.12) : 1 / 60;
     lastFrame = time;
-    const remaining = targetHeading - (currentHeading ?? targetHeading);
-    currentHeading = state.reduceMotion || Math.abs(remaining) < 0.05 ? targetHeading : (currentHeading ?? targetHeading) + remaining * (1 - Math.exp(-dt * 16));
+    const heading = rotation.advance(dt, state.reduceMotion);
     // In Three's Y-up coordinates +heading turns the geographic world left.
     // Target x after rotation is R*sin(bearing - heading), so zero is straight ahead.
-    if (Math.abs(targetHeading - currentHeading) < 0.05) currentHeading = targetHeading;
-    world.rotation.y = radians(currentHeading);
+    if (heading !== null) world.rotation.y = radians(heading);
     try { renderer.info.reset(); renderer.render(scene, camera); draws++; readyFrames++; onFrame(); }
     catch (error) { onError(String(error)); return; }
-    if (Math.abs(targetHeading - currentHeading) >= 0.05) frame = requestAnimationFrame(render);
+    if (rotation.moving()) frame = requestAnimationFrame(render);
+    else lastFrame = 0;
   }
 
   function invalidate() {
@@ -124,14 +121,10 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   }
   function update(next: QiblaSceneState) {
     if (disposed || !Number.isFinite(next.bearing)) return;
-    const wasReady = state.heading !== null;
     if (next.dark !== state.dark) setTheme(next.dark);
     state = { ...next, heading: next.heading !== null && Number.isFinite(next.heading) ? next.heading : null };
     target.visible = line.visible = state.heading !== null;
-    if (state.heading !== null) {
-      if (currentHeading === null || !wasReady) currentHeading = targetHeading = state.heading;
-      else targetHeading += headingDelta(targetHeading, state.heading);
-    }
+    rotation.setTarget(state.heading);
     const b = radians(state.bearing);
     target.position.set(Math.sin(b) * RADIUS, 0, -Math.cos(b) * RADIUS);
     target.rotation.y = -b - 0.08;
@@ -151,7 +144,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
     }
     haloMaterial.opacity = state.aligned ? 0.46 : 0.22;
     lineMaterial.opacity = state.aligned ? 1 : 0.80;
-    if (!state.active) { cancelAnimationFrame(frame); frame = 0; lastFrame = 0; }
+    if (!state.active) { cancelAnimationFrame(frame); frame = 0; lastFrame = 0; rotation.reset(state.heading); }
     else invalidate();
   }
   const lost = (event: Event) => { event.preventDefault(); contextLost = true; cancelAnimationFrame(frame); frame = 0; onError('WebGL context lost'); };
@@ -181,7 +174,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
           kaabaBounds.push(project(new T.Vector3(x, y, z).applyMatrix4(part.matrixWorld)));
         }
       });
-      return { draws, readyFrames, texturesReady, lightweight, active: state.active, scheduled: Boolean(frame), heading: currentHeading, targetHeading,
+      return { draws, readyFrames, texturesReady, lightweight, active: state.active, scheduled: Boolean(frame), heading: rotation.current(), targetHeading: rotation.target(),
         personPosition: personPoint.toArray(), personRotation: person.rotation.toArray(), cameraPosition: camera.position.toArray(),
         kaabaPosition: targetPoint.toArray(), targetVisible: target.visible, kaabaScreen: project(targetPoint),
         personScreen: project(personPoint), personBounds, personDepthTest: sprite.material.depthTest, personDepthWrite: sprite.material.depthWrite,

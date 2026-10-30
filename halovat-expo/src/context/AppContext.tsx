@@ -11,6 +11,8 @@ import { ROUND_TARGET, ZIKR } from '../data/zikr';
 import { focusControl } from '../services/focusControl';
 import { foregroundLocation } from '../services/foregroundLocation';
 import { scheduleLabels, updatePrayerSchedule } from '../services/prayerScheduler';
+import { createPrayerWidgetSnapshot } from '../domain/prayerWidget';
+import { syncPrayerWidget } from '../services/prayerWidget';
 import { ensureAutomaticQuietAccess } from '../services/automaticQuiet';
 import { ensureReminderBatteryGuide } from '../services/reminderBattery';
 import { useLanguage } from './LanguageContext';
@@ -19,6 +21,7 @@ import { REMINDER_CHANNEL, ensureReminderAlarmAccess, ensureReminderFlashAccess,
 const STORAGE_KEY = 'halovat.expo.state.v1';
 const CALENDAR_PREFIX = 'halovat.expo.calendar.v1:';
 const ONBOARDING_KEY = 'halovat.expo.onboarding.complete.v3.language-and-six-pages';
+type ReminderSetting = 'prayerTimeReminderEnabled' | 'reminderEnabled' | 'duaReminderEnabled';
 
 type AppData = {
   displayName: string;
@@ -153,6 +156,8 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   const refreshReminders = useCallback(() => setReminderRevision(value => value + 1), []);
   const [now, setNow] = useState(new Date());
   const autoLocationStarted = useRef(false);
+  const notificationPermissionRequest = useRef<Promise<boolean> | null>(null);
+  const reminderSettingRequests = useRef<Record<ReminderSetting, number>>({ prayerTimeReminderEnabled: 0, reminderEnabled: 0, duaReminderEnabled: 0 });
   const mosqueQuietQueue = useRef<Promise<void>>(Promise.resolve());
   const previousRounds = useRef<number | null>(null);
   const pendingSave = useRef<AppData | null>(null);
@@ -310,54 +315,55 @@ export function AppProvider({ children }: React.PropsWithChildren) {
     void detectCity({ silent: true, automatic: true });
   }, [data.cityManuallySelected, data.locationAttempted, detectCity, hydrated, onboardingComplete]);
 
-  const ensureNotificationPermission = useCallback(async () => {
-    if (Platform.OS === 'web') {
-      globalThis.alert('Bildirishnomalar telefon ilovasida ishlaydi. Kompyuterdagi web preview faqat ekranlarni ko‘rsatadi.');
-      return false;
-    }
-    try {
-      await prepareReminderChannels();
-      const current = await Notifications.getPermissionsAsync();
-      const permission = current.granted ? current : await Notifications.requestPermissionsAsync();
-      if (!notificationsAllowed(permission)) {
-        Alert.alert(t('Bildirishnoma yoqilmadi'), t('Eslatmalarni olish uchun bildirishnoma ruxsati kerak.'), [
-          { text: t('Hozir emas'), style: 'cancel' },
-          { text: t('Sozlamalarni ochish'), onPress: () => { void Linking.openSettings(); } },
-        ]);
+  const ensureNotificationPermission = useCallback(() => {
+    if (notificationPermissionRequest.current) return notificationPermissionRequest.current;
+    const request = (async () => {
+      if (Platform.OS === 'web') {
+        globalThis.alert('Bildirishnomalar telefon ilovasida ishlaydi. Kompyuterdagi web preview faqat ekranlarni ko‘rsatadi.');
         return false;
       }
-      if (!await ensureReminderAlarmAccess()) return false;
-      await ensureReminderPopupAccess();
-      await ensureReminderFlashAccess(t);
-      await ensureReminderBatteryGuide(t);
-      return true;
-    } catch (error) {
-      Alert.alert('Eslatma yoqilmadi', error instanceof Error ? error.message : 'Qayta urinib ko‘ring.');
-      return false;
-    }
+      try {
+        await prepareReminderChannels();
+        const current = await Notifications.getPermissionsAsync();
+        const permission = notificationsAllowed(current) || !current.canAskAgain ? current : await Notifications.requestPermissionsAsync();
+        if (!notificationsAllowed(permission)) {
+          Alert.alert(t('Bildirishnoma yoqilmadi'), t('Eslatmalarni olish uchun bildirishnoma ruxsati kerak.'), [
+            { text: t('Hozir emas'), style: 'cancel' },
+            { text: t('Sozlamalarni ochish'), onPress: () => { void Linking.openSettings(); } },
+          ]);
+          return false;
+        }
+        // Alarm precision, popup, flash and battery setup must not gate an
+        // ordinary notification switch. Delivery diagnostics exposes each one.
+        return true;
+      } catch (error) {
+        Alert.alert('Eslatma yoqilmadi', error instanceof Error ? error.message : 'Qayta urinib ko‘ring.');
+        return false;
+      }
+    })().finally(() => { notificationPermissionRequest.current = null; });
+    notificationPermissionRequest.current = request;
+    return request;
   }, [t]);
 
-  const setPrayerTimeReminderEnabled = useCallback(async (enabled: boolean) => {
+  const setReminderSetting = useCallback(async (key: ReminderSetting, enabled: boolean) => {
+    const revision = ++reminderSettingRequests.current[key];
     if (enabled && !await ensureNotificationPermission()) return;
-    setData(current => ({ ...current, prayerTimeReminderEnabled: enabled }));
+    if (revision !== reminderSettingRequests.current[key]) return;
+    setData(current => ({ ...current, [key]: enabled }));
     refreshReminders();
   }, [ensureNotificationPermission, refreshReminders]);
 
-  const setDuaReminderEnabled = useCallback(async (enabled: boolean) => {
-    if (enabled && !await ensureNotificationPermission()) return;
-    setData(current => ({ ...current, duaReminderEnabled: enabled }));
-    refreshReminders();
-  }, [ensureNotificationPermission, refreshReminders]);
-
-  const setReminderEnabled = useCallback(async (enabled: boolean) => {
-    if (enabled && !await ensureNotificationPermission()) return;
-    setData(current => ({ ...current, reminderEnabled: enabled }));
-    refreshReminders();
-  }, [ensureNotificationPermission, refreshReminders]);
+  const setPrayerTimeReminderEnabled = useCallback((enabled: boolean) => setReminderSetting('prayerTimeReminderEnabled', enabled), [setReminderSetting]);
+  const setDuaReminderEnabled = useCallback((enabled: boolean) => setReminderSetting('duaReminderEnabled', enabled), [setReminderSetting]);
+  const setReminderEnabled = useCallback((enabled: boolean) => setReminderSetting('reminderEnabled', enabled), [setReminderSetting]);
 
   const sendReminderPreview = useCallback(async () => {
     if (!await ensureNotificationPermission()) return;
     try {
+      if (!await ensureReminderAlarmAccess()) return;
+      await ensureReminderPopupAccess();
+      await ensureReminderFlashAccess(t);
+      await ensureReminderBatteryGuide(t);
       await Notifications.scheduleNotificationAsync({
         identifier: 'halovat-reminder-preview',
         content: reminderAlertContent({ title: t('Halovat eslatmasi'), body: t('Bu sinov eslatmasi.'), data: { halovatReminderPreview: true, halovatPopupClose: t('Yopish'), halovatPopupVibration: t('Vibratsiya · {seconds} soniya').replace(/\{[^}]+\}/, '{seconds}'), halovatPopupFinished: t('Vibratsiya tugadi') } }),
@@ -464,6 +470,12 @@ export function AppProvider({ children }: React.PropsWithChildren) {
   }, [data.mosqueLatitude, data.mosqueLongitude, t]);
   const timesFor = useCallback((day: Date) => getPrayerTimes(city, day, months), [city, months]);
 
+  useEffect(() => {
+    if (!hydrated || !onboardingComplete || Platform.OS === 'web') return;
+    void syncPrayerWidget(createPrayerWidgetSnapshot(city, months, t)).catch(error => {
+      console.warn('Prayer widget could not be updated:', error);
+    });
+  }, [city, months, hydrated, onboardingComplete, notificationDay, reminderRevision, t]);
 
   useEffect(() => {
     if (!hydrated || !focusControl) return;

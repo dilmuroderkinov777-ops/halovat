@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation 'com.google.android.gms:play-services-location:21.0.1'
+  implementation 'com.google.android.gms:play-services-location:21.3.0'
   implementation expoModule.getExpoDependency('expo-notifications')
   implementation 'androidx.core:core:1.17.0'
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
@@ -21,3 +21,12 @@ android {
     versionName "1.0.0"
   }
 }
+
+// Reuse the home card artwork without committing a second copy of the images.
+def widgetAssets = tasks.register('syncPrayerWidgetAssets', Copy) {
+  from('../../../assets/prayer-hero')
+  include('*.png')
+  into(layout.buildDirectory.dir('generated/prayerWidgetAssets/prayer-hero'))
+}
+android.sourceSets.main.assets.srcDir(layout.buildDirectory.dir('generated/prayerWidgetAssets').get().asFile)
+tasks.named('preBuild').configure { dependsOn(widgetAssets) }

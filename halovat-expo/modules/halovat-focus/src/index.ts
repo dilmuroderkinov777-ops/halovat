@@ -51,6 +51,7 @@ type HalovatFocusNative = {
   startVibrationPreview(): { ok: boolean; reason?: string };
   stopVibrationPreview(): boolean;
   setPrayerQuietWindows(json: string): boolean;
+  updatePrayerWidget?(json: string): boolean;
   scheduleQuietPreview(): { start: number; end: number };
   cancelQuietPreview(): boolean;
   setMosqueRegion(latitude: number, longitude: number, enabled: boolean): Promise<boolean>;

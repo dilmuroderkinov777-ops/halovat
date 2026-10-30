@@ -11,6 +11,7 @@ import { useQiblaActive, useQiblaAlignment } from '../hooks/useQiblaAlignment';
 import { Text } from '../ui/AppText';
 import { useAppTheme, useThemedStyles, useThemeColors } from '../ui/useAppTheme';
 import { CompassCalibrationGuide } from './CompassCalibrationGuide';
+import { CompassDegrees } from './CompassDegrees';
 import { QiblaCalibrationAction } from './QiblaCalibrationAction';
 import { QiblaScene } from './QiblaScene';
 
@@ -23,7 +24,7 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   const active = useQiblaActive();
   const [guideRevision, setGuideRevision] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(true);
-  const { coordinates, heading, motion, headingAccuracy, gpsAccuracy, status, trueNorth, restart } = useCompass(city);
+  const { coordinates, heading, motion, headingAccuracy, gpsAccuracy, status, trueNorth, sensorSource, restart } = useCompass(city);
   const { latitude, longitude } = coordinates;
   const locationName = useMemo(() => gpsAccuracy === null ? city.name : (nearestCity(latitude, longitude)?.name ?? city.name),
     [city.name, gpsAccuracy, latitude, longitude]);
@@ -40,11 +41,11 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
       : status === 'no_sensor' ? 'Kompas sensori topilmadi'
         : !hasHeading ? 'Kompas ulanmoqda'
           : headingAccuracy < 3 ? 'Kompas aniqligi past'
-            : !trueNorth ? 'Magnit shimol bo‘yicha taxminiy yo‘nalish' : null;
+            : !trueNorth ? (sensorSource === 'fused_orientation' ? 'Shimol bo‘yicha taxminiy yo‘nalish' : 'Magnit shimol bo‘yicha taxminiy yo‘nalish') : null;
 
   useEffect(() => {
     let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (mounted) setReduceMotion(value); });
+    void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (mounted) setReduceMotion(value); }).catch(() => undefined);
     const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => { mounted = false; subscription.remove(); };
   }, []);
@@ -67,7 +68,7 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
     </View>
     <View style={styles.guidance}>
       <View style={styles.directionRow}>
-        <Text translate={false} adjustsFontSizeToFit minimumFontScale={0.65} numberOfLines={1} style={styles.degrees}>{angle === null ? '—' : `${Math.round(Math.abs(angle))}°`}</Text>
+        <CompassDegrees angle={angle} color={styles.instruction.color} reduceMotion={reduceMotion} />
         <View style={[styles.turnBadge, aligned && styles.turnBadgeAligned]}><TurnIcon size={32} color={aligned ? '#FFFFFF' : colors.green} strokeWidth={2.2} /></View>
         <Text accessibilityLiveRegion="polite" style={styles.instruction}>{instruction}</Text>
       </View>
@@ -89,7 +90,6 @@ const baseStyles = StyleSheet.create({
   scene: { marginHorizontal: -16, overflow: 'hidden' },
   guidance: { gap: 11, paddingHorizontal: 5 },
   directionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 76 },
-  degrees: { fontSize: 64, lineHeight: 74, fontWeight: '600', letterSpacing: -2, color: '#003527', fontVariant: ['tabular-nums'], flex: 1.1 },
   turnBadge: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E9F2EC' },
   turnBadgeAligned: { backgroundColor: '#006C49' },
   instruction: { flex: 1.25, color: '#003527', fontSize: 23, lineHeight: 28, fontWeight: '600' },

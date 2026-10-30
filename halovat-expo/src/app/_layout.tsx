@@ -23,7 +23,7 @@ export const unstable_settings = { anchor: '(tabs)' };
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold, Onest_800ExtraBold });
   const [appReady, setAppReady] = useState(false);
-  const { visible: loading, revision, onFinished } = useLaunchAnimation();
+  const { visible: loading, onFinished } = useLaunchAnimation();
   const fontsReady = fontsLoaded || Boolean(fontError);
   const handleReady = useCallback(() => setAppReady(true), []);
   const revealLoading = useCallback(() => { if (Platform.OS !== 'web') SplashScreen.hide(); }, []);
@@ -34,7 +34,7 @@ export default function RootLayout() {
           <RootNavigator onReady={handleReady} loading={loading} />
         </AppProvider></LanguageProvider>}
       </View>
-      {loading && <LoadingScreen key={revision} fontsReady={fontsReady} appReady={appReady} onFinished={onFinished} onReady={revealLoading} />}
+      {loading && <LoadingScreen fontsReady={fontsReady} appReady={appReady} onFinished={onFinished} onReady={revealLoading} />}
     </View></LaunchAnimationContext.Provider>
   );
 }

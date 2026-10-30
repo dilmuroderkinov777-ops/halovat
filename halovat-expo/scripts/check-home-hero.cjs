@@ -12,7 +12,8 @@ function load(path, resolver) {
   return exports;
 }
 const prayers = load('src/domain/prayers.ts', require);
-const themes = load('src/data/prayerHero.ts', name => name).PRAYER_HERO;
+const sharedThemes = load('src/data/prayerHeroThemes.ts', require);
+const themes = load('src/data/prayerHero.ts', name => name.endsWith('/prayerHeroThemes') ? sharedThemes : name).PRAYER_HERO;
 const react = {
   createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
   useMemo: callback => callback(),

@@ -111,6 +111,11 @@ class HalovatFocusModule : Module() {
       true
     }
 
+    Function("updatePrayerWidget") { json: String ->
+      val context = appContext.reactContext?.applicationContext ?: return@Function false
+      HalovatPrayerWidget.save(context, json)
+    }
+
     AsyncFunction("setMosqueRegion") { latitude: Double, longitude: Double, enabled: Boolean, promise: Promise ->
       val context = appContext.reactContext?.applicationContext
       if (context == null) promise.reject("E_UNAVAILABLE", "Android context unavailable", null)

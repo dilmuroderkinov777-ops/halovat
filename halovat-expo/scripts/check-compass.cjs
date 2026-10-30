@@ -188,6 +188,11 @@ function harness({ granted = true, deferWatcher = false, platform = 'android', n
       watch.callback(watch.native ? { status: 'ready', heading, accuracy, trueNorth, source: 'rotation_vector', tilt: 45 }
         : { trueHeading: trueNorth ? heading : -1, magHeading: heading, accuracy });
     },
+    emitNative: reading => {
+      const watch = state.watches.at(-1);
+      assert.ok(watch.native);
+      watch.callback(reading);
+    },
     appState: async next => { appState.currentState = next; appStateListener?.(next); await flush(); },
     error: (index = state.watches.length - 1) => {
       const watch = state.watches[index];
@@ -252,7 +257,7 @@ function compassView(reading) {
       useQiblaAlignment: () => {}, // Feedback behavior is covered by check-qibla-alignment.cjs.
     },
   };
-  for (const name of ['CompassCalibrationGuide', 'QiblaScene', 'QiblaCalibrationAction']) dependencies['./' + name] = { [name]: name };
+  for (const name of ['CompassCalibrationGuide', 'CompassDegrees', 'QiblaScene', 'QiblaCalibrationAction']) dependencies['./' + name] = { [name]: name };
   const load = file => {
     const box = { exports: {}, require: name => {
       assert.ok(name in dependencies, 'Unexpected view dependency: ' + name);
@@ -267,6 +272,11 @@ function compassView(reading) {
   const nodes = all(tree);
   const scene = nodes.find(node => node.type === 'QiblaScene');
   assert.equal(scene.props.motion, reading.motion, 'Scene must consume the actual live motion signal');
+  const degrees = nodes.find(node => node.type === 'CompassDegrees');
+  const validHeading = reading.status === 'ready' && reading.heading !== null && Number.isFinite(reading.heading);
+  assert.equal(degrees.props.angle, validHeading
+    ? dependencies['../domain/qibla'].relativeBearing(scene.props.bearing, reading.heading) : null,
+  'Animated degrees must receive the same angle as the compass guidance');
   return {
     opacity: scene.props.motion.current() ? 1 : 0,
     aligned: scene.props.aligned,
@@ -489,7 +499,7 @@ async function checkAndroidNative() {
   const h = harness({ native: true });
   await h.focus();
   assert.equal(h.started, 1);
-  assert.equal(h.expoStarted, 0, 'Installed Android must use rotation-vector native module, not Expo raw sensors');
+  assert.equal(h.expoStarted, 0, 'Installed Android must use the native compass module');
   assert.deepEqual(h.commands[0], ['start', 41.3111, 69.2797], 'Start from selected city without waiting for GPS');
   h.emit(359);
   assert.equal(h.snapshot().sensorSource, 'rotation_vector');
@@ -568,7 +578,68 @@ async function checkAndroidNative() {
   await late.blur();
   assert.deepEqual(late.commands.map(command => command[0]), ['start', 'stop', 'start', 'stop']);
   assert.equal(late.clock.tasks.size, 0);
-  console.log('PASS: real Android native bridge selection, 12 rotations, stationary heartbeats, stall/recovery, GPS correction, denied permission, absent sensors and queued start/stop races.');
+  console.log('PASS: mocked Android native bridge selection, 12 rotations, stationary heartbeats, stall/recovery, GPS correction, denied permission, absent sensors and queued start/stop races.');
+}
+
+async function checkFusedOrientationBridge() {
+  const h = harness({ native: true });
+  await h.focus();
+  const fused = heading => h.emitNative({ status: 'ready', heading, accuracy: 3,
+    trueNorth: false, source: 'fused_orientation', tilt: 90 });
+  fused(240);
+  assert.equal(h.snapshot().heading, 240, 'Fused heading must reach the UI without applying declination again');
+  assert.equal(h.snapshot().sensorSource, 'fused_orientation');
+  assert.equal(h.snapshot().trueNorth, false, 'Unknown FOP north reference must not be advertised as confirmed true north');
+  const view = compassView(h.snapshot());
+  assert.ok(view.texts.includes('Shimol bo‘yicha taxminiy yo‘nalish'));
+  assert.ok(!view.texts.includes('Magnit shimol bo‘yicha taxminiy yo‘nalish'), 'FOP may use true north; do not label it as always magnetic');
+  for (const heading of [300, 359, 0, 60, 120, 240]) {
+    await h.clock.advance(250);
+    fused(heading);
+    assert.ok(Math.abs(headingMath.headingDelta(h.snapshot().heading, heading)) <= headingMath.HEADING_STABILITY);
+  }
+  h.error();
+  assert.equal(h.snapshot().motion.current(), null);
+  h.emit(238, 3, true);
+  assert.equal(h.snapshot().sensorSource, 'rotation_vector');
+  assert.equal(h.snapshot().heading, 238, 'Corrected Android fallback must replace the failed FOP reading');
+  assert.equal(h.snapshot().trueNorth, true);
+  await h.appState('background');
+  fused(90);
+  assert.equal(h.snapshot().heading, null);
+  await h.appState('active');
+  fused(240);
+  assert.equal(h.snapshot().sensorSource, 'fused_orientation');
+  assert.equal(h.snapshot().heading, 240);
+  await h.blur();
+  assert.equal(h.clock.tasks.size, 0);
+  console.log('PASS: Android Fused Orientation payload, north-reference warning, north crossing, fallback and foreground restart.');
+}
+
+async function checkIosIsolation() {
+  const h = harness({ platform: 'ios', native: true });
+  await h.focus();
+  assert.equal(h.expoStarted, 1, 'iOS must keep its existing Expo/Core Location heading watcher');
+  h.emit(359);
+  assert.equal(h.snapshot().sensorSource, 'expo_location');
+  assert.equal(h.snapshot().trueNorth, true);
+  assert.equal(h.snapshot().heading, 359);
+  await h.clock.advance(250);
+  h.emit(1, 3, false);
+  assert.equal(h.snapshot().heading, 1);
+  assert.equal(h.snapshot().trueNorth, false);
+  assert.ok(compassView(h.snapshot()).texts.includes('Magnit shimol bo‘yicha taxminiy yo‘nalish'));
+  await h.finishGps();
+  await h.appState('background');
+  await h.appState('active');
+  h.emit(240);
+  assert.equal(h.expoStarted, 2);
+  assert.equal(h.snapshot().sensorSource, 'expo_location');
+  assert.equal(h.snapshot().heading, 240);
+  await h.blur();
+  assert.equal(h.commands.length, 0, 'No Android start, location or stop command may run on iOS');
+  assert.equal(h.clock.tasks.size, 0);
+  console.log('PASS: iOS retains Expo heading, true/magnetic fallback and lifecycle; Android FOP is never invoked.');
 }
 
 async function main() {
@@ -578,6 +649,8 @@ async function main() {
   await checkSparseAndSafety();
   await checkLifecycle();
   await checkAndroidNative();
+  await checkFusedOrientationBridge();
+  await checkIosIsolation();
   console.log('PASS: physical Qibla/cardinal math agrees with Adhan; compass checks use a deterministic fake clock and mocked native driver.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

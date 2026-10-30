@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/halovat_widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+  android:background="@drawable/halovat_widget_background">
+  <ImageView android:id="@+id/halovat_widget_art" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:scaleType="fitXY" android:importantForAccessibility="no" android:contentDescription="@null" />
+  <FrameLayout android:id="@+id/halovat_widget_timer_container" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:paddingLeft="18dp" android:paddingTop="48dp" android:paddingRight="80dp">
+    <Chronometer android:id="@+id/halovat_widget_timer" android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:countDown="true" android:textColor="#FFFFFF" android:textSize="38sp" android:textStyle="bold"
+      android:fontFamily="sans-serif" android:fontFeatureSettings="tnum" android:includeFontPadding="false"
+      android:singleLine="true" android:layoutDirection="ltr" android:gravity="left|top" android:visibility="gone" />
+  </FrameLayout>
+  <TextView android:id="@+id/halovat_widget_empty" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:padding="22dp" android:gravity="center_vertical" android:text="@string/halovat_widget_open"
+    android:textColor="#FFFFFF" android:textSize="15sp" />
+</FrameLayout>

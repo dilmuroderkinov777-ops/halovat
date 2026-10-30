@@ -1,0 +1,5 @@
+<resources>
+  <string name="halovat_widget_name">Halovat — Namozgacha vaqt</string>
+  <string name="halovat_widget_description">Keyingi namozgacha jonli hisoblagich. Ilovadagi shahar va namoz jadvali bilan ishlaydi.</string>
+  <string name="halovat_widget_open">Namoz vaqtlarini ko‘rish uchun Halovatni oching.</string>
+</resources>

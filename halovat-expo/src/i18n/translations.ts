@@ -170,6 +170,7 @@ const entries: readonly (readonly [string, string, string])[] = [
   ['Kompas uchun joylashuv ruxsati kerak', 'Для компаса нужен доступ к геопозиции', 'Location permission is needed for the compass'],
   ['Kompas ma’lumoti olinmadi', 'Нет данных компаса', 'No compass reading available'],
   ['Magnit shimol bo‘yicha taxminiy yo‘nalish', 'Приблизительно, по магнитному северу', 'Approximate direction using magnetic north'],
+  ['Shimol bo‘yicha taxminiy yo‘nalish', 'Приблизительное направление на север', 'Approximate direction using north'],
   ['Bu joyga yaqin masjid topilmadi.', 'Рядом с этим местом мечети не найдены.', 'No mosques found near this location.'],
   ['Xarita ochilmadi. Internetni tekshiring.', 'Карта не загрузилась. Проверьте интернет.', 'Map could not load. Check your connection.'],
   ['Joylashuv aniqlanmadi. GPS yoqilganini tekshiring.', 'Не удалось определить местоположение. Проверьте GPS.', 'Location unavailable. Check that GPS is enabled.'],
@@ -294,6 +295,7 @@ const entries: readonly (readonly [string, string, string])[] = [
   ['Toshkent', 'Ташкент', 'Tashkent'], ['Toshkent shahri', 'Город Ташкент', 'Tashkent city'], ['Toshkent viloyati', 'Ташкентская область', 'Tashkent region'], ['O‘zbekiston', 'Узбекистан', 'Uzbekistan'], ['Samarqand', 'Самарканд', 'Samarkand'], ['Buxoro', 'Бухара', 'Bukhara'], ['Andijon', 'Андижан', 'Andijan'], ['Farg‘ona', 'Фергана', 'Fergana'], ['Qo‘qon', 'Коканд', 'Kokand'], ['Jizzax', 'Джизак', 'Jizzakh'], ['Qarshi', 'Карши', 'Qarshi'], ['Navoiy', 'Навои', 'Navoi'], ['Namangan', 'Наманган', 'Namangan'], ['Nukus', 'Нукус', 'Nukus'], ['Termiz', 'Термез', 'Termez'], ['Urganch', 'Ургенч', 'Urgench'], ['Guliston', 'Гулистан', 'Gulistan'], ['Marg‘ilon', 'Маргилан', 'Margilan'], ['Angren', 'Ангрен', 'Angren'], ['Qoraqalpog‘iston', 'Каракалпакстан', 'Karakalpakstan'],
   ['Du', 'Пн', 'Mo'], ['Se', 'Вт', 'Tu'], ['Cho', 'Ср', 'We'], ['Pay', 'Чт', 'Th'], ['Ju', 'Пт', 'Fr'], ['Sha', 'Сб', 'Sa'], ['Ya', 'Вс', 'Su'], ['Sh', 'С', 'N'], ['Shq', 'В', 'E'], ['J', 'Ю', 'S'], ['G‘', 'З', 'W'],
   ['SOAT', 'ЧАСЫ', 'HOURS'], ['DAQIQA', 'МИНУТЫ', 'MINUTES'], ['SONIYA', 'СЕКУНДЫ', 'SECONDS'], ['daq.', 'мин.', 'min.'], ['daqiqa · soniya', 'минуты · секунды', 'minutes · seconds'], ['Hozir:', 'Сейчас:', 'Now:'], ['Keyingi namoz:', 'Следующий намаз:', 'Next prayer:'],
+  ['Namoz vaqtlarini ko‘rish uchun Halovatni oching.', 'Откройте Halovat, чтобы увидеть время намазов.', 'Open Halovat to see prayer times.'],
 ];
 
 const catalog = Object.fromEntries(entries.map(([uz, ru, en]) => [uz, { ru, en }]));
