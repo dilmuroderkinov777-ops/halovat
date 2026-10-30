@@ -343,7 +343,7 @@ const baseStyles = StyleSheet.create({
   rowCopy: { flex: 1, minWidth: 0 },
   rowTitle: { color: '#1B1C1A', fontSize: 14, fontWeight: '600', lineHeight: 19 },
   rowSubtitle: { color: '#404944', fontSize: 12, lineHeight: 17, marginTop: 1 },
-  switchHost: { width: 48, height: 30, transform: [{ scale: 0.82 }], alignItems: 'center', justifyContent: 'center' },
+  switchHost: { flexShrink: 0, alignSelf: 'center', marginEnd: 6, transform: [{ scale: 0.82 }] },
   donationCard: { borderRadius: 28, padding: 24, backgroundColor: '#003527', overflow: 'hidden', gap: 18, shadowColor: '#064E3B', shadowOpacity: 0.16, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } },
   donationGlow: { position: 'absolute', right: -70, top: -70, width: 190, height: 190, borderRadius: 100, backgroundColor: '#6FFBBE14' },
   donationHeading: { flexDirection: 'row', alignItems: 'center', gap: 9 },
