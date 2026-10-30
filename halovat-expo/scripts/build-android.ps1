@@ -29,7 +29,7 @@ try {
   } elseif (-not (Test-Path 'android\gradlew.bat')) { throw 'Run prebuild before using -SkipPrebuild.' }
   Push-Location (Join-Path $projectRoot 'android')
   try {
-    $tasks = @(':halovat-focus:testReleaseUnitTest', ':app:assembleRelease')
+    $tasks = @(':halovat-focus:test', ':app:assembleRelease')
     if ($Mode -eq 'production') { $tasks += ':app:bundleRelease' }
     & .\gradlew.bat @tasks "-PreactNativeArchitectures=$Architectures" --console=plain
     if ($LASTEXITCODE -ne 0) { throw 'Android verification/build failed.' }

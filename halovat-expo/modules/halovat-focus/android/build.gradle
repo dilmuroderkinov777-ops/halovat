@@ -5,13 +5,7 @@ plugins {
 
 dependencies {
   implementation 'com.google.android.gms:play-services-location:21.0.1'
-  if (findProject(':expo-notifications') != null) {
-    implementation project(':expo-notifications')
-  } else {
-    // SDK 57 normally links Expo modules as prebuilt local Maven artifacts.
-    def publication = new groovy.json.JsonSlurper().parse(file('../../../node_modules/expo-notifications/expo-module.config.json')).android.publication
-    implementation "${publication.groupId}:${publication.artifactId}:${publication.version}"
-  }
+  implementation expoModule.getExpoDependency('expo-notifications')
   implementation 'androidx.core:core:1.17.0'
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
   testImplementation 'junit:junit:4.13.2'
