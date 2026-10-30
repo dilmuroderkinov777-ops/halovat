@@ -11,16 +11,16 @@ export type QiblaSceneState = {
 const RADIUS = 7.4;
 
 /** Camera and person are fixed. Geographic objects rotate about the person's feet. */
-export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: string) => void) {
+export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: string) => void, onFrame: () => void = () => {}, lightweight = false) {
   const scene = new T.Scene();
   const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lightweight ? 1.25 : 1.5));
   renderer.outputColorSpace = T.SRGBColorSpace;
   renderer.info.autoReset = false;
   renderer.toneMapping = T.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.45;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = T.VSMShadowMap;
+  renderer.shadowMap.type = lightweight ? T.PCFShadowMap : T.VSMShadowMap;
   const camera = new T.OrthographicCamera(-4.5, 4.5, 4.5, -4.5, 0.1, 65);
   // Aim at the geographic pivot under the person's feet, not an offset point on the map.
   // A centered rear camera shares the avatar's -Z forward axis. The higher angle
@@ -32,7 +32,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   const sun = new T.DirectionalLight('#fff2db', 2.1);
   sun.position.set(-4, 10, -3);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(lightweight ? 512 : 1024, lightweight ? 512 : 1024);
   Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 0.1, far: 50 });
   sun.shadow.normalBias = 0.04;
   sun.shadow.bias = -0.0003;
@@ -58,7 +58,10 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   halo.rotation.x = -Math.PI / 2; halo.position.y = 0.018; scene.add(halo);
   const inner = new T.Mesh(new T.CircleGeometry(0.70, 64), new T.MeshBasicMaterial({ color: '#087859', transparent: true, opacity: 0.80, depthWrite: false, toneMapped: false }));
   inner.rotation.x = -Math.PI / 2; inner.position.y = 0.022; scene.add(inner);
-  const reflection = createFloorReflection([ground, person, halo, inner, line]); scene.add(reflection);
+  // A live planar reflection redraws every tree and the Kaaba. Keep Android's
+  // compass responsive with one scene pass; marble, lighting and shadows remain.
+  const reflection = lightweight ? null : createFloorReflection([ground, person, halo, inner, line]);
+  if (reflection) scene.add(reflection);
 
   let state: QiblaSceneState = { heading: null, bearing: 0, aligned: false, active: false, dark: false, reduceMotion: false };
   let currentHeading: number | null = null;
@@ -80,7 +83,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
     document.body.style.setProperty('--canvas', color);
     scene.fog = new T.Fog(color, 26, 50);
     groundMaterial.map?.dispose(); groundMaterial.map = createMarbleTexture(dark, 7.5); groundMaterial.needsUpdate = true;
-    (reflection.material as T.ShaderMaterial).uniforms.strength.value = dark ? 0.04 : 0.09;
+    if (reflection) (reflection.material as T.ShaderMaterial).uniforms.strength.value = dark ? 0.04 : 0.09;
     person.traverse(object => { if (object instanceof T.Sprite) object.material.color.set(dark ? '#c1d1c6' : '#ffffff'); });
     sky.intensity = dark ? 1.1 : 1.8;
     sun.intensity = dark ? 1.0 : 2.1;
@@ -101,7 +104,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
     // Target x after rotation is R*sin(bearing - heading), so zero is straight ahead.
     if (Math.abs(targetHeading - currentHeading) < 0.05) currentHeading = targetHeading;
     world.rotation.y = radians(currentHeading);
-    try { renderer.info.reset(); renderer.render(scene, camera); draws++; readyFrames++; }
+    try { renderer.info.reset(); renderer.render(scene, camera); draws++; readyFrames++; onFrame(); }
     catch (error) { onError(String(error)); return; }
     if (Math.abs(targetHeading - currentHeading) >= 0.05) frame = requestAnimationFrame(render);
   }
@@ -178,7 +181,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
           kaabaBounds.push(project(new T.Vector3(x, y, z).applyMatrix4(part.matrixWorld)));
         }
       });
-      return { draws, readyFrames, texturesReady, active: state.active, scheduled: Boolean(frame), heading: currentHeading, targetHeading,
+      return { draws, readyFrames, texturesReady, lightweight, active: state.active, scheduled: Boolean(frame), heading: currentHeading, targetHeading,
         personPosition: personPoint.toArray(), personRotation: person.rotation.toArray(), cameraPosition: camera.position.toArray(),
         kaabaPosition: targetPoint.toArray(), targetVisible: target.visible, kaabaScreen: project(targetPoint),
         personScreen: project(personPoint), personBounds, personDepthTest: sprite.material.depthTest, personDepthWrite: sprite.material.depthWrite,
@@ -192,7 +195,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
       if (disposed) return;
       disposed = true; cancelAnimationFrame(frame); frame = 0;
       observer.disconnect(); canvas.removeEventListener('webglcontextlost', lost);
-      reflection.dispose(); disposeGroup(scene); renderer.dispose(); renderer.forceContextLoss();
+      reflection?.dispose(); disposeGroup(scene); renderer.dispose(); renderer.forceContextLoss();
     },
   };
 }
