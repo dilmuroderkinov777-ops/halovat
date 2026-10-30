@@ -44,30 +44,35 @@ async function main() {
     await page.goto(origin + '/qibla', { waitUntil: 'domcontentloaded' });
     await page.getByRole('image', { name: 'Halovat yuklanmoqda' }).waitFor({ state: 'hidden', timeout: 30000 });
     const recalibrate = page.getByRole('button', { name: /Qayta sozlash/ });
-    await recalibrate.click({ trial: true });
+    await recalibrate.waitFor();
     assert.ok(instrumented, 'Actual compass hook must use the test sensor fixture');
     const scene = await page.locator('iframe[title="Qibla 3D"]').elementHandle();
     const frame = await scene.contentFrame();
     await frame.waitForFunction(() => window.__halovatQibla?.inspect().texturesReady && window.__halovatQibla.inspect().draws > 0);
+    // Expo UI's existing web Host warning uses a shadow-root toast with an unlabeled
+    // dismiss button. Close that known warning through its UI before testing clicks.
+    const hostWarning = page.locator('#error-toast').getByRole('button').filter({ hasText: /Received `false` for a non-boolean/ });
+    if (await hostWarning.isVisible()) await hostWarning.locator('button').click();
+    await recalibrate.click({ trial: true });
     const pivot = await frame.evaluate(() => window.__halovatQibla.inspect().personScreen);
     assert.ok(Math.abs(pivot[0]) < 0.002 && Math.abs(pivot[1]) < 0.002,
       'The real screen must display the person and rotation pivot at the center');
+    const sceneBox = await page.locator('iframe[title="Qibla 3D"]').boundingBox();
+    assert.ok(sceneBox.height >= 480, 'Phone map frame must be larger than the old 410pt cap');
+    assert.equal(await page.getByRole('button', { name: 'Yaqin masjidlar', exact: true }).count(), 0,
+      'The nearby-mosques card must be removed from Qibla');
     const text = await page.locator('body').innerText();
     assert.ok(text.includes('52°') && text.includes('O‘ngga buring') && text.includes('GPS · ±17 m'));
     const output = path.join(root, '.expo/qibla-check'); fs.mkdirSync(output, { recursive: true });
     await page.mouse.move(0, 0);
-    // Expo UI's web Host reports development-only DOM warnings; dismiss the LogBox toast for the screenshot.
-    const dismissLog = page.getByRole('button', { name: /Dismiss notification|Dismiss log|Close notification/i });
-    if (await dismissLog.count()) await dismissLog.first().click();
     await page.screenshot({ path: path.join(output, 'page-52-degrees.png'), fullPage: true });
     await recalibrate.click();
     await page.getByText('Telefonni 8 shaklida aylantiring', { exact: true }).waitFor();
     assert.equal(await page.evaluate(() => window.__qiblaRestarts), 1, 'Native calibration action must restart sensor and open the guide');
     await page.getByRole('button', { name: 'Kompasga o‘tish', exact: true }).click();
-    await page.getByRole('button', { name: 'Yaqin masjidlar', exact: true }).click();
-    await page.waitForURL('**/qibla/mosque');
+    assert.ok(new URL(page.url()).pathname.endsWith('/qibla'));
     assert.deepEqual(errors, [], 'No screen runtime errors');
-    console.log('PASS: real screen renders sensor fixture and offline scene; calibration restarts sensor and opens guide; nearby-mosques navigation works.');
+    console.log('PASS: real screen renders enlarged offline map and sensor fixture; nearby-mosques button is absent; calibration still restarts sensor and opens guide.');
     console.log('Preview:', path.join(output, 'page-52-degrees.png'));
   } finally { await browser.close(); }
 }

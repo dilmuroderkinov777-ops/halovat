@@ -48,7 +48,7 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
     return () => { mounted = false; subscription.remove(); };
   }, []);
   const showCalibration = useCallback(() => { restart(); setGuideRevision(value => value + 1); }, [restart]);
-  const sceneHeight = Math.max(300, Math.min(Math.min(width, 440) * 1.04, height * 0.47, 410));
+  const sceneHeight = Math.max(340, Math.min(Math.min(width, 440) * 1.30, height * 0.58, 540));
 
   return <>
     <View style={styles.locationRow}>

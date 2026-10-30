@@ -2,7 +2,15 @@
   "tool": "built-in image_gen",
   "reference": "../../../../design/qibla-proposals/12-third-person-isometric-map.png",
   "encoding": "Generated PNG assets resized and encoded as WebP; transparency preserved. No runtime image generation or downloads.",
+  "activeAssets": ["person-rear.webp", "kiswa.webp", "door.webp"],
+  "environment": "24 instanced procedural 3D date palms, planted directly in the plaza; no planter sprites. Previous person.webp and planter.webp are retained as historical assets only.",
   "assets": [
+    {
+      "file": "person-rear.webp",
+      "transparent_background": true,
+      "source": "built-in image_gen / exec-aa3774ec-3571-4204-b764-7af2619f6da2.png",
+      "prompt": "Use case: identity-preserve. Asset type: transparent production sprite for a mobile third-person compass. Input image is the existing character identity/outfit and premium 3D shading reference. Render ONLY this full-body man, but change the camera and pose to an EXACT STRAIGHT REAR VIEW, camera horizontally centered directly behind his spine, looking down at 50 degrees from the horizon. The man stands upright on a level floor, feet parallel, both toes pointing straight away from viewer toward image top; shoulders square, head and torso straight ahead, spine on the central vertical axis. No sideways turn, no three-quarter side view, no twisting. He holds his smartphone DIRECTLY IN FRONT of his chest with both hands centered, elbows symmetrical. Only the top of the phone and fingertips may be visible beyond the shoulders because we see his back. Eyes, nose and front of face must not be visible. Keep the same cream embroidered kufi, short black hair, ivory long sleeve shirt with fabric folds, charcoal dark green trousers, off-white sneakers, natural anatomy and refined soft photorealistic 3D model style. Match warm upper-left studio illumination and soft ambient shading. Full body including both shoes, nearly fills image height with 3% padding top/bottom; horizontally centered. Genuinely transparent background and no ground shadow. Avoid ground, circle, arrows, Kaaba, plants, text, UI, panels, props other than the phone. Critical: the body and feet must face image top, not top right or top left, so forward aligns exactly with the compass world negative-Z axis."
+    },
     {
       "file": "person.webp",
       "transparent_background": true,

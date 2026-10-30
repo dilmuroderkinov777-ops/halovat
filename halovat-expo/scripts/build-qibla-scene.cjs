@@ -4,8 +4,8 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 async function main() {
-  const textures = Object.fromEntries(await Promise.all(['person', 'kiswa', 'door', 'planter'].map(async name => [name,
-    'data:image/webp;base64,' + (await fs.readFile(path.join(root, 'assets/qibla/scene', name + '.webp'))).toString('base64'),
+  const textures = Object.fromEntries(await Promise.all(['personRear', 'kiswa', 'door'].map(async name => [name,
+    'data:image/webp;base64,' + (await fs.readFile(path.join(root, 'assets/qibla/scene', (name === 'personRear' ? 'person-rear' : name) + '.webp'))).toString('base64'),
   ])));
   const result = await build({ entryPoints: [path.join(root, 'src/scene/qibla/runtime.ts')], bundle: true, minify: true,
     write: false, format: 'iife', target: ['safari16', 'chrome110'], legalComments: 'none',

@@ -140,12 +140,9 @@ async function main() {
   const qibla = mount(load('src/app/(tabs)/qibla/index.tsx')).render();
   assert.equal(findAll(qibla, 'NativeSegments').length, 0);
   assert.equal(findAll(qibla, 'QiblaCompass').length, 1);
-  const nearby = findAll(qibla, 'Pressable').find(node => node.props.accessibilityLabel === 'Yaqin masjidlar');
-  assert.ok(nearby, 'Nearby mosques card must be an accessible button');
-  assert.equal(findAll(nearby, 'Image')[0].props.source, 'mosque-3d.png');
-  assert.deepEqual(Array.from(qibla.props.children, child => child.type), ['QiblaCompass', 'Pressable']);
-  nearby.props.onPress();
-  assert.deepEqual(navigations, ['/(tabs)/qibla/mosque']);
+  assert.equal(findAll(qibla, 'Pressable').length, 0, 'Qibla must not show the removed nearby-mosques card');
+  assert.equal(qibla.props.children.type, 'QiblaCompass');
+  assert.deepEqual(navigations, []);
 
   const screen = mount(load('src/screens/MosqueScreen.tsx'));
   let tree = screen.render();

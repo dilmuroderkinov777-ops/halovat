@@ -7,7 +7,7 @@ export function createFloorReflection(hiddenInReflection: T.Object3D[]) {
   const shader = (Reflector as typeof Reflector & { ReflectorShader: {
     uniforms: Record<string, T.IUniform>; vertexShader: string; fragmentShader: string;
   } }).ReflectorShader;
-  const floor = new Reflector(new T.PlaneGeometry(40, 40), {
+  const floor = new Reflector(new T.PlaneGeometry(60, 60), {
     color: '#808080', textureWidth: 256, textureHeight: 256, multisample: 0, clipBias: 0.003,
     shader: {
       ...shader,

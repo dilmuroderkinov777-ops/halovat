@@ -12,7 +12,7 @@ async function main() {
   new Function('module', 'exports', documentBundle)(box, box.exports);
   const browser = await chromium.launch({ headless: true, args: ['--enable-unsafe-swiftshader'] });
   try {
-    const page = await browser.newPage({ viewport: { width: 390, height: 420 }, deviceScaleFactor: 2 });
+    const page = await browser.newPage({ viewport: { width: 390, height: 490 }, deviceScaleFactor: 2 });
     const errors = [], requests = [];
     page.on('pageerror', error => errors.push(String(error)));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -33,6 +33,18 @@ async function main() {
     };
     const dir = path.join(root, '.expo/qibla-check'); fs.mkdirSync(dir, { recursive: true });
     const first = await update({});
+    const bounds = points => ({ left: Math.min(...points.map(p => p[0])), right: Math.max(...points.map(p => p[0])),
+      bottom: Math.min(...points.map(p => p[1])), top: Math.max(...points.map(p => p[1])) });
+    const checkSeparation = snapshot => {
+      const person = bounds(snapshot.personBounds), target = bounds(snapshot.kaabaBounds);
+      assert.ok(person.right < target.left || target.right < person.left || person.top < target.bottom || target.top < person.bottom,
+        `Person and Kaaba silhouettes must stay separated at heading ${snapshot.heading}: ${JSON.stringify({ person, target })}`);
+      assert.ok((person.top - person.bottom) / (target.top - target.bottom) < 0.68,
+        'The person must be visibly smaller than the Kaaba');
+    };
+    assert.ok(first.personDepthTest && first.personDepthWrite, 'Character must use scene depth instead of an always-on-top overlay');
+    assert.equal(first.treeCount, 24, 'The enlarged plaza must contain the expanded palm grove');
+    assert.equal(first.groundSize, 60);
     const checkCentered = snapshot => {
       assert.ok(Math.abs(snapshot.personScreen[0]) < 0.002 && Math.abs(snapshot.personScreen[1]) < 0.002,
         'The person and geographic rotation pivot must project to the center of the scene');
@@ -42,6 +54,8 @@ async function main() {
     assert.ok(first.kaabaPosition[0] > 0, 'A target 52 degrees right must appear right of the person');
     const aligned = await update({ heading: 240, aligned: true });
     checkCentered(aligned);
+    checkSeparation(aligned);
+    assert.ok(Math.abs(aligned.forwardScreen[0]) < 0.002, 'Avatar, camera and physical forward axis must face straight ahead together');
     assert.ok(Math.abs(aligned.kaabaPosition[0]) < 0.004, 'Aligned target must be directly ahead');
     assert.ok(aligned.kaabaPosition[2] < 0, 'Forward is negative Z');
     assert.ok(aligned.kaabaBounds.every(point => Math.abs(point[0]) < 1 && Math.abs(point[1]) < 1), 'Aligned Kaaba roof and plinth must remain fully in frame');
@@ -57,10 +71,11 @@ async function main() {
     assert.ok(Math.abs(after.heading - before.heading) < 3, 'North crossing must turn two degrees, not 358');
     const orbit = [];
     const radius = Math.hypot(first.kaabaPosition[0], first.kaabaPosition[2]);
-    for (const heading of [0, 45, 90, 135, 180, 225, 270, 315, 360]) {
+    for (let heading = 0; heading <= 360; heading += 5) {
       const snapshot = await update({ heading, bearing: 0, reduceMotion: true });
       checkCentered(snapshot);
-      orbit.push(snapshot);
+      if (heading % 45 === 0) orbit.push(snapshot);
+      checkSeparation(snapshot);
       assert.deepEqual(snapshot.personPosition, first.personPosition);
       assert.deepEqual(snapshot.personRotation, first.personRotation);
       assert.ok(snapshot.kaabaPosition.every(Number.isFinite), 'A complete turn keeps valid world coordinates');
@@ -74,6 +89,7 @@ async function main() {
         assert.ok(Math.abs(forward[0] * target[1] - forward[1] * target[0]) < 0.002, 'Alignment follows the fixed forward arrow in the isometric camera');
         assert.ok(Math.abs(snapshot.kaabaScreen[0]) < 1 && Math.abs(snapshot.kaabaScreen[1]) < 1, 'Forward target stays in view');
       }
+      if (heading === 180 || heading === 170) await page.screenshot({ path: path.join(dir, `scene-behind-${heading}.png`) });
     }
     for (let i = 0; i < 4; i++) {
       for (const axis of [0, 1]) assert.ok(Math.abs((orbit[i].kaabaScreen[axis] + orbit[i + 4].kaabaScreen[axis]) / 2 - first.personScreen[axis]) < 0.002,
@@ -95,7 +111,7 @@ async function main() {
     const resumed = await update({ heading: 240, bearing: 240, aligned: true, dark: false });
     assert.ok(resumed.targetVisible);
     assert.ok(Math.abs(resumed.kaabaPosition[0]) < 0.004);
-    for (const viewport of [{ width: 320, height: 330 }, { width: 430, height: 410 }, { width: 844, height: 300 }]) {
+    for (const viewport of [{ width: 320, height: 416 }, { width: 430, height: 540 }, { width: 844, height: 340 }]) {
       await page.setViewportSize(viewport);
       await page.waitForFunction(size => {
         const canvas = document.querySelector('canvas'), snapshot = window.__halovatQibla.inspect();
@@ -105,6 +121,7 @@ async function main() {
       for (const heading of [240, 330, 60, 150]) {
         const snapshot = await update({ heading, reduceMotion: true });
         checkCentered(snapshot);
+        checkSeparation(snapshot);
         assert.ok(snapshot.kaabaBounds.every(point => Math.abs(point[0]) < 1 && Math.abs(point[1]) < 1),
           'Responsive framing must preserve the full centered orbit');
       }
@@ -114,7 +131,7 @@ async function main() {
     assert.equal(await page.evaluate(() => window.__halovatQibla.inspect().scheduled), false);
     assert.deepEqual(errors, [], 'No runtime errors');
     assert.deepEqual(requests.filter(url => !url.startsWith('data:')), [], '3D scene must work entirely offline');
-    console.log('PASS: centered fixed person/pivot, complete visible orbit, opposite-point symmetry, responsive framing, inverse map rotation, shortest north crossing, alignment, offline loading, idle/background teardown, recovery and dark theme.');
+    console.log('PASS: centered rear-facing person, smaller scale, depth testing and silhouette separation throughout 360 degrees, complete visible orbit, expanded palm grove, responsive framing, inverse map rotation, alignment, offline loading, idle/background teardown and dark theme.');
     console.log(JSON.stringify({ triangles: first.triangles, drawCalls: first.calls, textures: first.textures, geometries: first.geometries, screenshots: dir }, null, 2));
   } finally { await browser.close(); }
 }

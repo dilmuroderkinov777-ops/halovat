@@ -3,7 +3,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // The build embeds these local assets. A scene never depends on a CDN or an API.
-declare const __QIBLA_TEXTURES__: Record<'person' | 'kiswa' | 'door' | 'planter', string>;
+declare const __QIBLA_TEXTURES__: Record<'personRear' | 'kiswa' | 'door', string>;
 export function loadSceneTextures() {
   const loader = new T.TextureLoader();
   const pending: Promise<void>[] = [];
@@ -16,8 +16,8 @@ export function loadSceneTextures() {
     texture.anisotropy = 4;
     return texture;
   };
-  const person = load('person'), kiswa = load('kiswa'), door = load('door'), planter = load('planter');
-  return { person, kiswa, door, planter, ready: Promise.all(pending) };
+  const person = load('personRear'), kiswa = load('kiswa'), door = load('door');
+  return { person, kiswa, door, ready: Promise.all(pending) };
 }
 
 function mesh(parent: T.Group, geometry: T.BufferGeometry, material: T.Material | T.Material[], x: number, y: number, z: number) {
@@ -33,16 +33,15 @@ function stoneBox(parent: T.Group, size: [number, number, number], material: T.M
   return mesh(parent, new RoundedBoxGeometry(...size, 1, radius), material, ...at);
 }
 
-/** The approved, fixed camera pose is pre-rendered; the world remains live 3D. */
+/** Straight rear view: the person's shoulders, phone and feet all face world -Z. */
 export function createPerson(texture: T.Texture) {
   const person = new T.Group();
   person.name = 'person-fixed';
-  const sprite = new T.Sprite(new T.SpriteMaterial({ map: texture, transparent: true, alphaTest: 0.04, depthWrite: false, depthTest: false, toneMapped: false }));
+  const sprite = new T.Sprite(new T.SpriteMaterial({ map: texture, transparent: true, alphaTest: 0.1, depthWrite: true, depthTest: true, toneMapped: false }));
   sprite.name = 'phone-in-hands';
-  sprite.center.set(0.5, 0.085);
-  sprite.scale.set(2.93, 4.40, 1);
+  sprite.center.set(0.5, 0.035);
+  sprite.scale.set(2.0, 3.0, 1);
   sprite.position.y = 0.04;
-  sprite.renderOrder = 6;
   person.add(sprite);
   return person;
 }
@@ -134,25 +133,6 @@ export function createKaaba(textures: ReturnType<typeof loadSceneTextures>) {
   mergeStaticParts(kaaba);
   kaaba.add(createContactShadow(3.6, 3.2, 0.36));
   return kaaba;
-}
-
-/** Camera-facing foliage preserves the reference detail at two triangles per planter. */
-export function createSurroundings(dark: boolean, texture: T.Texture) {
-  const group = new T.Group(); group.name = 'map-surroundings';
-  const stone = new T.MeshStandardMaterial({ color: dark ? '#334239' : '#e9e2d3', roughness: 0.76 });
-  const cap = new T.MeshStandardMaterial({ color: dark ? '#3a4c40' : '#f1ecdf', roughness: 0.72 });
-  const foliage = new T.SpriteMaterial({ map: texture, transparent: true, alphaTest: 0.04, depthWrite: false,
-    color: dark ? '#75927c' : '#ffffff', toneMapped: false });
-  const planters = [[2.1, 5.8, 0.95], [3.3, 0.1, 1.05], [-5.0, -2.8, 1.15], [-8.0, 5.5, 0.8], [0, -7.0, 0.8], [-0.6, 10, 0.85]];
-  for (const [x, z, scale] of planters) {
-    const sprite = new T.Sprite(foliage); sprite.position.set(x, 0.03, z);
-    sprite.center.set(0.5, 0.04); sprite.scale.set(2.65 * scale, 2.20 * scale, 1); group.add(sprite);
-    stoneBox(group, [0.64, 0.64, 0.72], stone, [x - 0.9, 0.32, z - 1.2]);
-    stoneBox(group, [0.58, 0.43, 0.65], cap, [x - 0.25, 0.215, z - 1.03]);
-    const shadow = createContactShadow(3.3 * scale, 2.5 * scale, 0.17);
-    shadow.position.x = x + 0.25; shadow.position.z = z + 0.25; group.add(shadow);
-  }
-  return group;
 }
 
 /** Batch static geometry by material; preserve the Kaaba's six texture groups. */

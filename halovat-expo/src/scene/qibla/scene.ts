@@ -2,12 +2,13 @@ import * as T from 'three';
 import { createFloorReflection } from './reflection';
 import { headingDelta } from '../../domain/compassHeading';
 import { radians } from '../../domain/qibla';
-import { createContactShadow, createKaaba, createMarbleTexture, createPerson, createSurroundings, loadSceneTextures } from './models';
+import { createContactShadow, createKaaba, createMarbleTexture, createPerson, loadSceneTextures } from './models';
+import { createSurroundings } from './palms';
 
 export type QiblaSceneState = {
   heading: number | null; bearing: number; aligned: boolean; active: boolean; dark: boolean; reduceMotion: boolean;
 };
-const RADIUS = 5;
+const RADIUS = 7.4;
 
 /** Camera and person are fixed. Geographic objects rotate about the person's feet. */
 export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: string) => void) {
@@ -22,7 +23,9 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   renderer.shadowMap.type = T.VSMShadowMap;
   const camera = new T.OrthographicCamera(-4.5, 4.5, 4.5, -4.5, 0.1, 65);
   // Aim at the geographic pivot under the person's feet, not an offset point on the map.
-  camera.position.set(-2.280, 11.471, 16.223);
+  // A centered rear camera shares the avatar's -Z forward axis. The higher angle
+  // and clear orbit keep even a target behind the person below their feet on screen.
+  camera.position.set(0, 16.383, 11.472);
   camera.lookAt(0, 0, 0);
   const sky = new T.HemisphereLight('#ffffff', '#b6b3a6', 1.8);
   scene.add(sky);
@@ -30,26 +33,26 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   sun.position.set(-4, 10, -3);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
-  Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 0.1, far: 30 });
+  Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 0.1, far: 50 });
   sun.shadow.normalBias = 0.04;
   sun.shadow.bias = -0.0003;
   sun.shadow.radius = 4;
   sun.shadow.blurSamples = 8;
   scene.add(sun);
   const world = new T.Group(); world.name = 'rotating-world'; scene.add(world);
-  const groundMaterial = new T.MeshStandardMaterial({ map: createMarbleTexture(false, 5), roughness: 0.58, metalness: 0.05 });
-  const ground = new T.Mesh(new T.PlaneGeometry(40, 40), groundMaterial);
+  const groundMaterial = new T.MeshStandardMaterial({ map: createMarbleTexture(false, 7.5), roughness: 0.58, metalness: 0.05 });
+  const ground = new T.Mesh(new T.PlaneGeometry(60, 60), groundMaterial);
   ground.rotation.x = -Math.PI / 2; ground.rotation.z = Math.PI / 4; ground.position.y = -0.012; ground.receiveShadow = true;
   world.add(ground);
   const textures = loadSceneTextures();
-  let surroundings = createSurroundings(false, textures.planter); world.add(surroundings);
+  let surroundings = createSurroundings(false); world.add(surroundings);
   const target = new T.Group(); target.name = 'qibla-target'; target.visible = false;
-  const kaaba = createKaaba(textures); kaaba.rotation.y = -0.18; kaaba.scale.setScalar(1.45); target.add(kaaba); world.add(target);
+  const kaaba = createKaaba(textures); kaaba.rotation.y = -0.18; kaaba.scale.setScalar(1.65); target.add(kaaba); world.add(target);
   const lineMaterial = new T.MeshBasicMaterial({ color: '#79cea1', transparent: true, opacity: 0.85, depthWrite: false, side: T.DoubleSide, toneMapped: false });
   const line = new T.Mesh(new T.BufferGeometry(), lineMaterial); world.add(line); line.visible = false;
 
   const person = createPerson(textures.person); scene.add(person);
-  const personShadow = createContactShadow(2.3, 1.8, 0.20); personShadow.position.z = 0.3; scene.add(personShadow);
+  const personShadow = createContactShadow(1.5, 1.25, 0.20); personShadow.position.z = 0.15; scene.add(personShadow);
   const haloMaterial = new T.MeshBasicMaterial({ color: '#65ce9c', transparent: true, opacity: 0.22, depthWrite: false });
   const halo = new T.Mesh(new T.CircleGeometry(1.0, 64), haloMaterial);
   halo.rotation.x = -Math.PI / 2; halo.position.y = 0.018; scene.add(halo);
@@ -73,21 +76,21 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   let readyFrames = 0;
   let lastBearing: number | null = null;
   let texturesReady = false;
-  const ready = textures.ready.then(() => { texturesReady = true; if (disposed) { textures.person.dispose(); textures.kiswa.dispose(); textures.door.dispose(); textures.planter.dispose(); } else invalidate(); });
+  const ready = textures.ready.then(() => { texturesReady = true; if (disposed) { textures.person.dispose(); textures.kiswa.dispose(); textures.door.dispose(); } else invalidate(); });
 
   const setTheme = (dark: boolean) => {
     const color = dark ? '#0e1914' : '#faf9f5';
     scene.background = new T.Color(color);
     renderer.toneMappingExposure = dark ? 1.0 : 2.0;
     document.body.style.setProperty('--canvas', color);
-    scene.fog = new T.Fog(color, 18, 32);
-    groundMaterial.map?.dispose(); groundMaterial.map = createMarbleTexture(dark, 5); groundMaterial.needsUpdate = true;
+    scene.fog = new T.Fog(color, 26, 50);
+    groundMaterial.map?.dispose(); groundMaterial.map = createMarbleTexture(dark, 7.5); groundMaterial.needsUpdate = true;
     (reflection.material as T.ShaderMaterial).uniforms.strength.value = dark ? 0.04 : 0.09;
     person.traverse(object => { if (object instanceof T.Sprite) object.material.color.set(dark ? '#c1d1c6' : '#ffffff'); });
     sky.intensity = dark ? 1.1 : 1.8;
     sun.intensity = dark ? 1.0 : 2.1;
-    world.remove(surroundings); disposeGroup(surroundings, new Set([textures.planter]));
-    surroundings = createSurroundings(dark, textures.planter); world.add(surroundings);
+    world.remove(surroundings); disposeGroup(surroundings);
+    surroundings = createSurroundings(dark); world.add(surroundings);
   };
   setTheme(false);
 
@@ -115,7 +118,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
     const width = Math.max(canvas.clientWidth, 1), height = Math.max(canvas.clientHeight, 1);
     renderer.setSize(width, height, false);
     // Leave space on every side of the centered pivot for the Kaaba's complete orbit.
-    const viewHeight = Math.max(14.2, 15.0 / (width / height));
+    const viewHeight = Math.max(20.0, 20.4 / (width / height));
     camera.left = -viewHeight * width / height / 2; camera.right = -camera.left;
     camera.top = viewHeight / 2; camera.bottom = -camera.top; camera.updateProjectionMatrix();
     invalidate();
@@ -163,6 +166,12 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
       const targetPoint = target.getWorldPosition(new T.Vector3());
       const personPoint = person.getWorldPosition(new T.Vector3());
       const project = (point: T.Vector3) => point.clone().project(camera).toArray();
+      const sprite = person.getObjectByName('phone-in-hands') as T.Sprite;
+      const right = new T.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+      const up = new T.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+      const personBounds = [0, 1].flatMap(x => [0, 1].map(y => project(sprite.getWorldPosition(new T.Vector3())
+        .addScaledVector(right, (x - sprite.center.x) * sprite.scale.x)
+        .addScaledVector(up, (y - sprite.center.y) * sprite.scale.y))));
       // Include the complete roof/plinth, not only the target's center, in framing checks.
       const kaabaBounds: number[][] = [];
       kaaba.traverse(part => {
@@ -176,7 +185,11 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
       return { draws, readyFrames, texturesReady, active: state.active, scheduled: Boolean(frame), heading: currentHeading, targetHeading,
         personPosition: personPoint.toArray(), personRotation: person.rotation.toArray(), cameraPosition: camera.position.toArray(),
         kaabaPosition: targetPoint.toArray(), targetVisible: target.visible, kaabaScreen: project(targetPoint),
-        personScreen: project(personPoint), forwardScreen: project(new T.Vector3(0, 0, -1)), kaabaBounds, triangles: renderer.info.render.triangles, calls: renderer.info.render.calls,
+        personScreen: project(personPoint), personBounds, personDepthTest: sprite.material.depthTest, personDepthWrite: sprite.material.depthWrite,
+        forwardScreen: project(new T.Vector3(0, 0, -1)), kaabaBounds,
+        treeCount: (surroundings.getObjectByName('palm-trunks') as T.InstancedMesh).count,
+        groundSize: (ground.geometry as T.PlaneGeometry).parameters.width,
+        triangles: renderer.info.render.triangles, calls: renderer.info.render.calls,
         geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, pixelRatio: renderer.getPixelRatio() };
     },
     dispose() {
@@ -191,6 +204,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
 function disposeGroup(group: T.Object3D, keep = new Set<T.Texture>()) {
   const geometries = new Set<T.BufferGeometry>(), materials = new Set<T.Material>(), textures = new Set<T.Texture>();
   group.traverse(object => {
+    if (object instanceof T.InstancedMesh) object.dispose();
     if (object instanceof T.Mesh || object instanceof T.Line || object instanceof T.Sprite) {
       geometries.add(object.geometry);
       (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => {
