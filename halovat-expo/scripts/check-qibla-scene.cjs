@@ -49,11 +49,6 @@ async function main() {
       assert.ok(Math.abs(snapshot.personScreen[0]) < 0.002 && Math.abs(snapshot.personScreen[1]) < 0.002,
         'The person and geographic rotation pivot must project to the center of the scene');
     };
-    const checkArrow = snapshot => {
-      assert.ok(Math.abs(snapshot.arrowTipScreen[0] - snapshot.arrowTailScreen[0]) < 0.00001,
-        'The small forward arrow must have a vertical, straight shaft on screen');
-      assert.ok(snapshot.arrowTipScreen[1] > snapshot.arrowTailScreen[1], 'The arrow must face forward, not back');
-    };
     const checkSideCrop = snapshot => {
       const target = bounds(snapshot.kaabaBounds);
       const visibleWidth = Math.min(target.right, 1) - Math.max(target.left, -1);
@@ -78,7 +73,6 @@ async function main() {
     await page.screenshot({ path: path.join(dir, 'scene-aligned.png') });
     const side = await update({ heading: 150, aligned: false });
     checkSideCrop(side);
-    checkArrow(side);
     await page.screenshot({ path: path.join(dir, 'scene-half-kaaba.png') });
     await update({ heading: 168 });
     await page.screenshot({ path: path.join(dir, 'scene-72-degrees.png') });
@@ -93,7 +87,6 @@ async function main() {
     for (let heading = 0; heading <= 360; heading += 5) {
       const snapshot = await update({ heading, bearing: 0, reduceMotion: true });
       checkCentered(snapshot);
-      checkArrow(snapshot);
       if (heading % 45 === 0) orbit.push(snapshot);
       checkSeparation(snapshot);
       assert.deepEqual(snapshot.personPosition, first.personPosition);
@@ -107,7 +100,7 @@ async function main() {
       if (heading === 0 || heading === 360) {
         const forward = snapshot.forwardScreen.map((v, i) => v - snapshot.personScreen[i]);
         const target = snapshot.kaabaScreen.map((v, i) => v - snapshot.personScreen[i]);
-        assert.ok(Math.abs(forward[0] * target[1] - forward[1] * target[0]) < 0.002, 'Alignment follows the fixed forward arrow in the isometric camera');
+        assert.ok(Math.abs(forward[0] * target[1] - forward[1] * target[0]) < 0.002, 'Alignment follows the fixed person forward axis in the isometric camera');
         assert.ok(Math.abs(snapshot.kaabaScreen[0]) < 1 && Math.abs(snapshot.kaabaScreen[1]) < 1, 'Forward target stays in view');
       }
       if (heading === 180 || heading === 170) await page.screenshot({ path: path.join(dir, `scene-behind-${heading}.png`) });
@@ -143,7 +136,6 @@ async function main() {
         const snapshot = await update({ heading, reduceMotion: true });
         checkCentered(snapshot);
         checkSeparation(snapshot);
-        checkArrow(snapshot);
         assert.ok(snapshot.kaabaBounds.some(point => Math.abs(point[0]) < 1 && Math.abs(point[1]) < 1),
           'Responsive framing must preserve a visible target');
         if (viewport.width < viewport.height && [330, 150].includes(heading)) checkSideCrop(snapshot);
@@ -154,7 +146,7 @@ async function main() {
     assert.equal(await page.evaluate(() => window.__halovatQibla.inspect().scheduled), false);
     assert.deepEqual(errors, [], 'No runtime errors');
     assert.deepEqual(requests.filter(url => !url.startsWith('data:')), [], '3D scene must work entirely offline');
-    console.log('PASS: closer portrait framing and half-visible lateral Kaaba; straight forward arrow at every heading and screen size; centered fixed person, silhouette separation throughout 360 degrees, inverse map rotation, alignment, offline loading, idle/background teardown and dark theme.');
+    console.log('PASS: closer portrait framing and half-visible lateral Kaaba; centered fixed person, silhouette separation throughout 360 degrees, inverse map rotation, alignment, offline loading, idle/background teardown and dark theme.');
     console.log(JSON.stringify({ triangles: first.triangles, drawCalls: first.calls, textures: first.textures, geometries: first.geometries, screenshots: dir }, null, 2));
   } finally { await browser.close(); }
 }

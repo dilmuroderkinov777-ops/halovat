@@ -58,16 +58,7 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   halo.rotation.x = -Math.PI / 2; halo.position.y = 0.018; scene.add(halo);
   const inner = new T.Mesh(new T.CircleGeometry(0.70, 64), new T.MeshBasicMaterial({ color: '#087859', transparent: true, opacity: 0.80, depthWrite: false, toneMapped: false }));
   inner.rotation.x = -Math.PI / 2; inner.position.y = 0.022; scene.add(inner);
-  const arrowShape = new T.Shape();
-  // Symmetric head and straight shaft share the person's fixed -Z forward axis.
-  arrowShape.moveTo(0, 0.40); arrowShape.lineTo(-0.23, 0.06); arrowShape.lineTo(-0.085, 0.06);
-  arrowShape.lineTo(-0.085, -0.28); arrowShape.lineTo(0.085, -0.28);
-  arrowShape.lineTo(0.085, 0.06); arrowShape.lineTo(0.23, 0.06); arrowShape.closePath();
-  const arrow = new T.Mesh(new T.ExtrudeGeometry(arrowShape, { depth: 0.025, bevelEnabled: true, bevelSize: 0.008, bevelThickness: 0.005, bevelSegments: 1, steps: 1 }), new T.MeshBasicMaterial({ color: '#087357', toneMapped: false }));
-  arrow.name = 'person-forward-arrow';
-  arrow.rotation.x = -Math.PI / 2; arrow.position.set(1.05, 0.035, 0); scene.add(arrow);
-
-  const reflection = createFloorReflection([ground, person, halo, inner, line, arrow]); scene.add(reflection);
+  const reflection = createFloorReflection([ground, person, halo, inner, line]); scene.add(reflection);
 
   let state: QiblaSceneState = { heading: null, bearing: 0, aligned: false, active: false, dark: false, reduceMotion: false };
   let currentHeading: number | null = null;
@@ -192,8 +183,6 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
         kaabaPosition: targetPoint.toArray(), targetVisible: target.visible, kaabaScreen: project(targetPoint),
         personScreen: project(personPoint), personBounds, personDepthTest: sprite.material.depthTest, personDepthWrite: sprite.material.depthWrite,
         forwardScreen: project(new T.Vector3(0, 0, -1)), kaabaBounds,
-        arrowTipScreen: project(arrow.localToWorld(new T.Vector3(0, 0.40, 0))),
-        arrowTailScreen: project(arrow.localToWorld(new T.Vector3(0, -0.28, 0))),
         treeCount: (surroundings.getObjectByName('palm-trunks') as T.InstancedMesh).count,
         groundSize: (ground.geometry as T.PlaneGeometry).parameters.width,
         triangles: renderer.info.render.triangles, calls: renderer.info.render.calls,
