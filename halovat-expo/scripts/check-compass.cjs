@@ -46,9 +46,9 @@ class FakeClock {
   }
 }
 
-function harness({ granted = true, deferWatcher = false, platform = 'android' } = {}) {
+function harness({ granted = true, deferWatcher = false, platform = 'android', native = false, nativeAvailable = true, deferNativeStart = false, rejectNativeStart = false } = {}) {
   const clock = new FakeClock();
-  const state = { started: 0, removed: 0, requested: 0, animations: [], values: [], writes: [], watches: [] };
+  const state = { started: 0, expoStarted: 0, removed: 0, requested: 0, commands: [], nativeStarts: [], animations: [], values: [], writes: [], watches: [] };
   const hooks = [];
   let cursor = 0;
   let focusEffect;
@@ -106,12 +106,30 @@ function harness({ granted = true, deferWatcher = false, platform = 'android' } 
       return { remove: () => { if (appStateListener === callback) appStateListener = undefined; } };
     },
   };
+  const nativeModule = native ? {
+    addListener: (name, callback) => {
+      assert.equal(name, 'onHeading');
+      const watch = { callback, native: true, removed: false };
+      state.watches.push(watch);
+      return { remove: () => { assert.equal(watch.removed, false); watch.removed = true; state.removed++; } };
+    },
+    start: async (latitude, longitude) => {
+      state.started++;
+      state.commands.push(['start', latitude, longitude]);
+      if (rejectNativeStart) throw new Error('Native registration failed');
+      const result = { available: nativeAvailable, source: 'rotation_vector' };
+      return deferNativeStart ? new Promise(resolve => state.nativeStarts.push(() => resolve(result))) : result;
+    },
+    stop: async () => { state.commands.push(['stop']); },
+    setLocation: async (latitude, longitude) => { state.commands.push(['location', latitude, longitude]); },
+  } : null;
   const dependencies = {
     'expo-location': {
       getForegroundPermissionsAsync: async () => ({ granted, canAskAgain: true }),
       requestForegroundPermissionsAsync: async () => { state.requested++; return { granted, canAskAgain: true }; },
       watchHeadingAsync: async (callback, error) => {
         state.started++;
+        state.expoStarted++;
         const watch = { callback, error, removed: false };
         watch.subscription = { remove: () => {
           assert.equal(watch.removed, false, 'Each native watcher must be removed once');
@@ -141,6 +159,9 @@ function harness({ granted = true, deferWatcher = false, platform = 'android' } 
       },
     },
     '../services/foregroundLocation': { foregroundLocation: () => gps },
+    '../services/nativeCompass': loadMath('src/services/nativeCompass.ts', {
+      expo: { requireOptionalNativeModule: () => nativeModule },
+    }),
     '../domain/compassHeading': headingMath,
     '../domain/compassMotion': loadMath('src/domain/compassMotion.ts'),
   };
@@ -163,10 +184,16 @@ function harness({ granted = true, deferWatcher = false, platform = 'android' } 
     focus: async () => { assert.equal(cleanup, undefined); cleanup = focusEffect(); await flush(); },
     blur: async () => { cleanup?.(); cleanup = undefined; await flush(); },
     emit: (heading, accuracy = 3, trueNorth = true, index = state.watches.length - 1) => {
-      state.watches[index].callback({ trueHeading: trueNorth ? heading : -1, magHeading: heading, accuracy });
+      const watch = state.watches[index];
+      watch.callback(watch.native ? { status: 'ready', heading, accuracy, trueNorth, source: 'rotation_vector', tilt: 45 }
+        : { trueHeading: trueNorth ? heading : -1, magHeading: heading, accuracy });
     },
     appState: async next => { appState.currentState = next; appStateListener?.(next); await flush(); },
-    error: (index = state.watches.length - 1) => state.watches[index].error('sensor failure'),
+    error: (index = state.watches.length - 1) => {
+      const watch = state.watches[index];
+      if (watch.native) watch.callback({ status: 'unavailable', reason: 'no_readings' });
+      else watch.error('sensor failure');
+    },
     finishGps: async () => { resolveGps({ coords: { latitude: 40, longitude: 67, accuracy: 5 } }); await flush(); },
   });
 }
@@ -250,7 +277,7 @@ function compassView(reading) {
 
 async function checkNeedleVisibility() {
   for (const platform of ['ios', 'android']) {
-    const h = harness({ platform });
+    const h = harness({ platform, native: platform === 'android' });
     const view = () => compassView(h.snapshot());
     await h.focus();
     assert.equal(view().opacity, 0, 'Do not show a direction before the first heading');
@@ -458,12 +485,99 @@ async function checkLifecycle() {
   console.log('PASS: focus/background/error teardown, delayed handles, stale callbacks and permission-loop protection.');
 }
 
+async function checkAndroidNative() {
+  const h = harness({ native: true });
+  await h.focus();
+  assert.equal(h.started, 1);
+  assert.equal(h.expoStarted, 0, 'Installed Android must use rotation-vector native module, not Expo raw sensors');
+  assert.deepEqual(h.commands[0], ['start', 41.3111, 69.2797], 'Start from selected city without waiting for GPS');
+  h.emit(359);
+  assert.equal(h.snapshot().sensorSource, 'rotation_vector');
+  assert.equal(h.snapshot().tilt, 45);
+  await h.finishGps();
+  assert.deepEqual(h.commands.at(-1), ['location', 40, 67], 'GPS must correct true-north declination without restarting sensors');
+  assert.equal(h.started, 1);
+  for (let turn = 0; turn < 12; turn++) {
+    for (const heading of [0, 60, 120, 180, 240, 300, 359]) {
+      await h.clock.advance(250); h.emit(heading);
+      assert.ok(Math.abs(headingMath.headingDelta(h.snapshot().heading, heading)) <= headingMath.HEADING_STABILITY,
+        'Repeated Android rotations must track the latest heading within the one-degree noise deadband');
+    }
+  }
+  const writes = h.writes.length;
+  for (let i = 0; i < 50; i++) { await h.clock.advance(100); h.emit(359); }
+  assert.equal(h.writes.length, writes, 'Stationary native heartbeats must not rerender');
+  assert.equal(h.snapshot().status, 'ready');
+  await h.clock.advance(3001);
+  assert.equal(h.snapshot().heading, null, 'A stalled native stream must never freeze an old heading on screen');
+  assert.equal(h.snapshot().motion.current(), null, 'Stale data must clear alignment and the 3D target together');
+  assert.equal(h.snapshot().status, 'unavailable');
+  assert.equal(h.removed, 0, 'Keep the listener attached while native watchdog recovers');
+  h.emit(240);
+  assert.equal(h.snapshot().status, 'ready');
+  assert.equal(h.snapshot().heading, 240);
+  h.error();
+  assert.equal(h.snapshot().motion.current(), null);
+  h.emit(180);
+  assert.equal(h.snapshot().heading, 180, 'Source fallback must recover without leaving the page');
+  await h.appState('background');
+  assert.equal(h.snapshot().heading, null);
+  assert.equal(h.clock.tasks.size, 0);
+  assert.equal(h.commands.at(-1)[0], 'stop');
+  h.emit(90);
+  assert.equal(h.snapshot().heading, null, 'Old native callbacks must be ignored in background');
+  await h.appState('active');
+  h.emit(0);
+  assert.equal(h.snapshot().heading, 0);
+  await h.blur();
+  assert.equal(h.removed, 2);
+  assert.equal(h.commands.at(-1)[0], 'stop');
+  assert.equal(h.clock.tasks.size, 0);
+
+  const denied = harness({ native: true, granted: false });
+  await denied.focus(); denied.emit(240);
+  assert.equal(denied.snapshot().status, 'ready', 'Android compass must work from the saved city without GPS permission');
+  assert.equal(denied.snapshot().coordinates.latitude, 41.3111);
+  await denied.blur();
+
+  const absent = harness({ native: true, nativeAvailable: false });
+  await absent.focus();
+  assert.equal(absent.snapshot().status, 'no_sensor');
+  assert.equal(absent.snapshot().heading, null);
+  assert.equal(absent.expoStarted, 0, 'Missing hardware must not silently switch to a fabricated or broken reading');
+  await absent.blur();
+
+  const failed = harness({ native: true, rejectNativeStart: true });
+  await failed.focus();
+  assert.equal(failed.snapshot().status, 'unavailable');
+  assert.equal(failed.removed, 1);
+  assert.equal(failed.commands.at(-1)[0], 'stop');
+  await failed.blur();
+
+  const late = harness({ native: true, deferNativeStart: true });
+  await late.focus(); await late.blur(); await late.focus();
+  late.emit(90);
+  assert.equal(late.snapshot().heading, null, 'Do not accept old native-session events while a new start is queued');
+  late.nativeStarts[0](); await flush();
+  assert.deepEqual(late.commands.map(command => command[0]), ['start', 'stop', 'start']);
+  late.nativeStarts[1](); await flush();
+  late.emit(240);
+  assert.equal(late.snapshot().heading, 240);
+  late.emit(90, 3, true, 0);
+  assert.equal(late.snapshot().heading, 240, 'Delayed old-session event must not overwrite current heading');
+  await late.blur();
+  assert.deepEqual(late.commands.map(command => command[0]), ['start', 'stop', 'start', 'stop']);
+  assert.equal(late.clock.tasks.size, 0);
+  console.log('PASS: real Android native bridge selection, 12 rotations, stationary heartbeats, stall/recovery, GPS correction, denied permission, absent sensors and queued start/stop races.');
+}
+
 async function main() {
   checkMath();
   await checkNeedleVisibility();
   await checkPublishing();
   await checkSparseAndSafety();
   await checkLifecycle();
+  await checkAndroidNative();
   console.log('PASS: physical Qibla/cardinal math agrees with Adhan; compass checks use a deterministic fake clock and mocked native driver.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

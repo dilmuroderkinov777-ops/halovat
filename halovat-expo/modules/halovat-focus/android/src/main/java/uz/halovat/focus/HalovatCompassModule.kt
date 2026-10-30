@@ -7,30 +7,37 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
-import android.os.Looper
+import android.os.HandlerThread
 import android.os.SystemClock
 import android.view.Surface
 import android.view.WindowManager
-import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.android.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import kotlin.math.abs
 
 /** North-referenced sensors only: GAME_ROTATION_VECTOR cannot find north. */
 class HalovatCompassModule : Module(), SensorEventListener {
-  private val handler = Handler(Looper.getMainLooper())
+  // Sensor fusion and lifecycle commands share one queue, away from UI/WebView work.
+  private val sensorThread = HandlerThread("HalovatCompass").apply { start() }
+  private val handler = Handler(sensorThread.looper)
+  private val sensorScope = CoroutineScope(SupervisorJob() + handler.asCoroutineDispatcher())
   private var manager: SensorManager? = null
-  private var running = false
+  @Volatile private var running = false
   private var requested = false
   private var mode = -1
-  private var lastEventAt = 0L
+  @Volatile private var lastEventAt = 0L
   private var publishedAt = 0L
   private var accuracy = 0
   private var declination = 0.0
-  private var previous: Double? = null
-  private var lastReading: Map<String, Any?> = emptyMap()
+  @Volatile private var lastReading: Map<String, Any?> = emptyMap()
   private var gravity: FloatArray? = null
   private var magnetic: FloatArray? = null
+  private var gravityAt = 0L
+  private var magneticAt = 0L
   private val rotation = FloatArray(9)
   private val remapped = FloatArray(9)
   private val orientation = FloatArray(3)
@@ -39,9 +46,12 @@ class HalovatCompassModule : Module(), SensorEventListener {
     override fun run() {
       if (!running) return
       if (SystemClock.elapsedRealtime() - lastEventAt >= 3000L) {
-        if (!selectMode(mode + 1)) {
+        lastReading = mapOf("status" to "unavailable", "reason" to "no_readings")
+        sendEvent("onHeading", lastReading)
+        // A temporarily silent sensor is not permanently exhausted. Try another
+        // north-referenced source, then restart the preferred source if needed.
+        if (!selectMode(mode + 1) && !selectMode(0)) {
           stop()
-          sendEvent("onHeading", mapOf("status" to "unavailable", "reason" to "no_readings"))
           return
         }
       }
@@ -62,17 +72,17 @@ class HalovatCompassModule : Module(), SensorEventListener {
       val available = selectMode(0)
       if (available) handler.postDelayed(watchdog, 1000L) else stop()
       mapOf("available" to available, "source" to source())
-    }.runOnQueue(Queues.MAIN)
-    AsyncFunction("setLocation") { latitude: Double, longitude: Double -> updateLocation(latitude, longitude) }.runOnQueue(Queues.MAIN)
-    AsyncFunction("stop") { stop() }.runOnQueue(Queues.MAIN)
-    OnActivityEntersBackground { stop(false) }
-    OnActivityEntersForeground {
+    }.runOnQueue(sensorScope)
+    AsyncFunction("setLocation") { latitude: Double, longitude: Double -> updateLocation(latitude, longitude) }.runOnQueue(sensorScope)
+    AsyncFunction("stop") { stop() }.runOnQueue(sensorScope)
+    OnActivityEntersBackground { handler.post { stop(false) } }
+    OnActivityEntersForeground { handler.post {
       if (requested && !running) {
         running = true
         if (selectMode(0)) handler.postDelayed(watchdog, 1000L) else stop()
       }
-    }
-    OnDestroy { handler.post { stop() } }
+    } }
+    OnDestroy { handler.post { stop(); sensorScope.cancel(); sensorThread.quitSafely() } }
   }
 
   private fun updateLocation(latitude: Double, longitude: Double) {
@@ -90,7 +100,8 @@ class HalovatCompassModule : Module(), SensorEventListener {
       val ok = sensors.registerListener(this, sensor, 50_000, handler)
       val gravityOk = accelerometer == null || sensors.registerListener(this, accelerometer, 50_000, handler)
       if (ok && gravityOk) {
-        mode = index; accuracy = 0; gravity = null; magnetic = null; previous = null
+        mode = index; accuracy = 0; gravity = null; magnetic = null
+        gravityAt = 0L; magneticAt = 0L
         lastEventAt = SystemClock.elapsedRealtime(); publishedAt = 0L
         return true
       }
@@ -104,7 +115,8 @@ class HalovatCompassModule : Module(), SensorEventListener {
     running = false
     handler.removeCallbacks(watchdog)
     manager?.unregisterListener(this)
-    mode = -1; previous = null; gravity = null; magnetic = null
+    mode = -1; gravity = null; magnetic = null
+    lastReading = emptyMap()
   }
 
   override fun onAccuracyChanged(sensor: Sensor, value: Int) {
@@ -113,6 +125,9 @@ class HalovatCompassModule : Module(), SensorEventListener {
 
   override fun onSensorChanged(event: SensorEvent) {
     if (!running || mode < 0) return
+    // Do not replay buffered samples after the app/OS was busy or suspended.
+    val now = SystemClock.elapsedRealtimeNanos()
+    if (!CompassMath.isFresh(event.timestamp, now) || event.values.take(3).any { !it.isFinite() }) return
     if (mode < 2) {
       if (event.sensor.type != modes[mode]) return
       SensorManager.getRotationMatrixFromVector(rotation, event.values)
@@ -123,15 +138,15 @@ class HalovatCompassModule : Module(), SensorEventListener {
       }
     } else {
       when (event.sensor.type) {
-        Sensor.TYPE_ACCELEROMETER -> gravity = filtered(gravity, event.values)
-        Sensor.TYPE_MAGNETIC_FIELD -> { magnetic = filtered(magnetic, event.values); accuracy = event.accuracy.coerceIn(0, 3) }
+        Sensor.TYPE_ACCELEROMETER -> { gravity = filtered(gravity, event.values); gravityAt = event.timestamp }
+        Sensor.TYPE_MAGNETIC_FIELD -> { magnetic = filtered(magnetic, event.values); magneticAt = event.timestamp; accuracy = event.accuracy.coerceIn(0, 3) }
         else -> return
       }
       val g = gravity ?: return
       val m = magnetic ?: return
+      if (!CompassMath.isFresh(gravityAt, now) || !CompassMath.isFresh(magneticAt, now)) return
       if (!SensorManager.getRotationMatrix(rotation, null, g, m)) return
     }
-    lastEventAt = SystemClock.elapsedRealtime()
     @Suppress("DEPRECATION")
     val displayRotation = (appContext.reactContext?.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay?.rotation ?: Surface.ROTATION_0
     val axes = when (displayRotation) {
@@ -142,14 +157,14 @@ class HalovatCompassModule : Module(), SensorEventListener {
     }
     if (!SensorManager.remapCoordinateSystem(rotation, axes.first, axes.second, remapped)) return
     SensorManager.getOrientation(remapped, orientation)
-    val heading = Math.toDegrees(orientation[0].toDouble()) + declination
-    if (!heading.isFinite()) return
-    previous = CompassMath.smooth(previous, heading)
+    val magneticHeading = CompassMath.heading(remapped) ?: return
+    val heading = CompassMath.normalize(magneticHeading + declination)
+    lastEventAt = SystemClock.elapsedRealtime()
     if (publishedAt != 0L && lastEventAt - publishedAt < 100L) return
     publishedAt = lastEventAt
     val tilt = abs(Math.toDegrees(orientation[1].toDouble()))
-    lastReading = mapOf("status" to "ready", "heading" to previous,
-      "accuracy" to if (tilt > 70) 0 else accuracy, "trueNorth" to true,
+    lastReading = mapOf("status" to "ready", "heading" to heading,
+      "accuracy" to accuracy, "trueNorth" to true,
       "source" to source(), "tilt" to tilt)
     sendEvent("onHeading", lastReading)
   }
