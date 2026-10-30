@@ -5,6 +5,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, View, useWindowDimensions } f
 import { useLanguage } from '../context/LanguageContext';
 import { type City, nearestCity } from '../domain/prayers';
 import { qiblaBearing, relativeBearing } from '../domain/qibla';
+import { isQiblaAligned } from '../domain/qiblaAlignment';
 import { useCompass } from '../hooks/useCompass';
 import { useQiblaActive, useQiblaAlignment } from '../hooks/useQiblaAlignment';
 import { Text } from '../ui/AppText';
@@ -27,11 +28,11 @@ export const QiblaCompass = memo(function QiblaCompass({ city }: { city: City })
   const locationName = useMemo(() => gpsAccuracy === null ? city.name : (nearestCity(latitude, longitude)?.name ?? city.name),
     [city.name, gpsAccuracy, latitude, longitude]);
   const bearing = useMemo(() => qiblaBearing(latitude, longitude), [latitude, longitude]);
-  const confirmed = useQiblaAlignment(motion, bearing, active);
+  // Haptic confirmation requires reliable data; the label follows the displayed angle.
+  useQiblaAlignment(motion, bearing, active);
   const hasHeading = active && status === 'ready' && heading !== null && Number.isFinite(heading);
   const angle = hasHeading ? relativeBearing(bearing, heading) : null;
-  const reliable = hasHeading && headingAccuracy >= 3 && trueNorth;
-  const aligned = reliable && confirmed;
+  const aligned = isQiblaAligned(angle);
   const TurnIcon = aligned ? Check : (angle ?? 0) < 0 ? CornerUpLeft : CornerUpRight;
   const instruction = aligned ? 'Qiblaga yo‘naldingiz' : angle === null ? 'Telefonni Qibla tomoniga buring' : angle < 0 ? 'Chapga buring' : 'O‘ngga buring';
   const warning = status === 'permission' ? 'Kompas uchun joylashuv ruxsati kerak'

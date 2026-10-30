@@ -7,8 +7,11 @@ const { Coordinates, Qibla } = require('adhan');
 const compile = file => ts.transpileModule(fs.readFileSync(file, 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, esModuleInterop: true },
 }).outputText;
-const loadMath = file => {
-  const box = { exports: {} };
+const loadMath = (file, dependencies = {}) => {
+  const box = { exports: {}, require: name => {
+    assert.ok(name in dependencies, 'Unexpected math dependency: ' + name);
+    return dependencies[name];
+  } };
   vm.runInNewContext(compile(file), box);
   return box.exports;
 };
@@ -213,6 +216,7 @@ function compassView(reading) {
     '../context/LanguageContext': { useLanguage: () => ({ t: text => text }) },
     '../domain/prayers': { nearestCity: () => null },
     '../domain/qibla': loadMath('src/domain/qibla.ts'),
+    '../domain/qiblaAlignment': loadMath('src/domain/qiblaAlignment.ts', { './qibla': loadMath('src/domain/qibla.ts') }),
     '../hooks/useCompass': { useCompass: () => reading },
     '../ui/AppText': { Text: 'Text' },
     '../ui/useAppTheme': { useAppTheme: () => ({ dark: false }), useThemedStyles: styles => styles, useThemeColors: () => ({ paper: '#FFFFFF', green: '#006C49' }) },
@@ -220,7 +224,7 @@ function compassView(reading) {
       useQiblaActive: () => true,
       useQiblaAlignment: (motion, bearing) => {
         const sample = motion.current();
-        return sample && sample.accuracy >= 3 && sample.trueNorth && Math.abs(headingMath.headingDelta(sample.heading, bearing)) <= 8;
+        return sample && sample.accuracy >= 3 && sample.trueNorth && Math.abs(headingMath.headingDelta(sample.heading, bearing)) <= 5;
       },
     },
   };
@@ -241,6 +245,8 @@ function compassView(reading) {
   assert.equal(scene.props.motion, reading.motion, 'Scene must consume the actual live motion signal');
   return {
     opacity: scene.props.motion.current() ? 1 : 0,
+    aligned: scene.props.aligned,
+    icons: nodes.filter(node => ['Check', 'CornerUpLeft', 'CornerUpRight'].includes(node.type)).map(node => node.type),
     texts: nodes.filter(node => node.type === 'Text').flatMap(node => node.props.children),
   };
 }
@@ -256,12 +262,38 @@ async function checkNeedleVisibility() {
     h.emit(bearing, 0);
     assert.equal(view().opacity, 1, platform + ': a finite low-confidence first heading must show the needle');
     assert.ok(view().texts.includes('Kompas aniqligi past'));
-    assert.ok(!view().texts.includes('Qiblaga yo‘naldingiz'));
+    assert.ok(view().texts.includes('Qiblaga yo‘naldingiz'), 'Low accuracy must not tell an aligned user to turn');
+    assert.equal(view().aligned, true, 'The 3D scene and guidance must agree at 0°');
+    assert.ok(view().icons.includes('Check'));
     h.emit(bearing, 3);
     assert.ok(view().texts.includes('Qiblaga yo‘naldingiz'));
     h.emit(bearing, 0);
     assert.equal(view().opacity, 1, platform + ': calibration loss must not hide a live needle');
-    assert.ok(!view().texts.includes('Qiblaga yo‘naldingiz'));
+    assert.ok(view().texts.includes('Qiblaga yo‘naldingiz'));
+    for (const accuracy of [0, 3]) {
+      for (const delta of [-5, 0, 5]) {
+        const reading = h.snapshot();
+        const state = compassView({ ...reading, heading: bearing - delta, headingAccuracy: accuracy });
+        assert.ok(state.texts.includes('Qiblaga yo‘naldingiz'), `${platform}: ${delta}° must be aligned at accuracy ${accuracy}`);
+        assert.equal(state.aligned, true);
+        assert.ok(state.icons.includes('Check'));
+        assert.equal(state.texts.includes('Kompas aniqligi past'), accuracy < 3);
+      }
+    }
+    for (const delta of [-6, 6]) {
+      const state = compassView({ ...h.snapshot(), heading: bearing - delta });
+      assert.ok(state.texts.includes(delta < 0 ? 'Chapga buring' : 'O‘ngga buring'));
+      assert.equal(state.aligned, false);
+      assert.ok(state.icons.includes(delta < 0 ? 'CornerUpLeft' : 'CornerUpRight'));
+    }
+    const magnetic = compassView({ ...h.snapshot(), heading: bearing, headingAccuracy: 3, trueNorth: false });
+    assert.ok(magnetic.texts.includes('Qiblaga yo‘naldingiz'));
+    assert.ok(magnetic.texts.includes('Magnit shimol bo‘yicha taxminiy yo‘nalish'));
+    for (const invalid of [null, NaN, Infinity]) {
+      const state = compassView({ ...h.snapshot(), heading: invalid });
+      assert.equal(state.aligned, false, 'Missing or invalid headings must not confirm alignment');
+      assert.ok(state.texts.includes('Telefonni Qibla tomoniga buring'));
+    }
     h.emit(90, 0, false);
     assert.equal(view().opacity, 1, 'Magnetic fallback must remain visible with a warning');
     await h.appState('background');
@@ -275,7 +307,7 @@ async function checkNeedleVisibility() {
     assert.equal(view().opacity, 0, 'A real sensor failure must hide the stale direction');
     await h.blur();
   }
-  console.log('PASS: actual 3D scene keeps live targets during accuracy loss/magnetic fallback; missing, invalid and stale readings stay hidden on both platforms.');
+  console.log('PASS: iOS/Android guidance, check icon and 3D state agree at 0° and ±5° regardless of sensor confidence; warnings remain separate, outside angles turn correctly and invalid/stale headings stay hidden.');
 }
 
 async function checkPublishing() {

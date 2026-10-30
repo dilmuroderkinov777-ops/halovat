@@ -19,12 +19,15 @@ async function main() {
       localStorage.setItem('halovat.expo.onboarding.complete.v3.language-and-six-pages', 'true');
       localStorage.setItem('halovat.expo.state.v1', JSON.stringify({ cityId: 'toshkent', cityManuallySelected: true,
         locationAttempted: true, compassGuideDismissed: true, darkMode: false }));
-      let value = { heading: 188, accuracy: 3, trueNorth: true };
+      const query = new URLSearchParams(location.search);
+      const heading = query.has('heading') ? Number(query.get('heading')) : 188;
+      const accuracy = query.has('accuracy') ? Number(query.get('accuracy')) : 3;
+      let value = { heading, accuracy, trueNorth: true };
       const listeners = new Set();
       window.__qiblaRestarts = 0;
       window.__qiblaFixture = {
         coordinates: { latitude: 41.2995, longitude: 69.2401 }, gpsAccuracy: 17,
-        heading: 188, headingAccuracy: 3, trueNorth: true, status: 'ready',
+        heading, headingAccuracy: accuracy, trueNorth: true, status: 'ready',
         restart: () => { window.__qiblaRestarts++; },
         motion: { current: () => value, subscribe: listener => { listeners.add(listener); listener(value); return () => listeners.delete(listener); },
           publish: sample => { value = sample; listeners.forEach(listener => listener(sample)); } },
@@ -71,9 +74,18 @@ async function main() {
     assert.equal(await page.evaluate(() => window.__qiblaRestarts), 1, 'Native calibration action must restart sensor and open the guide');
     await page.getByRole('button', { name: 'Kompasga o‘tish', exact: true }).click();
     assert.ok(new URL(page.url()).pathname.endsWith('/qibla'));
+    // Reproduce the reported screen: a rounded 0° reading with low sensor confidence.
+    await page.goto(origin + '/qibla?heading=240&accuracy=0', { waitUntil: 'domcontentloaded' });
+    await page.getByText('Qiblaga yo‘naldingiz', { exact: true }).waitFor();
+    assert.equal(await page.getByText('0°', { exact: true }).count(), 1);
+    assert.equal(await page.getByText('Kompas aniqligi past', { exact: true }).count(), 1);
+    assert.equal(await page.getByText('O‘ngga buring', { exact: true }).count(), 0);
+    if (await hostWarning.isVisible()) await hostWarning.locator('button').click();
+    await page.screenshot({ path: path.join(output, 'page-zero-degrees-low-accuracy.png'), fullPage: true });
     assert.deepEqual(errors, [], 'No screen runtime errors');
     console.log('PASS: real screen renders enlarged offline map and sensor fixture; nearby-mosques button is absent; calibration still restarts sensor and opens guide.');
-    console.log('Preview:', path.join(output, 'page-52-degrees.png'));
+    console.log('PASS: real screen shows alignment at 0° with low accuracy, keeps the quality warning and never asks the aligned user to turn right.');
+    console.log('Preview:', path.join(output, 'page-zero-degrees-low-accuracy.png'));
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

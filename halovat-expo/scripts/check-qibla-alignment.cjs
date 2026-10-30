@@ -11,10 +11,17 @@ function bundle(file, requireModule = require) {
 }
 let now = 0;
 const { createCompassMotion } = bundle('src/domain/compassMotion.ts');
-const { createQiblaAlignment } = bundle('src/domain/qiblaAlignment.ts');
+const { createQiblaAlignment, isQiblaAligned } = bundle('src/domain/qiblaAlignment.ts');
+for (const angle of [0, -0.4, 0.4, -5, 5]) assert.equal(isQiblaAligned(angle), true);
+for (const angle of [-5.01, 5.01, -180, 180, null, NaN, Infinity, -Infinity]) assert.equal(isQiblaAligned(angle), false);
+for (const heading of [235, 245]) {
+  const boundary = createQiblaAlignment();
+  assert.equal(boundary(240, heading, true, 0).feedback, true, 'Both 5° boundaries confirm alignment');
+}
+assert.equal(createQiblaAlignment()(240, 234.9, true, 0).feedback, false, 'Haptics must not start outside 5°');
 const track = createQiblaAlignment();
 assert.equal(track(240, 188, true, 0).aligned, false);
-assert.equal(track(240, 233, true, 10).feedback, true);
+assert.equal(track(240, 235, true, 10).feedback, true);
 for (const angle of [239, 240, 241, 232, 231, 229, 240]) {
   const state = track(240, angle, true, 100);
   assert.equal(state.aligned, true, 'Hysteresis must tolerate boundary noise');
@@ -85,4 +92,4 @@ assert.equal(haptics.length, 3, 'Changing the geographic bearing uses the curren
 slots.forEach(slot => slot?.cleanup?.());
 emit(240); assert.equal(haptics.length, 3, 'Unmount removes the sensor subscription');
 assert.ok(haptics.every(event => event.type === 'success'));
-console.log('PASS: actual alignment hook sends one success haptic on entry; hysteresis, cooldown, north crossing, quality, geographic changes, focus/background and unmount checks pass.');
+console.log('PASS: visual alignment includes ±5° and rejects invalid angles; actual hook sends one reliable success haptic on entry with hysteresis, cooldown, north crossing, quality, geographic changes and lifecycle cleanup.');
