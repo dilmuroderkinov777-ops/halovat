@@ -59,9 +59,13 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   const inner = new T.Mesh(new T.CircleGeometry(0.70, 64), new T.MeshBasicMaterial({ color: '#087859', transparent: true, opacity: 0.80, depthWrite: false, toneMapped: false }));
   inner.rotation.x = -Math.PI / 2; inner.position.y = 0.022; scene.add(inner);
   const arrowShape = new T.Shape();
-  arrowShape.moveTo(0, 0.22); arrowShape.lineTo(-0.12, -0.10); arrowShape.lineTo(0, -0.025); arrowShape.lineTo(0.12, -0.10); arrowShape.closePath();
-  const arrow = new T.Mesh(new T.ExtrudeGeometry(arrowShape, { depth: 0.035, bevelEnabled: true, bevelSize: 0.009, bevelThickness: 0.007, bevelSegments: 1, steps: 1 }), new T.MeshStandardMaterial({ color: '#087357', roughness: 0.6 }));
-  arrow.rotation.x = -Math.PI / 2; arrow.position.set(0.82, 0.035, -0.75); scene.add(arrow);
+  // Symmetric head and straight shaft share the person's fixed -Z forward axis.
+  arrowShape.moveTo(0, 0.40); arrowShape.lineTo(-0.23, 0.06); arrowShape.lineTo(-0.085, 0.06);
+  arrowShape.lineTo(-0.085, -0.28); arrowShape.lineTo(0.085, -0.28);
+  arrowShape.lineTo(0.085, 0.06); arrowShape.lineTo(0.23, 0.06); arrowShape.closePath();
+  const arrow = new T.Mesh(new T.ExtrudeGeometry(arrowShape, { depth: 0.025, bevelEnabled: true, bevelSize: 0.008, bevelThickness: 0.005, bevelSegments: 1, steps: 1 }), new T.MeshBasicMaterial({ color: '#087357', toneMapped: false }));
+  arrow.name = 'person-forward-arrow';
+  arrow.rotation.x = -Math.PI / 2; arrow.position.set(1.05, 0.035, 0); scene.add(arrow);
 
   const reflection = createFloorReflection([ground, person, halo, inner, line, arrow]); scene.add(reflection);
 
@@ -117,8 +121,9 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
   function resize() {
     const width = Math.max(canvas.clientWidth, 1), height = Math.max(canvas.clientHeight, 1);
     renderer.setSize(width, height, false);
-    // Leave space on every side of the centered pivot for the Kaaba's complete orbit.
-    const viewHeight = Math.max(20.0, 20.4 / (width / height));
+    // Closer framing: on portrait phones the lateral orbit reaches the frame edge,
+    // revealing half the Kaaba at a 90° turn, while the person stays at the pivot.
+    const viewHeight = Math.max(18.0, RADIUS * 2 / (width / height));
     camera.left = -viewHeight * width / height / 2; camera.right = -camera.left;
     camera.top = viewHeight / 2; camera.bottom = -camera.top; camera.updateProjectionMatrix();
     invalidate();
@@ -187,6 +192,8 @@ export function createQiblaScene(canvas: HTMLCanvasElement, onError: (message: s
         kaabaPosition: targetPoint.toArray(), targetVisible: target.visible, kaabaScreen: project(targetPoint),
         personScreen: project(personPoint), personBounds, personDepthTest: sprite.material.depthTest, personDepthWrite: sprite.material.depthWrite,
         forwardScreen: project(new T.Vector3(0, 0, -1)), kaabaBounds,
+        arrowTipScreen: project(arrow.localToWorld(new T.Vector3(0, 0.40, 0))),
+        arrowTailScreen: project(arrow.localToWorld(new T.Vector3(0, -0.28, 0))),
         treeCount: (surroundings.getObjectByName('palm-trunks') as T.InstancedMesh).count,
         groundSize: (ground.geometry as T.PlaneGeometry).parameters.width,
         triangles: renderer.info.render.triangles, calls: renderer.info.render.calls,
