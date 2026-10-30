@@ -4,10 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { CalendarDays, CircleDot, GraduationCap, Moon, RotateCw, Sunrise } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Switch, View, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, Switch, View, useWindowDimensions } from 'react-native';
 import { Text } from '../../../ui/AppText';
 import { NativeAction } from '../../../components/NativeAction';
-import { NativeSelect } from '../../../components/NativeSelect';
+import { TasbeehZikrSelect } from '../../../components/TasbeehZikrSelect';
 import { Screen } from '../../../components/Screen';
 import { TasbeehCounter } from '../../../components/TasbeehCounter';
 import { useHalovat } from '../../../context/AppContext';
@@ -82,10 +82,9 @@ export default function TasbeehScreen() {
             <View pointerEvents="none" style={styles.heroGlowTop} />
             <View pointerEvents="none" style={styles.heroGlowBottom} />
             <View style={styles.heroHeader}>
-              <View style={{ flex: 1 }}><NativeSelect colorScheme="dark" value={selected.id}
-                options={ZIKR.map(item => ({ value: item.id, label: item.name }))} onChange={selectZikr} /></View>
+              <View style={{ flex: 1 }}><TasbeehZikrSelect value={selected.id} onChange={selectZikr} /></View>
               <Switch accessibilityLabel="Har bosishda tebranish" value={data.tasbeehTapHaptics}
-                onValueChange={setTasbeehTapHaptics} trackColor={{ true: MINT, false: '#708C7E' }} />
+                onValueChange={setTasbeehTapHaptics} thumbColor={Platform.OS === 'android' ? '#F3FFF8' : undefined} trackColor={{ true: MINT, false: '#708C7E' }} />
             </View>
 
             <View style={styles.phrase}>
